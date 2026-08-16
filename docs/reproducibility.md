@@ -1,0 +1,33 @@
+# Reproducibility contract
+
+The repository is intended to be rerunnable in a clean Python environment.
+Every generated run records configuration, software versions, input hashes,
+output hashes, QA results, and limitations.
+
+## Reference contract
+
+The frozen files under `results/` are the comparison baseline. A reproduction
+passes when:
+
+- all declared input SHA-256 values match;
+- the scenario loads 18 sequential sites and a 75.3–75.6 km corridor;
+- all link-quality values are finite;
+- centerline association is the maximum received power;
+- the simulator reaches the exact corridor endpoint;
+- deterministic CSV outputs match the reference hashes.
+
+Figures may contain metadata differences between Matplotlib versions. Their
+editable CSV source data and QA values are the scientific comparison objects.
+
+## Evidence grade
+
+The current package is **rerunnable** and is tested for same-machine
+repeatability. It is not yet independently validated, calibrated to airborne
+measurements, or demonstrated across multiple clean operating systems.
+
+## External dependencies
+
+- CesiumJS and OpenStreetMap tiles are loaded from the network by the dashboard.
+- The CesiumDrone glTF asset is stored locally with its Apache-2.0 license.
+- Original municipal/FCC documents and Street View images remain external;
+  their URLs are recorded in the site register and CSV.

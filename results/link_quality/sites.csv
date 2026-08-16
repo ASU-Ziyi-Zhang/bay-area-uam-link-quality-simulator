@@ -1,0 +1,19 @@
+﻿site_id,chainage_km,lateral_offset_km,height_m,height_basis,operator_evidence,serves_centerline,centerline_sample_count,first_served_km,last_served_km,served_centerline_length_km
+BS01,1.670,0.131,15.24,assumed: Macro_Building default,T-Mobile,True,88,0.0,3.2809055534146836,3.3169586321838183
+BS02,4.450,1.040,18.288,assumed: unresolved Macro_Tower default,T-Mobile + Verizon documented historically,True,37,3.3186171114999103,4.6762332025680555,1.3946303339863781
+BS03,5.775,0.080,23.561,official site-record top-elevation proxy,T-Mobile,True,172,4.713944760653281,11.16262119322697,6.48314641745019
+BS04,16.402,0.863,15.24,official: 50-ft tree-form monopole,T-Mobile,True,259,11.200332751312196,20.929914737300567,9.762412337904648
+BS05,25.817,0.515,15.24,assumed: Macro_Building default,T-Mobile,True,249,20.967626295385795,30.320092700521904,9.385485220611029
+BS06,32.782,4.255,17.094,official: 56-ft 1-in water-tower support,T-Mobile; Verizon separate facilities,False,0,,,0.0
+BS07,34.698,0.982,15.24,official: 50-ft freestanding monopole,operator unresolved,True,105,30.357804258607132,34.279806299470664,3.9577347315829647
+BS08,35.372,0.171,15.24,assumed: concealed Macro_Building default,T-Mobile,True,97,34.31751785755589,37.9378274337376,3.6561930377480727
+BS09,39.545,1.903,15.24,assumed: Macro_Building default,T-Mobile,True,171,37.97553899182283,44.3865038663113,6.445453705720829
+BS10,47.750,3.854,15.24,assumed: Macro_Building default,T-Mobile,True,89,44.42421542439653,47.74283253589643,3.3546513439131793
+BS11,50.310,2.870,18.288,assumed: unresolved Macro_Tower default,Dish applicant; other tenancy unresolved,True,69,47.78054409398166,50.34493004377704,2.6007971093259483
+BS12,51.428,2.668,15.24,assumed: Macro_Building default,T-Mobile,True,150,50.38264160186227,56.00166375656099,5.653906759404236
+BS13,60.986,1.865,16.459,official: 54-ft mono-eucalyptus,Verizon,True,179,56.039375314646215,62.75203265381648,6.746995399555721
+BS14,61.358,2.336,20.422,official: 67-ft tree monopole,T-Mobile + AT&T,False,0,,,0.0
+BS15,64.983,1.532,21.641,official: 71-ft monopole,AT&T + T-Mobile + Verizon,True,160,62.789744211901706,68.78588194745268,6.0308338766978515
+BS16,72.483,1.786,18.288,official: 60-ft slimline monopole,AT&T corroborated,True,176,68.82359350553791,75.4231161704525,6.6339172643676365
+BS17,75.423,3.417,23.47,official: approximately 77-ft monopole,T-Mobile + AT&T corroborated,False,0,,,0.0
+BS18,75.423,4.433,18.288,official: 60-ft monopine,operator unresolved,False,0,,,0.0

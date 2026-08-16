@@ -1,0 +1,21 @@
+{
+  "site_count": 18,
+  "public_ids_unique": true,
+  "public_ids_sequential": true,
+  "fcc_type_counts": {
+    "Macro_Tower": 10,
+    "Macro_Building": 7,
+    "Macro_Other": 1
+  },
+  "all_official_urls_present": true,
+  "all_map_urls_present": true,
+  "all_offsets_within_5km": true,
+  "all_model_heights_present": true,
+  "height_basis_counts": {
+    "official_or_site_record": 10,
+    "class_imputation": 8
+  },
+  "local_photo_count": 15,
+  "exports_present": true,
+  "panel_count": 1
+}

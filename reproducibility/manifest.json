@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "evidence_grade": "rerunnable deterministic planning-model baseline",
+  "files": [
+    {
+      "path": "configs/scenario.json",
+      "sha256": "d597d2c9f8cb51a814c4321eeb6dd495bd40ada28b3dd24b09799c1160dd7d7d"
+    },
+    {
+      "path": "configs/simulator.json",
+      "sha256": "8b91e4203765af668672f5b053aa2aab56e5e5b8fbd6b4248a6a0adff8cb0b1a"
+    },
+    {
+      "path": "data/corridor.geojson",
+      "sha256": "be018f7d2089e81fc8785cb1522606fbe841be52b02d9e2ace70889acc466cdc"
+    },
+    {
+      "path": "data/base_stations.csv",
+      "sha256": "013db4dbd473d45f7014d551de2bc03f647fd4df72fc08067a0e8edf4c18fdd7"
+    },
+    {
+      "path": "results/link_quality/profile.csv",
+      "sha256": "7e1b4aa3fd8d5e219e11de27110050911b1e8b4d0e8524079b98a06198fd4197"
+    },
+    {
+      "path": "results/link_quality/sites.csv",
+      "sha256": "8ae42e8b6d1c2593a66dfd2ef3ae03c0ddad6d6b7b601778b0aac8fb17493965"
+    },
+    {
+      "path": "results/link_quality/transitions.csv",
+      "sha256": "c055ae0cf430d4c96feb16d9fa23eb0be5d83451fbc10447d9bd793ab4ed4df2"
+    },
+    {
+      "path": "results/link_quality/qa.json",
+      "sha256": "c70aba89f8b6f00e0ec4f25501e74d62c35e14518ce25092b6002a6766fc0f94"
+    },
+    {
+      "path": "results/simulator/uam_state_trace.csv",
+      "sha256": "c773985cfcbac96617191aa73dc47e5bc1b8c65c2c7dd3bee16b256c805d3b80"
+    },
+    {
+      "path": "results/simulator/motion_state_trace.csv",
+      "sha256": "3e10c0ecd9c329889a670ade39057cdd2971010eb7fe2f54834478976655db5c"
+    },
+    {
+      "path": "results/simulator/radio_measurements.csv",
+      "sha256": "e54bc91d8516f9060aed7b627559f5b876d97fdeb210907e28894eda05f44b19"
+    },
+    {
+      "path": "results/simulator/control_ticks.csv",
+      "sha256": "2b3c0c2cb4205770490ba4310b9dc9b27b2cb612e0344e1aaa5b392f054993cf"
+    },
+    {
+      "path": "results/simulator/summary.json",
+      "sha256": "14fdafefe0b8af600de5dd6f13d04de4249957fc33a06df3fb7b475ea2939f0e"
+    },
+    {
+      "path": "dashboard/data/dashboard_data.js",
+      "sha256": "e0818633d7f0dc04d357f7e7ae9c45d66c69a49a4d6146fb4dd23147a9a0a547"
+    }
+  ],
+  "expected": {
+    "site_count": 18,
+    "corridor_length_km": 75.423116,
+    "link_quality_positions": 2001,
+    "association_transitions": 13,
+    "simulator_handoffs": 13,
+    "simulator_radio_rows": 1510,
+    "simulator_measurement_rows": 27180,
+    "link_quality_status": "pass",
+    "simulator_status": "pass"
+  }
+}

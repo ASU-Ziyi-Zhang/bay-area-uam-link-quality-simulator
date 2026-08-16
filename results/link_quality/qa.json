@@ -1,0 +1,41 @@
+{
+  "site_count": 18,
+  "site_ids_sequential": true,
+  "all_site_heights_resolved": true,
+  "corridor_length_km": 75.4231161704525,
+  "n_longitudinal_positions": 2001,
+  "n_cross_section_points_per_position": 147,
+  "n_cross_section_evaluations": 294147,
+  "all_values_finite": true,
+  "serving_is_max_received_power": true,
+  "interference_identity_max_abs_mw": 1.0587911840678754e-21,
+  "association_transition_count": 13,
+  "serving_site_count": 14,
+  "non_serving_site_ids_on_centerline": [
+    "BS06",
+    "BS14",
+    "BS17",
+    "BS18"
+  ],
+  "serving_rsrp_centerline_dbm_per_re": {
+    "min": -102.6254759859056,
+    "median": -95.63581245932713,
+    "max": -74.85264548732331
+  },
+  "sinr_centerline_db": {
+    "min": -5.515057768184257,
+    "median": 0.565314573303388,
+    "max": 19.625019643385244
+  },
+  "cross_section_p05_min": {
+    "rsrp_dbm_per_re": -103.00618378414765,
+    "sinr_db": -5.642129228933045
+  },
+  "maximum_noise_fraction": 0.0062315246737378255,
+  "policy_thresholds_applied": false,
+  "shadow_fading_applied": false,
+  "source_files_present": true,
+  "figure_export_count": 6,
+  "all_figure_exports_present": true,
+  "status": "pass"
+}

@@ -1,0 +1,49 @@
+{
+  "scenario_id": "sf_sj_real",
+  "corridor": {
+    "kind": "geojson",
+    "path": "../data/corridor.geojson",
+    "source_crs": "EPSG:4326",
+    "target_crs": "EPSG:26910"
+  },
+  "base_stations": {
+    "kind": "wgs84_csv",
+    "path": "../data/base_stations.csv",
+    "active_site_ids": [
+      "BS01", "BS02", "BS03", "BS04", "BS05", "BS06", "BS07",
+      "BS08", "BS09", "BS10", "BS11", "BS12", "BS13", "BS14",
+      "BS15", "BS16", "BS17", "BS18"
+    ],
+    "height_column": "antenna_height_m"
+  },
+  "trajectory": {
+    "model": "constant_speed_route",
+    "speed_mps": 50.0
+  },
+  "simulation": {
+    "duration_s": 4525.38,
+    "time_step_s": 5.0
+  },
+  "radio": {
+    "frequency_ghz": 5.0,
+    "eirp_dbm": 46.0,
+    "receiver_gain_db": 0.0,
+    "noise_dbm": -99.0,
+    "resource_elements": 300,
+    "assumed_bs_height_m": null
+  },
+  "link_quality": {
+    "sinr_threshold_db": -1.5
+  },
+  "policy": {
+    "reactive_exposure_tolerance": 0.10,
+    "coordinated_exposure_tolerance": 0.05,
+    "group_size": 5,
+    "window_s": 30.0
+  },
+  "capacity": {
+    "standstill_distance_m": 200.0,
+    "response_time_s": {"C": 15.0, "R": 30.0, "F": 60.0},
+    "braking_buffer_s2_per_m": 0.167
+  }
+}

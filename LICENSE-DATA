@@ -1,0 +1,24 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Copyright (c) 2026 Ziyi Zhang
+
+Unless otherwise noted, original material in the following directories is
+licensed under the Creative Commons Attribution 4.0 International License:
+
+- data/
+- docs/
+- evidence/
+- results/
+- README.md and RELEASE_REVIEW.md
+
+License deed and canonical legal code:
+https://creativecommons.org/licenses/by/4.0/
+
+You may share and adapt the licensed material for any purpose, including
+commercially, provided that you give appropriate credit, link to the license,
+and indicate whether changes were made.
+
+This license does not override third-party rights. The CesiumDrone model in
+dashboard/assets/models/cesium-drone/ remains under the license distributed
+beside that asset. Linked municipal/FCC records, map tiles, and external source
+materials retain their respective owners' terms.

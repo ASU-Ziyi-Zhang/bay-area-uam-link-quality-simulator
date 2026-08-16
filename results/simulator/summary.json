@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "created_utc": "2026-08-15T23:57:39.196312+00:00",
+  "config_path": "configs/simulator.json",
+  "scenario_path": "configs/scenario.json",
+  "scenario_id": "sf_sj_real",
+  "corridor_length_km": 75.4231161704525,
+  "site_count": 18,
+  "site_ids": [
+    "BS01",
+    "BS02",
+    "BS03",
+    "BS04",
+    "BS05",
+    "BS06",
+    "BS07",
+    "BS08",
+    "BS09",
+    "BS10",
+    "BS11",
+    "BS12",
+    "BS13",
+    "BS14",
+    "BS15",
+    "BS16",
+    "BS17",
+    "BS18"
+  ],
+  "uam_id": "UAM01",
+  "trajectory": {
+    "speed_mps": 50.0,
+    "altitude_m": 300.0,
+    "lateral_offset_m": 0.0,
+    "level_id": "L300",
+    "lane_id": "lane_0",
+    "stop_s": 1508.46232340905
+  },
+  "clock": {
+    "dt_motion_s": 1.0,
+    "dt_radio_s": 1.0,
+    "dt_control_s": 5.0,
+    "policy_window_s": 30.0,
+    "capacity_aggregation_s": 60.0
+  },
+  "samples": {
+    "radio_state_rows": 1510,
+    "motion_state_rows": 1510,
+    "radio_measurement_rows": 27180,
+    "control_tick_rows": 303,
+    "handoff_count": 13
+  },
+  "outputs": [
+    "motion_state_trace.csv",
+    "uam_state_trace.csv",
+    "radio_measurements.csv",
+    "control_ticks.csv"
+  ],
+  "scientific_boundary": "Deterministic single-UAM centerline RSRP/SINR trace; policy, controller, multi-UAM conflict, and capacity models are not yet implemented."
+}

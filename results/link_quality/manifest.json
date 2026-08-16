@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "run_id": "link_quality",
+  "stage": "link-quality",
+  "standalone": true,
+  "status": "awaiting_review",
+  "created_utc": "2026-08-16T00:07:06.518946+00:00",
+  "objective": "Generate serving RSRP and SINR profiles for the 18-site SF-SJ real corridor.",
+  "inputs": [
+    {
+      "path": "configs/scenario.json",
+      "sha256": "d597d2c9f8cb51a814c4321eeb6dd495bd40ada28b3dd24b09799c1160dd7d7d"
+    },
+    {
+      "path": "data/base_stations.csv",
+      "sha256": "013db4dbd473d45f7014d551de2bc03f647fd4df72fc08067a0e8edf4c18fdd7"
+    },
+    {
+      "path": "data/corridor.geojson",
+      "sha256": "be018f7d2089e81fc8785cb1522606fbe841be52b02d9e2ace70889acc466cdc"
+    }
+  ],
+  "command": "python scripts/run_link_quality.py --output runs/link_quality",
+  "environment": {
+    "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.3.5",
+    "matplotlib": "3.10.7"
+  },
+  "outputs": [
+    {
+      "path": "profile.csv",
+      "bytes": 513826,
+      "sha256": "7e1b4aa3fd8d5e219e11de27110050911b1e8b4d0e8524079b98a06198fd4197"
+    },
+    {
+      "path": "sites.csv",
+      "bytes": 2526,
+      "sha256": "8ae42e8b6d1c2593a66dfd2ef3ae03c0ddad6d6b7b601778b0aac8fb17493965"
+    },
+    {
+      "path": "transitions.csv",
+      "bytes": 481,
+      "sha256": "c055ae0cf430d4c96feb16d9fa23eb0be5d83451fbc10447d9bd793ab4ed4df2"
+    },
+    {
+      "path": "config.json",
+      "bytes": 1125,
+      "sha256": "e2ff9fd39e104cf28dfe1ac03e045d4f71cfa8129ae423552bd60125ef4f3dad"
+    },
+    {
+      "path": "qa.json",
+      "bytes": 1207,
+      "sha256": "c70aba89f8b6f00e0ec4f25501e74d62c35e14518ce25092b6002a6766fc0f94"
+    },
+    {
+      "path": "figures/rsrp.svg",
+      "bytes": 136508,
+      "sha256": "6266e6e368ca3014092a93fff4ee0f30afe466364e72a32c8c19af7511e5c52e"
+    },
+    {
+      "path": "figures/rsrp.png",
+      "bytes": 236767,
+      "sha256": "39372ac1cbc0c72fe33d8f5fe012084361be5e93084c8366deeed3d5deb7b32a"
+    },
+    {
+      "path": "figures/sinr.svg",
+      "bytes": 136332,
+      "sha256": "46d97545b3c1cceacdb1cffa64dbcf699410ae8b23428483709dfff1b616bd53"
+    },
+    {
+      "path": "figures/sinr.png",
+      "bytes": 220652,
+      "sha256": "af775b3e4b83abadf960c94350fc43520d7442fe626032204002b155f46200d3"
+    },
+    {
+      "path": "figures/profile.svg",
+      "bytes": 262393,
+      "sha256": "f40f613bb0b67095747663a6ef80148503e1ce7a9c94112c13ee04cf36208e80"
+    },
+    {
+      "path": "figures/profile.png",
+      "bytes": 421567,
+      "sha256": "592370d1bd2d608a5be270f3eede604a52abd430f30c246e0f909b1febe3c203"
+    }
+  ],
+  "qa_file": "qa.json",
+  "qa_status": "pass",
+  "evidence_grade": "estimated within a deterministic planning model",
+  "evidence_boundary": "Co-channel LOS planning diagnostic; not measured coverage, verified operator interoperability, airborne antenna validation, policy classification, or corridor capacity."
+}

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Interactive SF–SJ UAM corridor link-quality simulator dashboard" />
+    <title>SF–SJ UAM Corridor Simulator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <header class="dashboard__header">
+        <div class="dashboard__brand">
+          <span class="dashboard__eyebrow">REAL-CORRIDOR EXPERIMENT</span>
+          <h1>SF–SJ UAM Link-Quality Simulator</h1>
+          <p>One aircraft · 18 macro sites · 300 m centerline flight</p>
+        </div>
+        <div class="dashboard__run-status" aria-label="Simulation run status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div><strong id="run-status">Validated baseline</strong><span id="run-id">Loading run…</span></div>
+        </div>
+      </header>
+
+      <section class="parameter-panel" aria-labelledby="parameter-title">
+        <div class="parameter-panel__intro">
+          <span class="section-label">SCENARIO CONTROLS</span>
+          <h2 id="parameter-title">Flight parameters</h2>
+          <p>Instant deterministic preview; cruise offset tapers to zero over the first/last 2 km. Save a new run before treating adjustments as evidence.</p>
+        </div>
+        <label class="parameter-control" for="flight-speed">
+          <span>Speed <output id="flight-speed-value">50 m/s</output></span>
+          <input id="flight-speed" type="range" min="20" max="100" value="50" step="5" />
+        </label>
+        <label class="parameter-control" for="flight-height">
+          <span>Altitude <output id="flight-height-value">300 m</output></span>
+          <input id="flight-height" type="range" min="100" max="600" value="300" step="25" />
+        </label>
+        <label class="parameter-control" for="flight-offset">
+          <span>Lateral offset (cruise) <output id="flight-offset-value">0 m</output></span>
+          <input id="flight-offset" type="range" min="-1000" max="1000" value="0" step="50" />
+        </label>
+        <div class="parameter-panel__actions">
+          <button class="parameter-button parameter-button--primary" id="apply-parameters" type="button">Update preview</button>
+          <button class="parameter-button" id="reset-parameters" type="button">Reset</button>
+          <span id="preview-status" role="status">Baseline parameters active</span>
+        </div>
+      </section>
+
+      <main class="dashboard__main">
+        <div class="views">
+        <section class="map-panel" aria-labelledby="map-title">
+          <div class="map-panel__heading">
+            <div><span class="section-label">LIVE FLIGHT</span><h2 id="map-title">San Francisco → San Jose</h2></div>
+            <div class="map-panel__progress"><span id="progress-km">0.00 km</span><strong id="progress-percent">0.0%</strong></div>
+          </div>
+          <div class="map-panel__viewport">
+            <div id="map" role="application" aria-label="Interactive SF to San Jose UAM corridor map"></div>
+            <div class="map-legend" aria-label="Map legend">
+              <span><i class="map-legend__line"></i>Flight corridor</span>
+              <span><i class="map-legend__site map-legend__site--tower"></i>Macro tower</span>
+              <span><i class="map-legend__site map-legend__site--building"></i>Macro building</span>
+              <span><i class="map-legend__site map-legend__site--serving"></i>Serving site</span>
+            </div>
+          </div>
+          <div class="transport" aria-label="Simulation playback controls">
+            <button class="transport__button" id="reset-button" type="button" aria-label="Reset simulation">↺</button>
+            <button class="transport__button transport__button--primary" id="play-button" type="button" aria-label="Play simulation">▶</button>
+            <div class="transport__time" aria-live="polite"><strong id="current-time">00:00</strong><span id="total-time">/ 00:00</span></div>
+            <label class="sr-only" for="time-slider">Flight timeline</label>
+            <input class="transport__slider" id="time-slider" type="range" min="0" max="1" value="0" step="1" />
+            <label class="sr-only" for="speed-select">Playback speed</label>
+            <select class="transport__speed" id="speed-select" aria-label="Playback speed">
+              <option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="three-panel" aria-labelledby="three-title">
+          <div class="three-panel__heading">
+            <div><span class="section-label">GEOREFERENCED 3D VIEW</span><h2 id="three-title">Fixed-bearing third-person view</h2></div>
+            <div class="three-panel__camera">
+              <span>315° bearing · fixed pitch</span>
+              <button id="reset-3d-camera" type="button">Recenter</button>
+            </div>
+          </div>
+          <div class="three-panel__viewport">
+            <div id="corridor-3d" role="application" aria-label="Georeferenced three-dimensional corridor, UAM aircraft and base-station view"></div>
+            <div class="three-panel__map-note">Fixed bearing and pitch · camera translates with position only.</div>
+            <div class="three-panel__file-warning" id="three-file-warning" hidden>
+              Open <a href="http://127.0.0.1:8765/">the local dashboard server</a> to load the 3D map and aircraft model.
+            </div>
+          </div>
+          <div class="three-panel__legend">
+            <span><i class="three-panel__line three-panel__line--ground"></i>Ground centerline</span>
+            <span><i class="three-panel__line three-panel__line--flight"></i>Selected flight path</span>
+            <span><i class="three-panel__line three-panel__line--radio"></i>Serving link</span>
+            <span><i class="three-panel__symbol three-panel__symbol--tower"></i>Tower macro</span>
+            <span><i class="three-panel__symbol three-panel__symbol--building"></i>Building macro</span>
+            <span id="three-parameter-label">300 m level · 0 m offset</span>
+          </div>
+        </section>
+        </div>
+
+        <aside class="telemetry" aria-label="Flight telemetry and radio diagnostics">
+          <section class="telemetry__metrics" aria-label="Current simulation metrics">
+            <article class="metric-card metric-card--accent"><span>Serving site</span><strong id="serving-site">—</strong><small id="serving-form">Waiting for data</small></article>
+            <article class="metric-card"><span>RSRP</span><strong><b id="rsrp-value">—</b><small> dBm/RE</small></strong><small>Serving-cell reference power</small></article>
+            <article class="metric-card"><span>SINR</span><strong><b id="sinr-value">—</b><small> dB</small></strong><small>Co-channel baseline</small></article>
+            <article class="metric-card"><span>Handoffs</span><strong id="handoff-count">0</strong><small>Association changes so far</small></article>
+          </section>
+
+          <section class="chart-card" aria-labelledby="rsrp-title">
+            <div class="chart-card__heading"><div><span class="section-label">RADIO TRACE</span><h2 id="rsrp-title">Serving RSRP</h2></div><span class="chart-card__range" id="rsrp-range">—</span></div>
+            <canvas id="rsrp-chart" height="130" aria-label="RSRP along the corridor"></canvas>
+          </section>
+          <section class="chart-card" aria-labelledby="sinr-title">
+            <div class="chart-card__heading"><div><span class="section-label">INTERFERENCE TRACE</span><h2 id="sinr-title">SINR</h2></div><span class="chart-card__range" id="sinr-range">—</span></div>
+            <canvas id="sinr-chart" height="130" aria-label="SINR along the corridor"></canvas>
+          </section>
+
+          <section class="site-card" aria-labelledby="site-title">
+            <div><span class="section-label">SERVING-SITE RECORD</span><h2 id="site-title">Site evidence</h2></div>
+            <dl class="site-card__details">
+              <div><dt>Location</dt><dd id="site-address">—</dd></div>
+              <div><dt>Class</dt><dd id="site-class">—</dd></div>
+              <div><dt>Operator evidence</dt><dd id="site-operator">—</dd></div>
+              <div><dt>Antenna height</dt><dd id="site-height">—</dd></div>
+            </dl>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="dashboard__footer">
+        <span>Deterministic planning model · fixed centerline · no policy/capacity controller active</span>
+        <span id="clock-summary">Motion 1 s · Radio 1 s · Control 5 s</span>
+      </footer>
+    </div>
+    <div class="dashboard__error" id="error-panel" hidden role="alert"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"></script>
+    <script src="data/dashboard_data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

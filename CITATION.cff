@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software or its SF-SJ planning scenario, please cite this repository."
+title: "Bay Area UAM Link-Quality Simulator"
+type: software
+authors:
+  - family-names: Zhang
+    given-names: Ziyi
+version: 0.1.0
+date-released: 2026-08-15

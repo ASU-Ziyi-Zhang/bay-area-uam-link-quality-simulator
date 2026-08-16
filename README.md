@@ -1,0 +1,81 @@
+# Bay Area UAM Link-Quality Simulator
+
+A reproducible research toolkit for a Caltrain-referenced San Francisco–San
+Jose UAM corridor. The repository packages four connected layers:
+
+1. the 75.423 km corridor centerline;
+2. 18 retained physical macro-site locations;
+3. deterministic RSRP/SINR link-quality analysis;
+4. a single-UAM, multi-rate simulator with an interactive 2D/3D dashboard.
+
+The current release is a communication-planning baseline. It does **not**
+claim measured airborne coverage, verified operator interoperability,
+implemented C/R/F policy, multi-UAM conflict resolution, or corridor capacity.
+
+## Repository map
+
+```text
+configs/       scenario and simulator settings
+data/          corridor GeoJSON and 18-site CSV
+evidence/      site register, selection rules, source links, and corridor map
+src/           reusable link-quality and simulator packages
+scripts/       run, dashboard, and verification entry points
+dashboard/     interactive real-map and fixed-bearing 3D playback
+results/       frozen reference results used for comparison
+tests/         standalone tests with no external TRB dependency
+runs/          local generated runs (ignored by Git)
+docs/          architecture, assumptions, and reproducibility notes
+```
+
+## Install
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+```
+
+## Run the link-quality analysis
+
+```powershell
+python scripts\run_link_quality.py --output runs\link_quality
+```
+
+The analysis evaluates a 300 m centerline trajectory and a prescribed
+cross-section envelope at 2,001 longitudinal positions. It writes editable
+CSV data, QA, figures, and a checksum manifest.
+
+## Run the simulator
+
+```powershell
+python scripts\run_simulator.py --output runs\simulator
+python scripts\build_dashboard.py --run-dir runs\simulator
+python scripts\serve_dashboard.py
+```
+
+Open [http://127.0.0.1:8765/](http://127.0.0.1:8765/). The 3D view uses a
+fixed 315° bearing and −25° pitch; it translates with the UAM but does not
+rotate with aircraft heading.
+
+## Verify
+
+```powershell
+python -m pytest -q
+python scripts\verify_reference.py
+```
+
+See [docs/reproducibility.md](docs/reproducibility.md) for the exact evidence
+level and [evidence/site_register.md](evidence/site_register.md) for the source
+links behind the retained sites.
+
+## Publication note
+
+Third-party Street View screenshots and downloaded municipal/FCC PDFs are not
+redistributed here. The public package retains source URLs and derived research
+data; the original private working directory remains the audit archive.
+
+## License
+
+- Source code and software configuration: [MIT License](LICENSE).
+- Original data, figures, and documentation: [CC BY 4.0](LICENSE-DATA).
+- Third-party assets retain their own notices; see the license beside each asset.
