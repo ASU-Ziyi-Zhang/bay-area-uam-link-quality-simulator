@@ -29,6 +29,15 @@ def bundle() -> dict:
     return json.loads(raw[raw.index("=") + 1 : raw.rstrip().rindex(";")])
 
 
+def test_complete_site_layout_is_published_with_the_dashboard() -> None:
+    dashboard_layout = ROOT / "dashboard/assets/site-layout/corridor-sites-layout.svg"
+    evidence_layout = ROOT / "evidence/figures/corridor_sites.svg"
+    index = (ROOT / "dashboard/index.html").read_text(encoding="utf-8")
+    assert dashboard_layout.read_bytes() == evidence_layout.read_bytes()
+    assert 'href="assets/site-layout/corridor-sites-layout.svg"' in index
+    assert 'target="_blank"' in index
+
+
 def evaluate_radio(stations, radio, x_m, y_m, z_m):
     """Port of evaluateRadio() in dashboard/app.js, served set included."""
     links = []

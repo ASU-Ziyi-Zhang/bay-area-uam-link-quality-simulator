@@ -59,7 +59,16 @@
         <section class="map-panel" aria-labelledby="map-title">
           <div class="map-panel__heading">
             <div><span class="section-label">LIVE FLIGHT</span><h2 id="map-title">San Francisco → San Jose</h2></div>
-            <div class="map-panel__progress"><span id="progress-km">0.00 km</span><strong id="progress-percent">0.0%</strong></div>
+            <div class="map-panel__heading-tools">
+              <a class="map-panel__layout-link"
+                 href="assets/site-layout/corridor-sites-layout.svg"
+                 target="_blank"
+                 rel="noopener"
+                 title="Open the 18-site layout with FCC macro-site classes">
+                View 18-site layout <span aria-hidden="true">↗</span>
+              </a>
+              <div class="map-panel__progress"><span id="progress-km">0.00 km</span><strong id="progress-percent">0.0%</strong></div>
+            </div>
           </div>
           <div class="map-panel__viewport">
             <div id="map" role="application" aria-label="Interactive SF to San Jose UAM corridor map"></div>

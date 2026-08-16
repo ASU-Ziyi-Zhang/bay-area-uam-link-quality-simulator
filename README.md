@@ -18,6 +18,11 @@ A hosted build is published from `dashboard/` on every push to `main`:
 
 **https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/**
 
+The map header links to the complete
+[18-site macro-site layout](evidence/figures/corridor_sites.svg), showing the
+corridor-wide `Macro_Tower`, `Macro_Building`, and `Macro_Other` classes and
+marking sites with retained images.
+
 No local environment is needed to open it. The 2D map, radio traces, telemetry,
 and site records are self-contained. Two things are fetched at view time:
 CesiumJS for the 3D panel, and OpenStreetMap raster tiles for both basemaps. If

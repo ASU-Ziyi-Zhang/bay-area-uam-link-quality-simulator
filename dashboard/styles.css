@@ -37,6 +37,10 @@ button, input, select { font: inherit; }
 .map-panel { border-radius: 20px; overflow: hidden; }
 .map-panel__heading { display: flex; align-items: flex-end; justify-content: space-between; padding: 18px 20px 15px; }
 .map-panel__heading h2, .chart-card h2, .site-card h2, .model-card h2 { margin: 3px 0 0; font-size: 1.05rem; font-weight: 720; }
+.map-panel__heading-tools { display: flex; align-items: center; gap: 14px; }
+.map-panel__layout-link { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 7px 11px; border: 1px solid rgba(22,140,133,.3); border-radius: 9px; color: var(--teal-dark); background: rgba(22,140,133,.07); font-size: .7rem; font-weight: 760; text-decoration: none; white-space: nowrap; }
+.map-panel__layout-link:hover { border-color: var(--teal); background: rgba(22,140,133,.13); }
+.map-panel__layout-link:focus-visible { outline: 3px solid rgba(22,140,133,.25); outline-offset: 2px; }
 .map-panel__progress { display: grid; text-align: right; }
 .map-panel__progress span { color: var(--muted); font-size: .75rem; }
 .map-panel__progress strong { font-size: 1.18rem; }
@@ -124,6 +128,8 @@ button, input, select { font: inherit; }
   .dashboard__run-status { width: 100%; }
   .parameter-panel { grid-template-columns: 1fr; }
   .parameter-panel__intro, .parameter-panel__actions { grid-column: auto; }
+  .map-panel__heading { align-items: flex-start; gap: 12px; }
+  .map-panel__heading-tools { align-items: flex-end; flex-direction: column-reverse; gap: 8px; }
   .telemetry { grid-template-columns: 1fr; }
   .telemetry__metrics, .site-card, .model-card { grid-column: auto; }
   .transport { grid-template-columns: auto auto 1fr auto; }
