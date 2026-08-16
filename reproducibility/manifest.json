@@ -12,51 +12,51 @@
     },
     {
       "path": "data/corridor.geojson",
-      "sha256": "be018f7d2089e81fc8785cb1522606fbe841be52b02d9e2ace70889acc466cdc"
+      "sha256": "27ef9841305529c548beec53059be56c3f0600ffe05178214315fccda90b980b"
     },
     {
       "path": "data/base_stations.csv",
-      "sha256": "013db4dbd473d45f7014d551de2bc03f647fd4df72fc08067a0e8edf4c18fdd7"
+      "sha256": "e214a75a9a265a77409859b214b4f4068d8fec2f0d9458e7b05854164e50d3ab"
     },
     {
       "path": "results/link_quality/profile.csv",
-      "sha256": "7e1b4aa3fd8d5e219e11de27110050911b1e8b4d0e8524079b98a06198fd4197"
+      "sha256": "fd188da629c0139467e48485439cc196279e567e8c605f94fffe7c0b6138085b"
     },
     {
       "path": "results/link_quality/sites.csv",
-      "sha256": "8ae42e8b6d1c2593a66dfd2ef3ae03c0ddad6d6b7b601778b0aac8fb17493965"
+      "sha256": "cff308f6212c3d39259fe8772c8fee113a84b5fb955f059f375633cc238f68a6"
     },
     {
       "path": "results/link_quality/transitions.csv",
-      "sha256": "c055ae0cf430d4c96feb16d9fa23eb0be5d83451fbc10447d9bd793ab4ed4df2"
+      "sha256": "e661d227f6273327ac0914cbfe75066af7a53ea3d54ab32655d7bea6266a8ed4"
     },
     {
       "path": "results/link_quality/qa.json",
-      "sha256": "c70aba89f8b6f00e0ec4f25501e74d62c35e14518ce25092b6002a6766fc0f94"
+      "sha256": "5c448a45da6cc9bb10538185dc46fb5af5a8b626d39f54d93177e0133dd58fcf"
     },
     {
       "path": "results/simulator/uam_state_trace.csv",
-      "sha256": "c773985cfcbac96617191aa73dc47e5bc1b8c65c2c7dd3bee16b256c805d3b80"
+      "sha256": "ea68b8ee0898c9807b7657ae6cd04fadfec1acd314eca3a6f3f741cf12c3993a"
     },
     {
       "path": "results/simulator/motion_state_trace.csv",
-      "sha256": "3e10c0ecd9c329889a670ade39057cdd2971010eb7fe2f54834478976655db5c"
+      "sha256": "7e14e273e148ad0336fee4c62e9d9ecb2293f377a1c7326c9b85f1aa900291ec"
     },
     {
       "path": "results/simulator/radio_measurements.csv",
-      "sha256": "e54bc91d8516f9060aed7b627559f5b876d97fdeb210907e28894eda05f44b19"
+      "sha256": "03a8a1df139d9319a16f524ad67c664c46aa53d2df701a53768255c85ed396dd"
     },
     {
       "path": "results/simulator/control_ticks.csv",
-      "sha256": "2b3c0c2cb4205770490ba4310b9dc9b27b2cb612e0344e1aaa5b392f054993cf"
+      "sha256": "9e085b6f64f10b45badbcf6cda9b78f39188358522d3f4fd308acbd0ab17f993"
     },
     {
       "path": "results/simulator/summary.json",
-      "sha256": "14fdafefe0b8af600de5dd6f13d04de4249957fc33a06df3fb7b475ea2939f0e"
+      "sha256": "a7b0c493d6d5c86f8c7dce0272679d3c079b80ff6e7a38365689fc800955ca07"
     },
     {
       "path": "dashboard/data/dashboard_data.js",
-      "sha256": "e0818633d7f0dc04d357f7e7ae9c45d66c69a49a4d6146fb4dd23147a9a0a547"
+      "sha256": "6fe0f474cf02e3878e42a31068ad2662f3b3bfd829b1877ac8bd0b4c7fc1f593"
     }
   ],
   "expected": {

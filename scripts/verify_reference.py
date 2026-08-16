@@ -26,13 +26,16 @@ REFERENCE_FILES = (
     "results/simulator/summary.json",
     "dashboard/data/dashboard_data.js",
 )
+TEXT_SUFFIXES = {".csv", ".geojson", ".js", ".json"}
 
 
 def sha256(path: Path) -> str:
+    """Hash logical text content consistently across Windows and Linux."""
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(block)
+    content = path.read_bytes()
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        content = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    digest.update(content)
     return digest.hexdigest()
 
 

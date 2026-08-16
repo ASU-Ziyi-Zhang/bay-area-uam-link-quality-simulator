@@ -9,7 +9,8 @@ output hashes, QA results, and limitations.
 The frozen files under `results/` are the comparison baseline. A reproduction
 passes when:
 
-- all declared input SHA-256 values match;
+- all declared input SHA-256 values match; text hashes normalize line endings
+  to LF so Windows and Linux checkouts are comparable;
 - the scenario loads 18 sequential sites and a 75.3–75.6 km corridor;
 - all link-quality values are finite;
 - centerline association is the maximum received power;
