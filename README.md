@@ -97,6 +97,15 @@ Third-party Street View screenshots and downloaded municipal/FCC PDFs are not
 redistributed here. The public package retains source URLs and derived research
 data; the original private working directory remains the audit archive.
 
+## Tooling and AI assistance
+
+Parts of the code, tests, and documentation in this repository were developed
+with AI coding assistants (OpenAI Codex and Anthropic Claude). Their use was
+limited to implementation, refactoring, test authoring, and drafting; the
+scenario definition, site selection and evidence review, modeling assumptions,
+and the interpretation of all results are the author's own, and every reported
+figure is reproducible from the committed inputs with the commands above.
+
 ## License
 
 - Source code and software configuration: [MIT License](LICENSE).
