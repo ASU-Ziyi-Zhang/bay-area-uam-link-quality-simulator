@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Interactive SF–SJ UAM corridor link-quality simulator dashboard" />
     <title>SF–SJ UAM Corridor Simulator</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css" />
+    <!-- Leaflet 1.9.4 is vendored under vendor/leaflet/ (BSD-2-Clause); the 2D
+         map must not depend on a reachable CDN. CesiumJS stays on its pinned
+         release URL and is pinned further by subresource integrity. -->
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet"
+          href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css"
+          integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
+          crossorigin="anonymous" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -81,13 +87,13 @@
           <div class="three-panel__heading">
             <div><span class="section-label">GEOREFERENCED 3D VIEW</span><h2 id="three-title">Fixed-bearing third-person view</h2></div>
             <div class="three-panel__camera">
-              <span>315° bearing · fixed pitch</span>
+              <span id="three-camera-state">315° bearing · fixed pitch</span>
               <button id="reset-3d-camera" type="button">Recenter</button>
             </div>
           </div>
           <div class="three-panel__viewport">
             <div id="corridor-3d" role="application" aria-label="Georeferenced three-dimensional corridor, UAM aircraft and base-station view"></div>
-            <div class="three-panel__map-note">Fixed bearing and pitch · camera translates with position only.</div>
+            <div class="three-panel__map-note" id="three-camera-note">Fixed bearing and pitch · camera translates with position only.</div>
             <div class="three-panel__file-warning" id="three-file-warning" hidden>
               Open <a href="http://127.0.0.1:8765/">the local dashboard server</a> to load the 3D map and aircraft model.
             </div>
@@ -107,7 +113,7 @@
           <section class="telemetry__metrics" aria-label="Current simulation metrics">
             <article class="metric-card metric-card--accent"><span>Serving site</span><strong id="serving-site">—</strong><small id="serving-form">Waiting for data</small></article>
             <article class="metric-card"><span>RSRP</span><strong><b id="rsrp-value">—</b><small> dBm/RE</small></strong><small>Serving-cell reference power</small></article>
-            <article class="metric-card"><span>SINR</span><strong><b id="sinr-value">—</b><small> dB</small></strong><small>Co-channel baseline</small></article>
+            <article class="metric-card"><span>SINR</span><strong><b id="sinr-value">—</b><small> dB</small></strong><small id="sinr-caption">Co-channel worst case</small></article>
             <article class="metric-card"><span>Handoffs</span><strong id="handoff-count">0</strong><small>Association changes so far</small></article>
           </section>
 
@@ -127,7 +133,14 @@
               <div><dt>Class</dt><dd id="site-class">—</dd></div>
               <div><dt>Operator evidence</dt><dd id="site-operator">—</dd></div>
               <div><dt>Antenna height</dt><dd id="site-height">—</dd></div>
+              <div><dt>Source</dt><dd id="site-source">—</dd></div>
             </dl>
+          </section>
+
+          <section class="model-card" aria-labelledby="model-title">
+            <div><span class="section-label">FIXED MODEL PARAMETERS</span><h2 id="model-title">Radio assumptions</h2></div>
+            <dl class="model-card__grid" id="model-parameters"></dl>
+            <p class="model-card__caveat" id="model-caveat"></p>
           </section>
         </aside>
       </main>
@@ -138,8 +151,10 @@
       </footer>
     </div>
     <div class="dashboard__error" id="error-panel" hidden role="alert"></div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"></script>
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
+            integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
+            crossorigin="anonymous"></script>
     <script src="data/dashboard_data.js"></script>
     <script src="app.js"></script>
   </body>

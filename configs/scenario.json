@@ -30,7 +30,8 @@
     "receiver_gain_db": 0.0,
     "noise_dbm": -99.0,
     "resource_elements": 300,
-    "assumed_bs_height_m": null
+    "assumed_bs_height_m": null,
+    "served_set_size": 3
   },
   "link_quality": {
     "sinr_threshold_db": -1.5

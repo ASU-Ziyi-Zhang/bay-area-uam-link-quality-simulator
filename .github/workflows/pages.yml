@@ -1,0 +1,35 @@
+name: pages
+
+# Publishes dashboard/ as the project site so the interactive corridor can be
+# opened from a link without a local Python environment. The directory is
+# published exactly as committed; dashboard/data/dashboard_data.js is generated
+# by scripts/build_dashboard.py and checked by tests/test_dashboard_preview.py.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard
+      - id: deployment
+        uses: actions/deploy-pages@v4

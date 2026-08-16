@@ -5,7 +5,11 @@
   const errorPanel = document.getElementById("error-panel");
   if (!data || !window.L) {
     errorPanel.hidden = false;
-    errorPanel.textContent = "Dashboard data or map library could not be loaded. Regenerate the data bundle and check the map connection.";
+    // Leaflet is vendored, so a failure here is a packaging problem rather than
+    // a network one; keep the two causes distinguishable.
+    errorPanel.textContent = !data
+      ? "Dashboard data bundle is missing. Run scripts/build_dashboard.py to regenerate dashboard/data/dashboard_data.js."
+      : "The bundled map library (vendor/leaflet/leaflet.js) did not load. Serve the whole dashboard directory rather than the HTML file on its own.";
     return;
   }
 
@@ -17,6 +21,9 @@
     offset: Number(data.summary.defaults.lateral_offset_m),
   };
   const radio = data.summary.radio;
+  const servedSetSize = radio.served_set_size === null || radio.served_set_size === undefined
+    ? null
+    : Number(radio.served_set_size);
   const corridorLengthM = data.summary.corridor_length_km * 1000;
 
   const map = L.map("map", { zoomControl: true, preferCanvas: true });
@@ -61,11 +68,53 @@
     "clock-summary", "rsrp-range", "sinr-range", "flight-speed", "flight-height", "flight-offset",
     "flight-speed-value", "flight-height-value", "flight-offset-value", "apply-parameters", "reset-parameters",
     "preview-status", "three-parameter-label", "reset-3d-camera", "three-file-warning",
+    "three-camera-state", "three-camera-note",
+    "site-source", "model-parameters", "model-caveat", "sinr-caption",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const rsrpCanvas = document.getElementById("rsrp-chart");
   const sinrCanvas = document.getElementById("sinr-chart");
 
+  // Everything here is derived from the same summary.radio block that drives
+  // evaluateRadio(), so the printed assumptions cannot drift from the model.
+  function renderModelParameters() {
+    const reOffsetDb = 10 * Math.log10(Number(radio.resource_elements));
+    const rows = [
+      ["Carrier", `${Number(radio.frequency_ghz).toFixed(1)} GHz`],
+      ["Site EIRP", `${Number(radio.eirp_dbm).toFixed(0)} dBm (full carrier)`],
+      ["Receiver gain", `${Number(radio.receiver_gain_db).toFixed(0)} dB`],
+      ["Noise", `${Number(radio.noise_dbm).toFixed(0)} dBm (full carrier)`],
+      ["Resource elements", `${radio.resource_elements} · RSRP = full carrier − ${reOffsetDb.toFixed(2)} dB`],
+      ["Path loss", "28.0 + 22·log₁₀(d₃D / m) + 20·log₁₀(f / GHz)"],
+      ["Reference", "3GPP TR 36.777 UMa-AV LOS"],
+      ["Served set", servedSetSize === null
+        ? `all ${data.stations.length} sites`
+        : `${servedSetSize} nearest sites (equivalently the ${servedSetSize} strongest)`],
+      ["Association", "strongest of the served set, no hysteresis or offset"],
+      ["Interference", servedSetSize === null
+        ? `all ${data.stations.length} sites co-channel at full EIRP (${data.stations.length - 1} interferers)`
+        : `remaining ${servedSetSize - 1} served sites, co-channel at full EIRP`],
+      ["Antenna heights", "per site; see the serving-site record above"],
+    ];
+    el["model-parameters"].replaceChildren(...rows.map(([term, value]) => {
+      const wrap = document.createElement("div");
+      const dt = document.createElement("dt");
+      dt.textContent = term;
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      wrap.append(dt, dd);
+      return wrap;
+    }));
+    el["model-caveat"].textContent =
+      "Deterministic LOS planning kernel. No antenna pattern, sector orientation, "
+      + "downtilt, frequency reuse, traffic loading, shadow fading, or terrain "
+      + "diffraction is applied. SINR is a planning estimate, not a predicted "
+      + "service level.";
+    const interferers = servedSetSize === null ? data.stations.length - 1 : servedSetSize - 1;
+    el["sinr-caption"].textContent = `Co-channel · ${interferers} interferer${interferers === 1 ? "" : "s"}`;
+  }
+
+  renderModelParameters();
   el["run-id"].textContent = data.summary.run_id;
   el["clock-summary"].textContent = `Motion ${data.summary.clock.dt_motion_s} s · Radio ${data.summary.clock.dt_radio_s} s · Control ${data.summary.clock.dt_control_s} s`;
   el["flight-speed"].value = String(defaults.speed);
@@ -90,6 +139,12 @@
   let servingLink3d = null;
   let servingSite3d = null;
   let altitudeLine3d = null;
+  let rafId = null;
+
+  const CAMERA_HEADING_DEG = 315;
+  const CAMERA_PITCH_DEG = -25;
+  const CAMERA_RANGE_M = 3300;
+  let cameraMode = "follow";
 
   initialize3DScene();
 
@@ -212,12 +267,24 @@
       },
     });
     setFixedThirdPersonCamera(initial);
+
+    const canvas3d = viewer3d.scene.canvas;
+    canvas3d.addEventListener("pointerdown", releaseCameraToFree);
+    canvas3d.addEventListener("wheel", releaseCameraToFree, { passive: true });
+
     window.UAM_DASHBOARD_QA = {
-      camera: () => ({
-        heading_deg: Cesium.Math.toDegrees(viewer3d.camera.heading),
-        pitch_deg: Cesium.Math.toDegrees(viewer3d.camera.pitch),
-        roll_deg: Cesium.Math.toDegrees(viewer3d.camera.roll),
-      }),
+      camera: () => {
+        const carto = Cesium.Cartographic.fromCartesian(viewer3d.camera.positionWC);
+        return {
+          mode: cameraMode,
+          heading_deg: Cesium.Math.toDegrees(viewer3d.camera.heading),
+          pitch_deg: Cesium.Math.toDegrees(viewer3d.camera.pitch),
+          roll_deg: Cesium.Math.toDegrees(viewer3d.camera.roll),
+          lat: Cesium.Math.toDegrees(carto.latitude),
+          lon: Cesium.Math.toDegrees(carto.longitude),
+          height_m: carto.height,
+        };
+      },
       scene: () => ({ stations: data.stations.length, trace_samples: trace.length, index }),
     };
   }
@@ -376,14 +443,47 @@
     return Cesium.Transforms.headingPitchRollQuaternion(position, new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(headingAt(cursor)), 0, 0));
   }
 
+  function annotateCameraViewport() {
+    const viewport = document.getElementById("corridor-3d");
+    viewport.dataset.cameraMode = cameraMode === "follow" ? "translate-only" : "free";
+    if (cameraMode === "follow") {
+      viewport.dataset.cameraHeading = String(CAMERA_HEADING_DEG);
+      viewport.dataset.cameraPitch = String(CAMERA_PITCH_DEG);
+    } else {
+      delete viewport.dataset.cameraHeading;
+      delete viewport.dataset.cameraPitch;
+    }
+    el["three-camera-state"].textContent = cameraMode === "follow"
+      ? `${CAMERA_HEADING_DEG}° bearing · fixed pitch`
+      : "Free view";
+    el["three-camera-note"].textContent = cameraMode === "follow"
+      ? "Fixed bearing and pitch · camera translates with position only."
+      : "Free view · drag to orbit, scroll to zoom · Recenter restores the fixed bearing.";
+  }
+
+  // Follow mode reasserts the fixed third-person framing on every frame. Any
+  // user gesture on the canvas releases the lookAt transform so the camera can
+  // be driven freely; Recenter puts it back under follow control.
+  function applyFollowCamera(row) {
+    const target = Cesium.Cartesian3.fromDegrees(row.lon, row.lat, Math.max(60, row.altitude_m * 0.55));
+    viewer3d.camera.lookAt(target, new Cesium.HeadingPitchRange(
+      Cesium.Math.toRadians(CAMERA_HEADING_DEG), Cesium.Math.toRadians(CAMERA_PITCH_DEG), CAMERA_RANGE_M,
+    ));
+  }
+
   function setFixedThirdPersonCamera(row) {
     if (!viewer3d) return;
-    const target = Cesium.Cartesian3.fromDegrees(row.lon, row.lat, Math.max(60, row.altitude_m * 0.55));
-    viewer3d.camera.lookAt(target, new Cesium.HeadingPitchRange(Cesium.Math.toRadians(315), Cesium.Math.toRadians(-25), 3300));
-    const viewport = document.getElementById("corridor-3d");
-    viewport.dataset.cameraHeading = "315";
-    viewport.dataset.cameraPitch = "-25";
-    viewport.dataset.cameraMode = "translate-only";
+    cameraMode = "follow";
+    applyFollowCamera(row);
+    annotateCameraViewport();
+  }
+
+  function releaseCameraToFree() {
+    if (!viewer3d || cameraMode === "free") return;
+    cameraMode = "free";
+    // Detach from the aircraft-local reference frame without moving the camera.
+    viewer3d.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    annotateCameraViewport();
   }
 
   function updateFlightRoute3D() {
@@ -406,7 +506,7 @@
       servingSite3d.position = siteTop;
       servingSite3d.name = `Serving base station · ${site.id}`;
     }
-    setFixedThirdPersonCamera(row);
+    if (cameraMode === "follow") applyFollowCamera(row);
   }
 
   function formatTime(seconds) {
@@ -468,32 +568,41 @@
     };
   }
 
+  // Mirrors compute_link_state() in src/capacity_policy/radio.py, including the
+  // served-set restriction: the UAM associates with and receives from only the
+  // nearest summary.radio.served_set_size sites.
   function evaluateRadio(xM, yM, zM) {
-    const received = [];
-    let servingIndex = 0;
-    let strongest = -Infinity;
-    data.stations.forEach((site, i) => {
+    const links = data.stations.map((site, i) => {
       const dx = xM - site.x_m;
       const dy = yM - site.y_m;
       const dz = zM - site.height_m;
       const d2 = Math.max(dx * dx + dy * dy + dz * dz, Number.MIN_VALUE);
       const rx = Number(radio.eirp_dbm) + Number(radio.receiver_gain_db) - 28 - 11 * Math.log10(d2) - 20 * Math.log10(Number(radio.frequency_ghz));
-      received.push(rx);
-      if (rx > strongest) { strongest = rx; servingIndex = i; }
+      return { i, d2, rx };
     });
-    const powersMw = received.map((value) => 10 ** (value / 10));
-    const desiredMw = powersMw[servingIndex];
-    const interferenceMw = Math.max(powersMw.reduce((sum, value) => sum + value, 0) - desiredMw, Number.MIN_VALUE);
+
+    const served = servedSetSize !== null && servedSetSize < links.length
+      ? [...links].sort((a, b) => a.d2 - b.d2).slice(0, servedSetSize)
+      : links;
+
+    let serving = served[0];
+    served.forEach((link) => { if (link.rx > serving.rx) serving = link; });
+    const desiredMw = 10 ** (serving.rx / 10);
+    const totalMw = served.reduce((sum, link) => sum + 10 ** (link.rx / 10), 0);
+    const interferenceMw = Math.max(totalMw - desiredMw, Number.MIN_VALUE);
     const noiseMw = 10 ** (Number(radio.noise_dbm) / 10);
     return {
-      serving: data.stations[servingIndex].id,
-      rsrp: strongest - 10 * Math.log10(Number(radio.resource_elements)),
+      serving: data.stations[serving.i].id,
+      rsrp: serving.rx - 10 * Math.log10(Number(radio.resource_elements)),
       sinr: 10 * Math.log10(desiredMw / (interferenceMw + noiseMw)),
     };
   }
 
+  // Every trace shown by the dashboard — including the default one — comes out
+  // of this function. tests/test_dashboard_preview.py pins it against the
+  // Python kernel in src/capacity_policy/radio.py so the default path stays
+  // numerically identical to the validated baseline.
   function buildPreview(params) {
-    if (isDefault(params)) return baseTrace.map((row) => ({ ...row }));
     const dt = Number(data.summary.clock.dt_radio_s);
     const duration = corridorLengthM / params.speed;
     const times = [];
@@ -529,7 +638,36 @@
   function headingAt(i) {
     const a = trace[Math.max(0, i - 1)];
     const b = trace[Math.min(trace.length - 1, i + 1)];
-    return Math.atan2(b.lon - a.lon, b.lat - a.lat) * 180 / Math.PI;
+    // A degree of longitude spans cos(latitude) of a degree of latitude on the
+    // ground, so the east component must be scaled before taking the bearing.
+    const midLat = (a.lat + b.lat) / 2 * Math.PI / 180;
+    return Math.atan2((b.lon - a.lon) * Math.cos(midLat), b.lat - a.lat) * 180 / Math.PI;
+  }
+
+  // The register keeps an official source URL per site; surface it as a link so
+  // the on-screen claim can be traced without opening the CSV.
+  function renderSiteSource(site) {
+    const url = site.official_source_url;
+    if (!url) {
+      el["site-source"].textContent = "no public source URL retained";
+      return;
+    }
+    let host;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("scheme");
+      host = parsed.hostname.replace(/^www\./, "");
+    } catch {
+      el["site-source"].textContent = "source URL is not resolvable";
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = host;
+    link.title = url;
+    el["site-source"].replaceChildren(link);
   }
 
   function updateStationStyle(servingId) {
@@ -543,9 +681,7 @@
   }
 
   function applyParameters(params) {
-    playing = false;
-    el["play-button"].textContent = "▶";
-    el["play-button"].setAttribute("aria-label", "Play simulation");
+    setPlaying(false);
     activeParameters = params;
     trace = buildPreview(params);
     cumulativeHandoffs = buildHandoffCounts(trace);
@@ -590,50 +726,90 @@
       el["site-class"].textContent = `${site.site_class} · ${site.physical_form}`;
       el["site-operator"].textContent = site.operator;
       el["site-height"].textContent = `${site.height_m.toFixed(2)} m AGL (${site.height_basis})`;
+      renderSiteSource(site);
     }
     drawChart(rsrpCanvas, rsrpValues, rsrpDomain, index, "#168c85", "dBm/RE");
     drawChart(sinrCanvas, sinrValues, sinrDomain, index, "#e46f51", "dB");
     updateFrame3D(index);
   }
 
-  function drawChart(canvas, values, domain, cursor, color, unit) {
+  const CHART_HEIGHT = 130;
+  const CHART_PAD = { left: 34, right: 8, top: 8, bottom: 20 };
+  const chartLayers = new Map();
+
+  // The trace, gridlines, and axis labels are static between parameter changes,
+  // so they are rendered once into an offscreen surface and reused.
+  function chartLayer(canvas, values, domain, color, unit) {
     const ratio = window.devicePixelRatio || 1;
     const width = Math.max(280, canvas.clientWidth);
-    const height = 130;
-    canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const pad = { left: 34, right: 8, top: 8, bottom: 20 };
+    const cached = chartLayers.get(canvas);
+    if (cached && cached.values === values && cached.domain === domain
+      && cached.width === width && cached.ratio === ratio) return cached;
+
     const [min, max] = domain;
-    const xAt = (i) => pad.left + i / Math.max(1, values.length - 1) * (width - pad.left - pad.right);
-    const yAt = (value) => pad.top + (max - value) / Math.max(1e-9, max - min) * (height - pad.top - pad.bottom);
+    const xAt = (i) => CHART_PAD.left + i / Math.max(1, values.length - 1) * (width - CHART_PAD.left - CHART_PAD.right);
+    const yAt = (value) => CHART_PAD.top + (max - value) / Math.max(1e-9, max - min) * (CHART_HEIGHT - CHART_PAD.top - CHART_PAD.bottom);
+
+    const surface = cached?.surface || document.createElement("canvas");
+    surface.width = Math.round(width * ratio);
+    surface.height = Math.round(CHART_HEIGHT * ratio);
+    const ctx = surface.getContext("2d");
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, width, CHART_HEIGHT);
     ctx.strokeStyle = "#e3e6e3"; ctx.fillStyle = "#6c7880"; ctx.font = "10px system-ui"; ctx.textAlign = "right";
     for (let step = 0; step <= 2; step += 1) {
       const value = min + (max - min) * step / 2; const y = yAt(value);
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke(); ctx.fillText(value.toFixed(0), pad.left - 5, y + 3);
+      ctx.beginPath(); ctx.moveTo(CHART_PAD.left, y); ctx.lineTo(width - CHART_PAD.right, y); ctx.stroke();
+      ctx.fillText(value.toFixed(0), CHART_PAD.left - 5, y + 3);
     }
     ctx.beginPath();
     values.forEach((value, i) => { const x = xAt(i); const y = yAt(value); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
     ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.stroke();
-    const cursorX = xAt(cursor);
-    ctx.beginPath(); ctx.moveTo(cursorX, pad.top); ctx.lineTo(cursorX, height - pad.bottom);
+    ctx.fillStyle = "#6c7880"; ctx.textAlign = "left"; ctx.fillText("SF", CHART_PAD.left, CHART_HEIGHT - 4);
+    ctx.textAlign = "right"; ctx.fillText(`SJ · ${unit}`, width - CHART_PAD.right, CHART_HEIGHT - 4);
+
+    const layer = { surface, values, domain, width, ratio, xAt, yAt };
+    chartLayers.set(canvas, layer);
+    return layer;
+  }
+
+  function drawChart(canvas, values, domain, cursor, color, unit) {
+    const layer = chartLayer(canvas, values, domain, color, unit);
+    if (canvas.width !== layer.surface.width || canvas.height !== layer.surface.height) {
+      canvas.width = layer.surface.width;
+      canvas.height = layer.surface.height;
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(layer.surface, 0, 0);
+    ctx.setTransform(layer.ratio, 0, 0, layer.ratio, 0, 0);
+    const cursorX = layer.xAt(cursor);
+    ctx.beginPath(); ctx.moveTo(cursorX, CHART_PAD.top); ctx.lineTo(cursorX, CHART_HEIGHT - CHART_PAD.bottom);
     ctx.strokeStyle = "#17364a"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
-    ctx.beginPath(); ctx.arc(cursorX, yAt(values[cursor]), 3.5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
-    ctx.fillStyle = "#6c7880"; ctx.textAlign = "left"; ctx.fillText("SF", pad.left, height - 4);
-    ctx.textAlign = "right"; ctx.fillText(`SJ · ${unit}`, width - pad.right, height - 4);
+    ctx.beginPath(); ctx.arc(cursorX, layer.yAt(values[cursor]), 3.5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+  }
+
+  // Single source of truth for the transport state, so the button glyph and its
+  // accessible name can never drift apart and only one rAF loop can be live.
+  function setPlaying(next) {
+    playing = next;
+    el["play-button"].textContent = next ? "❚❚" : "▶";
+    el["play-button"].setAttribute("aria-label", next ? "Pause simulation" : "Play simulation");
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+    if (next) { lastFrameTime = null; rafId = requestAnimationFrame(animationFrame); }
   }
 
   function animationFrame(timestamp) {
+    rafId = null;
     if (!playing) return;
     if (lastFrameTime === null) lastFrameTime = timestamp;
     simulatedClock += (timestamp - lastFrameTime) / 1000 * Number(el["speed-select"].value);
     lastFrameTime = timestamp;
     while (index < trace.length - 1 && trace[index + 1].t <= simulatedClock) index += 1;
     updateFrame(index);
-    if (index >= trace.length - 1) {
-      playing = false; el["play-button"].textContent = "▶"; el["play-button"].setAttribute("aria-label", "Play simulation"); return;
-    }
-    requestAnimationFrame(animationFrame);
+    if (index >= trace.length - 1) { setPlaying(false); return; }
+    rafId = requestAnimationFrame(animationFrame);
   }
 
   ["flight-speed", "flight-height", "flight-offset"].forEach((id) => el[id].addEventListener("input", updateParameterLabels));
@@ -645,18 +821,18 @@
     updateParameterLabels(); applyParameters({ ...defaults });
   });
   el["play-button"].addEventListener("click", () => {
-    playing = !playing;
-    el["play-button"].textContent = playing ? "❚❚" : "▶";
-    el["play-button"].setAttribute("aria-label", playing ? "Pause simulation" : "Play simulation");
-    if (playing) {
-      if (index >= trace.length - 1) { index = 0; simulatedClock = 0; }
-      lastFrameTime = null; requestAnimationFrame(animationFrame);
-    }
+    if (!playing && index >= trace.length - 1) { index = 0; simulatedClock = 0; }
+    setPlaying(!playing);
   });
-  el["reset-button"].addEventListener("click", () => { playing = false; el["play-button"].textContent = "▶"; simulatedClock = 0; updateFrame(0); });
+  el["reset-button"].addEventListener("click", () => { setPlaying(false); simulatedClock = 0; updateFrame(0); });
   el["time-slider"].addEventListener("input", () => { index = Number(el["time-slider"].value); simulatedClock = trace[index].t; updateFrame(index); });
   el["reset-3d-camera"].addEventListener("click", () => setFixedThirdPersonCamera(trace[index]));
-  window.addEventListener("resize", () => { map.invalidateSize(); updateFrame(index); });
+
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (resizeTimer !== null) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resizeTimer = null; map.invalidateSize(); updateFrame(index); }, 120);
+  });
 
   updateParameterLabels();
   applyParameters({ ...defaults });

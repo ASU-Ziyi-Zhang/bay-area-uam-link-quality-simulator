@@ -119,6 +119,7 @@ def flatten_state(state: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         "sinr_db": state["sinr_db"][:, 0],
         "noise_fraction": state["noise_fraction"][:, 0],
         "received_power_dbm": state["received_power_dbm"][:, 0, :],
+        "served_mask": state["served_mask"][:, 0, :],
     }
 
 
@@ -227,7 +228,18 @@ def generate_source_data(scenario):
             }
         )
 
+    # The association and interference identities are checked over the served
+    # set, which is what the kernel sums; received_power_dbm still reports every
+    # site. With a common EIRP the nearest set is also the strongest set, so
+    # serving remains the global maximum and both forms are checked.
+    served = center["served_mask"]
     desired_is_max = np.allclose(
+        center["serving_rx_dbm"],
+        np.max(np.where(served, center["received_power_dbm"], -np.inf), axis=1),
+        atol=1e-12,
+        rtol=0.0,
+    )
+    serving_is_global_max = np.allclose(
         center["serving_rx_dbm"],
         np.max(center["received_power_dbm"], axis=1),
         atol=1e-12,
@@ -236,7 +248,7 @@ def generate_source_data(scenario):
     received_mw = np.power(10.0, center["received_power_dbm"] / 10.0)
     row_index = np.arange(N_LONGITUDINAL)
     desired_mw = received_mw[row_index, serving]
-    interference_identity = np.sum(received_mw, axis=1) - desired_mw
+    interference_identity = np.sum(np.where(served, received_mw, 0.0), axis=1) - desired_mw
     reported_interference_mw = np.power(10.0, center["interference_dbm"] / 10.0)
 
     qa = {
@@ -257,7 +269,10 @@ def generate_source_data(scenario):
             and np.all(np.isfinite(rsrp_quantiles))
             and np.all(np.isfinite(sinr_quantiles))
         ),
+        "served_set_size": scenario.radio.served_set_size,
+        "interferers_per_position": int(np.max(np.sum(center["served_mask"], axis=1)) - 1),
         "serving_is_max_received_power": bool(desired_is_max),
+        "serving_is_global_max_received_power": bool(serving_is_global_max),
         "interference_identity_max_abs_mw": float(
             np.max(np.abs(interference_identity - reported_interference_mw))
         ),
@@ -546,7 +561,16 @@ def main() -> None:
             "resource_elements": scenario.radio.resource_elements,
             "rsrp_definition": "serving_rx_full_carrier_dbm - 10log10(resource_elements)",
         },
-        "interference_assumption": "all 18 retained sites co-channel and simultaneously active",
+        "served_set_size": scenario.radio.served_set_size,
+        "interference_assumption": (
+            "all 18 retained sites co-channel and simultaneously active"
+            if scenario.radio.served_set_size is None
+            else (
+                f"UAM associates with the nearest {scenario.radio.served_set_size} sites; "
+                f"the strongest serves and the remaining "
+                f"{scenario.radio.served_set_size - 1} are co-channel interferers"
+            )
+        ),
         "policy_thresholds_applied": False,
         "random_seed": None,
         "nondeterminism": "none; deterministic geometry and LOS path loss",
@@ -629,7 +653,7 @@ Generate full-corridor serving-RSRP and SINR profiles from the retained 18-site 
 - Centerline trajectory: altitude 300 m.
 - Spatial envelope: lateral ±500 m and altitude 300±60 m; 147 points at each of 2,001 longitudinal positions.
 - Radio: 5 GHz, 46 dBm full-carrier EIRP, 0 dB receiver gain, −99 dBm full-carrier noise, deterministic LOS.
-- All 18 sites are treated as co-channel and simultaneously active.
+- Served set: the nearest {qa['served_set_size']} sites; the strongest of that set serves and the remaining {qa['interferers_per_position']} are co-channel interferers.
 - Strict RSRP is reported per resource element using 300 RE; SINR uses full-carrier desired/interference/noise powers.
 
 ## Outputs
@@ -647,7 +671,8 @@ Generate full-corridor serving-RSRP and SINR profiles from the retained 18-site 
 - Serving sites on centerline: {qa['serving_site_count']} of 18.
 - Association transitions: {qa['association_transition_count']}.
 - All values finite: {qa['all_values_finite']}.
-- Serving association equals maximum received power: {qa['serving_is_max_received_power']}.
+- Serving association equals maximum received power within the served set: {qa['serving_is_max_received_power']}.
+- Serving association also equals the global maximum across all 18 sites: {qa['serving_is_global_max_received_power']}.
 
 ## Results boundary
 

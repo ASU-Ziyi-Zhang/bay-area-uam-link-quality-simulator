@@ -39,7 +39,8 @@
     "resource_elements": 300,
     "rsrp_definition": "serving_rx_full_carrier_dbm - 10log10(resource_elements)"
   },
-  "interference_assumption": "all 18 retained sites co-channel and simultaneously active",
+  "served_set_size": 3,
+  "interference_assumption": "UAM associates with the nearest 3 sites; the strongest serves and the remaining 2 are co-channel interferers",
   "policy_thresholds_applied": false,
   "random_seed": null,
   "nondeterminism": "none; deterministic geometry and LOS path loss"

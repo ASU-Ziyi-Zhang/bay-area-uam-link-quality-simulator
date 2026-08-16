@@ -4,34 +4,34 @@
   "stage": "link-quality",
   "standalone": true,
   "status": "awaiting_review",
-  "created_utc": "2026-08-16T00:07:06.518946+00:00",
+  "created_utc": "2026-08-16T21:42:38.135762+00:00",
   "objective": "Generate serving RSRP and SINR profiles for the 18-site SF-SJ real corridor.",
   "inputs": [
     {
       "path": "configs/scenario.json",
-      "sha256": "d597d2c9f8cb51a814c4321eeb6dd495bd40ada28b3dd24b09799c1160dd7d7d"
+      "sha256": "f73a2638777d87df5b549fe0c521b4896610ccfd1b06102a7beec74cac6ad777"
     },
     {
       "path": "data/base_stations.csv",
-      "sha256": "013db4dbd473d45f7014d551de2bc03f647fd4df72fc08067a0e8edf4c18fdd7"
+      "sha256": "e214a75a9a265a77409859b214b4f4068d8fec2f0d9458e7b05854164e50d3ab"
     },
     {
       "path": "data/corridor.geojson",
-      "sha256": "be018f7d2089e81fc8785cb1522606fbe841be52b02d9e2ace70889acc466cdc"
+      "sha256": "27ef9841305529c548beec53059be56c3f0600ffe05178214315fccda90b980b"
     }
   ],
   "command": "python scripts/run_link_quality.py --output runs/link_quality",
   "environment": {
     "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]",
     "platform": "Windows-11-10.0.26200-SP0",
-    "numpy": "2.3.5",
-    "matplotlib": "3.10.7"
+    "numpy": "2.5.2",
+    "matplotlib": "3.11.1"
   },
   "outputs": [
     {
       "path": "profile.csv",
-      "bytes": 513826,
-      "sha256": "7e1b4aa3fd8d5e219e11de27110050911b1e8b4d0e8524079b98a06198fd4197"
+      "bytes": 512241,
+      "sha256": "106189fefd8eb36cfa2b6c9bbbf3e5cd97f6ce3885b323fb980f234c5b172722"
     },
     {
       "path": "sites.csv",
@@ -45,43 +45,43 @@
     },
     {
       "path": "config.json",
-      "bytes": 1125,
-      "sha256": "e2ff9fd39e104cf28dfe1ac03e045d4f71cfa8129ae423552bd60125ef4f3dad"
+      "bytes": 1200,
+      "sha256": "e31dd3184556980bcccd818e65a834154397b4851a8cb4ddd73cd5c8cbe64db0"
     },
     {
       "path": "qa.json",
-      "bytes": 1207,
-      "sha256": "c70aba89f8b6f00e0ec4f25501e74d62c35e14518ce25092b6002a6766fc0f94"
+      "bytes": 1315,
+      "sha256": "d334f2a682b8add47e888f780644b96d691c0e7f7d3123aa6aab001b80f38bc7"
     },
     {
       "path": "figures/rsrp.svg",
-      "bytes": 136508,
-      "sha256": "6266e6e368ca3014092a93fff4ee0f30afe466364e72a32c8c19af7511e5c52e"
+      "bytes": 136370,
+      "sha256": "52a733fbd4d791cdf72458520f352db3063f5ff567d0a2616203a302de3c999d"
     },
     {
       "path": "figures/rsrp.png",
-      "bytes": 236767,
-      "sha256": "39372ac1cbc0c72fe33d8f5fe012084361be5e93084c8366deeed3d5deb7b32a"
+      "bytes": 249818,
+      "sha256": "92964e05219d9202c01560efb655ebfbbe8f7503ed6e1e2933cbb5f3f5985476"
     },
     {
       "path": "figures/sinr.svg",
-      "bytes": 136332,
-      "sha256": "46d97545b3c1cceacdb1cffa64dbcf699410ae8b23428483709dfff1b616bd53"
+      "bytes": 135319,
+      "sha256": "b11673fb1d19eddb17eaeb1474348b347b2a2a46e1cef9af047a6891e22b5533"
     },
     {
       "path": "figures/sinr.png",
-      "bytes": 220652,
-      "sha256": "af775b3e4b83abadf960c94350fc43520d7442fe626032204002b155f46200d3"
+      "bytes": 232397,
+      "sha256": "971eb70421963f6e2abe178aebff3be07d43108c5384f829392d594fb63dd636"
     },
     {
       "path": "figures/profile.svg",
-      "bytes": 262393,
-      "sha256": "f40f613bb0b67095747663a6ef80148503e1ce7a9c94112c13ee04cf36208e80"
+      "bytes": 263820,
+      "sha256": "7be4f3f7830e20a25c891de45be53701c1b1cdd3d538fd3cb3c1f45c76e66450"
     },
     {
       "path": "figures/profile.png",
-      "bytes": 421567,
-      "sha256": "592370d1bd2d608a5be270f3eede604a52abd430f30c246e0f909b1febe3c203"
+      "bytes": 429257,
+      "sha256": "21d26b093d9b40eb3332a2aa2e2b5153bf5f187f440c0ada497ff75bf9b09df3"
     }
   ],
   "qa_file": "qa.json",

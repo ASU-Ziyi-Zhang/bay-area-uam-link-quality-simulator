@@ -4,7 +4,7 @@
   "stage": "simulator",
   "standalone": true,
   "status": "awaiting_review",
-  "created_utc": "2026-08-15T23:57:39.196312+00:00",
+  "created_utc": "2026-08-16T21:42:43.934415+00:00",
   "objective": "Run one UAM from the SF-SJ corridor origin to destination and record multi-rate motion, radio, and control-clock traces.",
   "command": "python scripts/run_simulator.py --output runs/simulator",
   "inputs": [
@@ -14,15 +14,15 @@
     },
     {
       "path": "configs/scenario.json",
-      "sha256": "d597d2c9f8cb51a814c4321eeb6dd495bd40ada28b3dd24b09799c1160dd7d7d"
+      "sha256": "f73a2638777d87df5b549fe0c521b4896610ccfd1b06102a7beec74cac6ad777"
     },
     {
       "path": "data/corridor.geojson",
-      "sha256": "be018f7d2089e81fc8785cb1522606fbe841be52b02d9e2ace70889acc466cdc"
+      "sha256": "27ef9841305529c548beec53059be56c3f0600ffe05178214315fccda90b980b"
     },
     {
       "path": "data/base_stations.csv",
-      "sha256": "013db4dbd473d45f7014d551de2bc03f647fd4df72fc08067a0e8edf4c18fdd7"
+      "sha256": "e214a75a9a265a77409859b214b4f4068d8fec2f0d9458e7b05854164e50d3ab"
     }
   ],
   "code_snapshot": [
@@ -40,7 +40,7 @@
     },
     {
       "path": "src/capacity_policy/radio.py",
-      "sha256": "6468b2c84537e139ecfb07cbea1ad2a4c6c1ea46bfee7435d9d55bd1d7acbb4c"
+      "sha256": "5c4bad39fc87353dfb1c6415fff5c99307cf88fcbdc898a1468f1c14d689dcd0"
     },
     {
       "path": "src/capacity_policy/scenario.py",
@@ -48,11 +48,11 @@
     },
     {
       "path": "src/capacity_policy/geometry.py",
-      "sha256": "150eea11e1a7489cbba641d57e9a32ded2287a2166f387cbf781f52ceb90ac68"
+      "sha256": "bac0b8fe5ed8c0a5bea73e97ac135fb84d816f66449e33769136749d4d2a7339"
     },
     {
       "path": "src/capacity_policy/base_stations.py",
-      "sha256": "6d2f79aaf626231b06e9d3d0889bdd6005469eb37aae034d01d67311dae4ce6d"
+      "sha256": "1c724fcebcb723e132063c7a4143c172a260aaf5c7af955930f823fd291b83ee"
     },
     {
       "path": "src/capacity_policy/trajectory.py",
@@ -62,7 +62,7 @@
   "environment": {
     "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]",
     "platform": "Windows-11-10.0.26200-SP0",
-    "numpy": "2.3.5"
+    "numpy": "2.5.2"
   },
   "outputs": [
     {
@@ -72,8 +72,8 @@
     },
     {
       "path": "uam_state_trace.csv",
-      "bytes": 228639,
-      "sha256": "c773985cfcbac96617191aa73dc47e5bc1b8c65c2c7dd3bee16b256c805d3b80"
+      "bytes": 228363,
+      "sha256": "2032d83e7794e7c98c6a4f3eb26c242be60837a9e238852fbc9fdab3c409f45f"
     },
     {
       "path": "radio_measurements.csv",
@@ -88,7 +88,7 @@
     {
       "path": "summary.json",
       "bytes": 1397,
-      "sha256": "14fdafefe0b8af600de5dd6f13d04de4249957fc33a06df3fb7b475ea2939f0e"
+      "sha256": "d47690147f378b0428a3b5dc8bccf95d17812dfe5c91a4f8e22820dff2164083"
     }
   ],
   "qa": {

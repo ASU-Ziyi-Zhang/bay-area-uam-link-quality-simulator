@@ -12,10 +12,28 @@ The current release is a communication-planning baseline. It does **not**
 claim measured airborne coverage, verified operator interoperability,
 implemented C/R/F policy, multi-UAM conflict resolution, or corridor capacity.
 
+## Interactive dashboard
+
+A hosted build is published from `dashboard/` on every push to `main`:
+
+**https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/**
+
+No local environment is needed to open it. The 2D map, radio traces, telemetry,
+and site records are self-contained. Two things are fetched at view time:
+CesiumJS for the 3D panel, and OpenStreetMap raster tiles for both basemaps. If
+a network blocks either, the 3D panel reports the failure and falls back while
+the 2D corridor, charts, and site evidence continue to work; Leaflet is vendored
+under `dashboard/vendor/leaflet/` so the 2D view never depends on a CDN.
+
+Opening `dashboard/index.html` straight from the filesystem is not supported —
+the 3D panel is disabled under `file://` because the aircraft model cannot be
+loaded cross-origin. Use the hosted build or the local server below.
+
 ## Repository map
 
 ```text
 configs/       scenario and simulator settings
+.github/       verification and dashboard-publishing workflows
 data/          corridor GeoJSON and 18-site CSV
 evidence/      site register, selection rules, source links, and corridor map
 src/           reusable link-quality and simulator packages
@@ -79,3 +97,7 @@ data; the original private working directory remains the audit archive.
 - Source code and software configuration: [MIT License](LICENSE).
 - Original data, figures, and documentation: [CC BY 4.0](LICENSE-DATA).
 - Third-party assets retain their own notices; see the license beside each asset.
+  Vendored Leaflet 1.9.4 is BSD-2-Clause
+  ([dashboard/vendor/leaflet/LICENSE](dashboard/vendor/leaflet/LICENSE)); the
+  bundled aircraft model carries its own notice; CesiumJS is loaded from its
+  pinned release URL under Apache-2.0.

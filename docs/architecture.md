@@ -33,5 +33,6 @@ assumptions recorded in `data/base_stations.csv` and `docs/assumptions.md`.
 ## Baseline boundary
 
 The accepted baseline is one UAM at 50 m/s, 300 m AGL, and zero lateral offset.
-It uses deterministic LOS/co-channel planning assumptions. It is not measured
+It uses deterministic LOS planning assumptions with a three-site served set
+(the strongest serves, the other two interfere). It is not measured
 coverage, operator-network validation, or an operational capacity estimate.

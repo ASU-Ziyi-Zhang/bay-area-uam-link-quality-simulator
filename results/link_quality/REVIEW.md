@@ -15,7 +15,7 @@ Generate full-corridor serving-RSRP and SINR profiles from the retained 18-site 
 - Centerline trajectory: altitude 300 m.
 - Spatial envelope: lateral ±500 m and altitude 300±60 m; 147 points at each of 2,001 longitudinal positions.
 - Radio: 5 GHz, 46 dBm full-carrier EIRP, 0 dB receiver gain, −99 dBm full-carrier noise, deterministic LOS.
-- All 18 sites are treated as co-channel and simultaneously active.
+- Served set: the nearest 3 sites; the strongest of that set serves and the remaining 2 are co-channel interferers.
 - Strict RSRP is reported per resource element using 300 RE; SINR uses full-carrier desired/interference/noise powers.
 
 ## Outputs
@@ -33,7 +33,8 @@ Generate full-corridor serving-RSRP and SINR profiles from the retained 18-site 
 - Serving sites on centerline: 14 of 18.
 - Association transitions: 13.
 - All values finite: True.
-- Serving association equals maximum received power: True.
+- Serving association equals maximum received power within the served set: True.
+- Serving association also equals the global maximum across all 18 sites: True.
 
 ## Results boundary
 
