@@ -20,6 +20,19 @@ passes when:
 Figures may contain metadata differences between Matplotlib versions. Their
 editable CSV source data and QA values are the scientific comparison objects.
 
+## Scenario-pack contract
+
+The root-level `configs/`, `data/`, and `results/` remain frozen so the original
+published baseline can still be verified. New experiments use a selected
+`scenarios/<name>/` pack. A pack is accepted when its route and site files
+load, all active site IDs and antenna heights resolve, its declared spatial
+selection rule passes, and both the link-quality and simulator entry points
+complete without changing shared model code.
+
+The `airport_to_airport` inputs are deterministically regenerated from
+`build.json` by `scripts/build_subcorridor_scenario.py`. Its endpoint and site
+selection audit is stored in `build_report.json`.
+
 ## Evidence grade
 
 The current package is **rerunnable** and is tested for same-machine

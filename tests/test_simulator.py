@@ -1,8 +1,13 @@
 import numpy as np
 import pytest
+from pathlib import Path
 
+from uam_simulator.config import load_simulator_config
 from uam_simulator.interfaces import ClockConfig
 from uam_simulator.runner import make_time_grid
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_default_clock_preserves_separate_rates() -> None:
@@ -27,3 +32,14 @@ def test_time_grid_includes_exact_noninteger_terminal_time() -> None:
 
 def test_time_grid_does_not_duplicate_exact_terminal_time() -> None:
     assert np.allclose(make_time_grid(10.0, 5.0), [0.0, 5.0, 10.0])
+
+
+@pytest.mark.parametrize("scenario_name", ["sf_sj_full", "airport_to_airport"])
+def test_scenario_pack_simulator_config_resolves_locally(scenario_name: str) -> None:
+    config = load_simulator_config(ROOT / "scenarios" / scenario_name / "simulator.json")
+    assert Path(config.simulation.scenario_path) == (
+        ROOT / "scenarios" / scenario_name / "scenario.json"
+    ).resolve()
+    assert config.speed_mps == 50.0
+    assert config.altitude_m == 300.0
+    assert config.lateral_offset_m == 0.0

@@ -1,4 +1,4 @@
-"""Run the reproducible 18-site SF-SJ serving-RSRP and SINR diagnostic."""
+"""Run a reproducible serving-RSRP and SINR diagnostic for one scenario pack."""
 
 from __future__ import annotations
 
@@ -31,9 +31,7 @@ RUN_DIR = PROJECT_ROOT / "runs" / "link_quality"
 DATA_DIR = RUN_DIR
 FIGURE_DIR = RUN_DIR / "figures"
 
-SCENARIO_PATH = PROJECT_ROOT / "configs" / "scenario.json"
-SITE_PATH = PROJECT_ROOT / "data" / "base_stations.csv"
-CORRIDOR_PATH = PROJECT_ROOT / "data" / "corridor.geojson"
+DEFAULT_SCENARIO_PATH = PROJECT_ROOT / "scenarios" / "sf_sj_full" / "scenario.json"
 
 N_LONGITUDINAL = 2_001
 REFERENCE_ALTITUDE_M = 300.0
@@ -82,6 +80,15 @@ def repository_path(path: Path) -> str:
         return resolved.relative_to(PROJECT_ROOT).as_posix()
     except ValueError:
         return resolved.name
+
+
+def scenario_input_paths(scenario_path: Path) -> tuple[Path, Path, Path]:
+    """Resolve the scenario, corridor, and site-table inputs for manifests."""
+    scenario_path = scenario_path.resolve()
+    payload = json.loads(scenario_path.read_text(encoding="utf-8"))
+    corridor_path = (scenario_path.parent / payload["corridor"]["path"]).resolve()
+    site_path = (scenario_path.parent / payload["base_stations"]["path"]).resolve()
+    return scenario_path, corridor_path, site_path
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -253,8 +260,8 @@ def generate_source_data(scenario):
 
     qa = {
         "site_count": len(scenario.base_stations.stations),
-        "site_ids_sequential": list(scenario.base_stations.site_ids)
-        == [f"BS{i:02d}" for i in range(1, 19)],
+        "site_ids_unique": len(set(scenario.base_stations.site_ids))
+        == len(scenario.base_stations.site_ids),
         "all_site_heights_resolved": all(
             station.height_m is not None and station.height_m > 0
             for station in scenario.base_stations.stations
@@ -355,7 +362,7 @@ def configure_x_axis(ax, corridor_length_km: float) -> None:
     ax.set_xticklabels(
         [f"{tick:.0f}" if abs(tick - round(tick)) < 0.05 else f"{tick:.1f}" for tick in ticks]
     )
-    ax.set_xlabel("Distance along SF–SJ corridor (km)")
+    ax.set_xlabel("Distance along corridor (km)")
 
 
 def add_common_legend(ax, line, band, transition_handle) -> None:
@@ -511,6 +518,12 @@ def save_figure(fig: plt.Figure, stem: str) -> list[Path]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--scenario",
+        type=Path,
+        default=DEFAULT_SCENARIO_PATH,
+        help="Scenario-pack JSON to evaluate.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=PROJECT_ROOT / "runs" / "link_quality",
@@ -527,7 +540,8 @@ def main() -> None:
     DATA_DIR = RUN_DIR
     FIGURE_DIR = RUN_DIR / "figures"
     prepare_run(args.overwrite)
-    scenario = load_scenario(SCENARIO_PATH)
+    scenario_path, corridor_path, site_path = scenario_input_paths(args.scenario)
+    scenario = load_scenario(scenario_path)
     if not scenario.radio_ready:
         raise RuntimeError("Scenario is not radio-ready.")
 
@@ -542,7 +556,7 @@ def main() -> None:
     config = {
         "run_id": RUN_DIR.name,
         "scenario_id": scenario.scenario_id,
-        "scenario_path": repository_path(SCENARIO_PATH),
+        "scenario_path": repository_path(scenario_path),
         "corridor_length_km": scenario.corridor.length_m / 1000.0,
         "site_count": len(scenario.base_stations.stations),
         "site_ids": list(scenario.base_stations.site_ids),
@@ -563,7 +577,7 @@ def main() -> None:
         },
         "served_set_size": scenario.radio.served_set_size,
         "interference_assumption": (
-            "all 18 retained sites co-channel and simultaneously active"
+            f"all {len(scenario.base_stations.stations)} retained sites co-channel and simultaneously active"
             if scenario.radio.served_set_size is None
             else (
                 f"UAM associates with the nearest {scenario.radio.served_set_size} sites; "
@@ -589,8 +603,8 @@ def main() -> None:
     qa["figure_export_count"] = len(figure_paths)
     qa["all_figure_exports_present"] = all(path.exists() and path.stat().st_size > 0 for path in figure_paths)
     qa["status"] = "pass" if (
-        qa["site_count"] == 18
-        and qa["site_ids_sequential"]
+        qa["site_count"] > 0
+        and qa["site_ids_unique"]
         and qa["all_site_heights_resolved"]
         and qa["all_values_finite"]
         and qa["serving_is_max_received_power"]
@@ -609,12 +623,15 @@ def main() -> None:
         "standalone": True,
         "status": "awaiting_review" if qa["status"] == "pass" else "failed",
         "created_utc": datetime.now(timezone.utc).isoformat(),
-        "objective": "Generate serving RSRP and SINR profiles for the 18-site SF-SJ real corridor.",
+        "objective": f"Generate serving RSRP and SINR profiles for scenario {scenario.scenario_id}.",
         "inputs": [
             {"path": repository_path(path), "sha256": sha256(path)}
-            for path in (SCENARIO_PATH, SITE_PATH, CORRIDOR_PATH)
+            for path in (scenario_path, corridor_path, site_path)
         ],
-        "command": "python scripts/run_link_quality.py --output runs/link_quality",
+        "command": (
+            "python scripts/run_link_quality.py "
+            f"--scenario {repository_path(scenario_path)} --output runs/{RUN_DIR.name}"
+        ),
         "environment": {
             "python": sys.version,
             "platform": platform.platform(),
@@ -636,16 +653,16 @@ def main() -> None:
     manifest_path = RUN_DIR / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
-    review = f"""# Link-quality review packet - SF-SJ real corridor
+    review = f"""# Link-quality review packet - {scenario.scenario_id}
 
 ## Objective and acceptance criteria
 
-Generate full-corridor serving-RSRP and SINR profiles from the retained 18-site scenario. Required checks are encoded in `qa.json`.
+Generate full-corridor serving-RSRP and SINR profiles from the selected scenario pack. Required checks are encoded in `qa.json`.
 
 ## Inputs and provenance
 
 - Scenario, corridor and site-table checksums are recorded in `manifest.json`.
-- 18 active sites; BS19 is not part of this run.
+- {qa['site_count']} active sites: {', '.join(scenario.base_stations.site_ids)}.
 - Site-specific/class-imputed heights are read from the versioned station CSV.
 
 ## Specification
@@ -668,11 +685,11 @@ Generate full-corridor serving-RSRP and SINR profiles from the retained 18-site 
 - QA status: **{qa['status']}**.
 - Longitudinal positions: {qa['n_longitudinal_positions']:,}.
 - Cross-section evaluations: {qa['n_cross_section_evaluations']:,}.
-- Serving sites on centerline: {qa['serving_site_count']} of 18.
+- Serving sites on centerline: {qa['serving_site_count']} of {qa['site_count']}.
 - Association transitions: {qa['association_transition_count']}.
 - All values finite: {qa['all_values_finite']}.
 - Serving association equals maximum received power within the served set: {qa['serving_is_max_received_power']}.
-- Serving association also equals the global maximum across all 18 sites: {qa['serving_is_global_max_received_power']}.
+- Serving association also equals the global maximum across all active sites: {qa['serving_is_global_max_received_power']}.
 
 ## Results boundary
 

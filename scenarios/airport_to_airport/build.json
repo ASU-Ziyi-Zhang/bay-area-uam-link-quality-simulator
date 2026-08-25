@@ -1,0 +1,25 @@
+{
+  "scenario_id": "airport_to_airport",
+  "source_scenario_id": "sf_sj_full",
+  "source_corridor": "../sf_sj_full/data/corridor.geojson",
+  "source_base_stations": "../sf_sj_full/data/base_stations.csv",
+  "output_corridor": "data/corridor.geojson",
+  "output_base_stations": "data/base_stations.csv",
+  "output_report": "build_report.json",
+  "metric_crs": "EPSG:26910",
+  "site_inclusion_distance_m": 5000.0,
+  "endpoints": [
+    {
+      "role": "SFO access proxy",
+      "name": "Millbrae Caltrain",
+      "longitude": -122.3867414747031,
+      "latitude": 37.59983815506196
+    },
+    {
+      "role": "SJC access proxy",
+      "name": "Santa Clara Caltrain",
+      "longitude": -121.936135,
+      "latitude": 37.353189
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "sf_sj_full_baseline",
+  "scenario": "scenario.json",
+  "trajectory": {
+    "speed_mps": 50.0,
+    "altitude_m": 300.0,
+    "lateral_offset_m": 0.0,
+    "level_id": "L300",
+    "lane_id": "lane_0"
+  },
+  "uam_id": "UAM01",
+  "duration_s": null,
+  "clock": {
+    "dt_motion_s": 1.0,
+    "dt_radio_s": 1.0,
+    "dt_control_s": 5.0,
+    "policy_window_s": 30.0,
+    "capacity_aggregation_s": 60.0
+  },
+  "models": {
+    "radio": "capacity_policy.radio",
+    "policy": null,
+    "controller": null,
+    "capacity": null
+  }
+}

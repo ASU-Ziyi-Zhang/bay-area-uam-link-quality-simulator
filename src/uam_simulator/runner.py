@@ -72,6 +72,14 @@ def _portable_path(path: Path, root: Path) -> str:
         return resolved.name
 
 
+def _scenario_input_paths(scenario_path: Path) -> tuple[Path, Path]:
+    """Resolve route and site inputs from a scenario pack."""
+    payload = json.loads(scenario_path.read_text(encoding="utf-8"))
+    corridor_path = (scenario_path.parent / payload["corridor"]["path"]).resolve()
+    site_path = (scenario_path.parent / payload["base_stations"]["path"]).resolve()
+    return corridor_path, site_path
+
+
 def run_simulation(
     config_path: str | Path,
     output_dir: str | Path,
@@ -238,11 +246,13 @@ def run_simulation(
         "scientific_boundary": "Deterministic single-UAM centerline RSRP/SINR trace; policy, controller, multi-UAM conflict, and capacity models are not yet implemented.",
     }
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    scenario_path = Path(cfg.simulation.scenario_path).resolve()
+    corridor_path, site_path = _scenario_input_paths(scenario_path)
     input_paths = [
         cfg.source_path,
-        Path(cfg.simulation.scenario_path),
-        project_root / "data" / "corridor.geojson",
-        project_root / "data" / "base_stations.csv",
+        scenario_path,
+        corridor_path,
+        site_path,
     ]
     code_paths = [
         Path(__file__).resolve(),
@@ -261,8 +271,11 @@ def run_simulation(
         "standalone": True,
         "status": "awaiting_review",
         "created_utc": summary["created_utc"],
-        "objective": "Run one UAM from the SF-SJ corridor origin to destination and record multi-rate motion, radio, and control-clock traces.",
-        "command": "python scripts/run_simulator.py --output runs/simulator",
+        "objective": f"Run one UAM through scenario {scenario.scenario_id} and record multi-rate motion, radio, and control-clock traces.",
+        "command": (
+            "python scripts/run_simulator.py "
+            f"--config {_portable_path(cfg.source_path, project_root)} --output runs/{output.name}"
+        ),
         "inputs": [
             {"path": _portable_path(path, project_root), "sha256": _sha256(path)}
             for path in input_paths
@@ -308,7 +321,7 @@ def run_simulation(
 
 ## Objective
 
-Run one UAM along the declared SF–SJ centerline and record motion, radio, and
+Run one UAM along the declared scenario centerline and record motion, radio, and
 control-clock traces using the multi-rate simulator.
 
 ## Acceptance checks

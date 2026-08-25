@@ -14,6 +14,10 @@ button, input, select { font: inherit; }
 .dashboard__brand h1 { margin: 5px 0 3px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.7rem, 3vw, 2.65rem); font-weight: 600; letter-spacing: -.035em; }
 .dashboard__brand p { margin: 0; color: var(--muted); }
 .dashboard__eyebrow, .section-label { color: var(--teal-dark); font-size: .67rem; font-weight: 800; letter-spacing: .16em; }
+.dashboard__header-tools { display: flex; align-items: center; gap: 12px; }
+.scenario-switcher { display: grid; gap: 4px; min-width: 220px; color: var(--muted); font-size: .68rem; font-weight: 760; }
+.scenario-switcher select { min-height: 42px; padding: 8px 34px 8px 11px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: rgba(255,253,250,.9); cursor: pointer; }
+.scenario-switcher select:focus-visible { outline: 3px solid rgba(22,140,133,.25); outline-offset: 2px; }
 .dashboard__run-status { display: flex; align-items: center; gap: 10px; min-width: 220px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,253,250,.82); }
 .dashboard__run-status div { display: grid; gap: 2px; }
 .dashboard__run-status strong { font-size: .82rem; }
@@ -112,6 +116,8 @@ button, input, select { font: inherit; }
 .uam-marker { display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid white; border-radius: 50%; color: white; background: var(--coral); box-shadow: 0 6px 15px rgba(29,43,52,.26); font-size: 17px; transform-origin: center; }
 .leaflet-tooltip.bs-tooltip { padding: 4px 7px; border: 0; border-radius: 7px; color: white; background: var(--navy); box-shadow: none; font-size: 10px; font-weight: 700; }
 .leaflet-tooltip.bs-tooltip::before { display: none; }
+.leaflet-tooltip.endpoint-tooltip { padding: 5px 8px; border: 1px solid rgba(23,54,74,.18); border-radius: 8px; color: var(--navy); background: rgba(255,253,250,.94); box-shadow: 0 4px 12px rgba(22,39,49,.12); font-size: 10px; font-weight: 800; }
+.leaflet-tooltip.endpoint-tooltip::before { display: none; }
 .leaflet-control-attribution { font-size: 9px; }
 @media (max-width: 1200px) {
   .parameter-panel { grid-template-columns: 1fr 1fr; }
@@ -125,6 +131,8 @@ button, input, select { font: inherit; }
 @media (max-width: 700px) {
   .dashboard { padding: 12px; }
   .dashboard__header { align-items: flex-start; flex-direction: column; }
+  .dashboard__header-tools { width: 100%; align-items: stretch; flex-direction: column; }
+  .scenario-switcher { width: 100%; }
   .dashboard__run-status { width: 100%; }
   .parameter-panel { grid-template-columns: 1fr; }
   .parameter-panel__intro, .parameter-panel__actions { grid-column: auto; }

@@ -1,4 +1,4 @@
-"""Run the declared SF–SJ single-UAM simulator baseline."""
+"""Run one declared single-UAM scenario baseline."""
 
 from __future__ import annotations
 
@@ -17,7 +17,11 @@ from uam_simulator.runner import run_simulation  # noqa: E402
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=ROOT / "configs" / "simulator.json")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=ROOT / "scenarios" / "sf_sj_full" / "simulator.json",
+    )
     parser.add_argument("--output", type=Path, default=ROOT / "runs" / "simulator")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()

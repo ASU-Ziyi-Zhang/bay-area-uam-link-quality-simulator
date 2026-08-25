@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "scenario_id": "airport_to_airport",
+  "source_scenario_id": "sf_sj_full",
+  "metric_crs": "EPSG:26910",
+  "endpoint_results": [
+    {
+      "name": "Millbrae Caltrain",
+      "role": "SFO access proxy",
+      "input_longitude": -122.3867414747031,
+      "input_latitude": 37.59983815506196,
+      "route_longitude": -122.38674147470311,
+      "route_latitude": 37.599838155061946,
+      "source_chainage_km": 21.726500375757787,
+      "projection_error_m": 0.0
+    },
+    {
+      "name": "Santa Clara Caltrain",
+      "role": "SJC access proxy",
+      "input_longitude": -121.936135,
+      "input_latitude": 37.353189,
+      "route_longitude": -121.93613500000001,
+      "route_latitude": 37.353189,
+      "source_chainage_km": 71.26908941120733,
+      "projection_error_m": 0.0
+    }
+  ],
+  "source_corridor_length_km": 75.4231161704525,
+  "subcorridor_length_km": 49.542589035449524,
+  "north_trim_km": 21.726500375757787,
+  "south_trim_km": 4.154026759245171,
+  "site_inclusion_distance_km": 5.0,
+  "retained_site_ids": [
+    "BS05",
+    "BS06",
+    "BS07",
+    "BS08",
+    "BS09",
+    "BS10",
+    "BS11",
+    "BS12",
+    "BS13",
+    "BS14",
+    "BS15",
+    "BS16"
+  ],
+  "excluded_site_ids": [
+    "BS01",
+    "BS02",
+    "BS03",
+    "BS04",
+    "BS17",
+    "BS18"
+  ],
+  "retained_site_count": 12
+}

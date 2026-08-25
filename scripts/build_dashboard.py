@@ -13,6 +13,7 @@ from pyproj import Transformer
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUN = ROOT / "results" / "simulator"
+DEFAULT_SCENARIO = ROOT / "scenarios" / "sf_sj_full" / "scenario.json"
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -23,15 +24,27 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, default=DEFAULT_RUN)
+    parser.add_argument("--scenario", type=Path, default=DEFAULT_SCENARIO)
     parser.add_argument("--output", type=Path, default=ROOT / "dashboard" / "data" / "dashboard_data.js")
     args = parser.parse_args()
 
     run_dir = args.run_dir.resolve()
-    scenario = json.loads((ROOT / "configs" / "scenario.json").read_text(encoding="utf-8"))
+    scenario_path = args.scenario.resolve()
+    scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    if summary["scenario_id"] != scenario["scenario_id"]:
+        raise ValueError(
+            f"run scenario {summary['scenario_id']} does not match {scenario['scenario_id']}"
+        )
     trace_rows = read_csv(run_dir / "uam_state_trace.csv")
-    site_rows = read_csv(ROOT / "data" / "base_stations.csv")
-    corridor = json.loads((ROOT / "data" / "corridor.geojson").read_text(encoding="utf-8"))
+    site_path = (scenario_path.parent / scenario["base_stations"]["path"]).resolve()
+    corridor_path = (scenario_path.parent / scenario["corridor"]["path"]).resolve()
+    site_rows = read_csv(site_path)
+    active_ids = scenario["base_stations"].get("active_site_ids")
+    if active_ids:
+        by_id = {row["public_site_id"]: row for row in site_rows}
+        site_rows = [by_id[site_id] for site_id in active_ids]
+    corridor = json.loads(corridor_path.read_text(encoding="utf-8"))
     route = corridor["features"][0]["geometry"]["coordinates"]
 
     to_wgs84 = Transformer.from_crs("EPSG:26910", "EPSG:4326", always_xy=True)
@@ -66,6 +79,8 @@ def main() -> None:
     bundle = {
         "summary": {
             "run_id": run_dir.name,
+            "scenario_id": scenario["scenario_id"],
+            "display": scenario.get("display", {}),
             "corridor_length_km": float(summary["corridor_length_km"]),
             "site_count": int(summary["site_count"]),
             "clock": summary["clock"],

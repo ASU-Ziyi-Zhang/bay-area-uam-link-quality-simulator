@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "default_scenario": "sf_sj_full",
+  "scenarios": [
+    {
+      "id": "sf_sj_full",
+      "label": "SF 4th & King to San Jose Diridon",
+      "scenario": "sf_sj_full/scenario.json",
+      "simulator": "sf_sj_full/simulator.json",
+      "status": "frozen baseline"
+    },
+    {
+      "id": "airport_to_airport",
+      "label": "Millbrae Caltrain to Santa Clara Caltrain",
+      "scenario": "airport_to_airport/scenario.json",
+      "simulator": "airport_to_airport/simulator.json",
+      "status": "Toyota-recommended endpoint scenario"
+    }
+  ]
+}

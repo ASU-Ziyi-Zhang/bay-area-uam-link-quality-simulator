@@ -21,6 +21,7 @@
     offset: Number(data.summary.defaults.lateral_offset_m),
   };
   const radio = data.summary.radio;
+  const display = data.summary.display || {};
   const servedSetSize = radio.served_set_size === null || radio.served_set_size === undefined
     ? null
     : Number(radio.served_set_size);
@@ -37,12 +38,26 @@
   let flightRoute = L.polyline(baseTrace.map((row) => [row.lat, row.lon]), {
     color: "#168c85", weight: 4, opacity: 0.9,
   }).addTo(map);
-  map.fitBounds(groundRoute.getBounds(), { padding: [25, 25] });
+  map.fitBounds(groundRoute.getBounds(), { paddingTopLeft: [80, 80], paddingBottomRight: [80, 80] });
 
   const routeStart = data.route[0];
   const routeEnd = data.route[data.route.length - 1];
-  L.circleMarker([routeStart[1], routeStart[0]], { radius: 6, color: "#fff", weight: 2, fillColor: "#17364a", fillOpacity: 1 }).bindTooltip("San Francisco origin").addTo(map);
-  L.circleMarker([routeEnd[1], routeEnd[0]], { radius: 6, color: "#fff", weight: 2, fillColor: "#e46f51", fillOpacity: 1 }).bindTooltip("San Jose destination").addTo(map);
+  const endpointDistanceM = (routePoint, tracePoint) => {
+    const latScale = 111320;
+    const lonScale = latScale * Math.cos((routePoint[1] * Math.PI) / 180);
+    return Math.hypot((routePoint[0] - tracePoint.lon) * lonScale, (routePoint[1] - tracePoint.lat) * latScale);
+  };
+  const startMismatchM = endpointDistanceM(routeStart, baseTrace[0]);
+  const endMismatchM = endpointDistanceM(routeEnd, baseTrace[baseTrace.length - 1]);
+  if (startMismatchM > 1 || endMismatchM > 1) {
+    throw new Error(`Scenario route and flight trace endpoints differ (${startMismatchM.toFixed(2)} m, ${endMismatchM.toFixed(2)} m).`);
+  }
+  L.circleMarker([routeStart[1], routeStart[0]], { radius: 8, color: "#fff", weight: 2.5, fillColor: "#17364a", fillOpacity: 1 })
+    .bindTooltip(`START · ${display.origin_label || "Corridor origin"}`, { permanent: true, direction: "top", offset: [0, -7], className: "endpoint-tooltip" })
+    .addTo(map);
+  L.circleMarker([routeEnd[1], routeEnd[0]], { radius: 8, color: "#fff", weight: 2.5, fillColor: "#e46f51", fillOpacity: 1 })
+    .bindTooltip(`END · ${display.destination_label || "Corridor destination"}`, { permanent: true, direction: "top", offset: [0, -7], className: "endpoint-tooltip" })
+    .addTo(map);
 
   const stationMarkers = new Map();
   data.stations.forEach((site) => {
@@ -69,7 +84,8 @@
     "flight-speed-value", "flight-height-value", "flight-offset-value", "apply-parameters", "reset-parameters",
     "preview-status", "three-parameter-label", "reset-3d-camera", "three-file-warning",
     "three-camera-state", "three-camera-note",
-    "site-source", "model-parameters", "model-caveat", "sinr-caption",
+    "site-source", "model-parameters", "model-caveat", "sinr-caption", "dashboard-title",
+    "dashboard-subtitle", "map-title", "three-title", "site-layout-link", "site-layout-link-text",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const rsrpCanvas = document.getElementById("rsrp-chart");
@@ -115,6 +131,16 @@
   }
 
   renderModelParameters();
+  const scenarioId = data.summary.scenario_id || "sf_sj_full";
+  el["dashboard-title"].textContent = display.title || "Bay Area UAM Link-Quality Simulator";
+  el["dashboard-subtitle"].textContent = `One aircraft · ${data.stations.length} macro sites · ${data.summary.defaults.altitude_m} m centerline flight`;
+  el["map-title"].textContent = display.route_label || scenarioId;
+  el["three-title"].textContent = `3D · ${display.route_label || scenarioId}`;
+  const layoutUrl = display.site_layout_url || "assets/site-layout/corridor-sites-layout.svg";
+  el["site-layout-link"].href = `${layoutUrl}${layoutUrl.includes("?") ? "&" : "?"}v=aligned-template-v1`;
+  el["site-layout-link"].title = `Open site layout for ${display.route_label || scenarioId}`;
+  el["site-layout-link-text"].textContent = "View complete site-evidence layout";
+  document.title = display.title || "Bay Area UAM Corridor Simulator";
   el["run-id"].textContent = data.summary.run_id;
   el["clock-summary"].textContent = `Motion ${data.summary.clock.dt_motion_s} s · Radio ${data.summary.clock.dt_radio_s} s · Control ${data.summary.clock.dt_control_s} s`;
   el["flight-speed"].value = String(defaults.speed);
@@ -186,7 +212,7 @@
 
     const groundPositions = Cesium.Cartesian3.fromDegreesArray(data.route.flatMap(([lon, lat]) => [lon, lat]));
     viewer3d.entities.add({
-      name: "Caltrain-referenced ground corridor",
+      name: `${display.route_label || data.summary.scenario_id} · selected centerline ground projection`,
       polyline: {
         positions: groundPositions,
         width: 3,
@@ -205,8 +231,18 @@
       },
     });
 
-    addVertiport3D(routeStart[0], routeStart[1], "San Francisco", "Origin vertiport");
-    addVertiport3D(routeEnd[0], routeEnd[1], "San Jose Diridon", "Destination vertiport");
+    addVertiport3D(
+      routeStart[0], routeStart[1],
+      `START · ${display.origin_label || "Corridor origin"}`,
+      `Scenario ${data.summary.scenario_id || "corridor"} origin`,
+      "#17364a",
+    );
+    addVertiport3D(
+      routeEnd[0], routeEnd[1],
+      `END · ${display.destination_label || "Corridor destination"}`,
+      `Scenario ${data.summary.scenario_id || "corridor"} destination`,
+      "#e46f51",
+    );
     addGeographicLabels();
     data.stations.forEach(addStation3D);
 
@@ -285,19 +321,28 @@
           height_m: carto.height,
         };
       },
-      scene: () => ({ stations: data.stations.length, trace_samples: trace.length, index }),
+      scene: () => ({
+        scenario_id: data.summary.scenario_id,
+        stations: data.stations.length,
+        trace_samples: trace.length,
+        route_start: display.origin_label,
+        route_end: display.destination_label,
+        endpoint_mismatch_m: [startMismatchM, endMismatchM],
+        index,
+      }),
     };
   }
 
-  function addVertiport3D(lon, lat, label, description) {
+  function addVertiport3D(lon, lat, label, description, colorHex) {
+    const endpointColor = Cesium.Color.fromCssColorString(colorHex);
     viewer3d.entities.add({
       name: label,
       description,
       position: Cesium.Cartesian3.fromDegrees(lon, lat, 3),
       ellipse: {
-        semiMajorAxis: 115,
-        semiMinorAxis: 115,
-        material: Cesium.Color.fromCssColorString("#17364a").withAlpha(0.72),
+        semiMajorAxis: 145,
+        semiMinorAxis: 145,
+        material: endpointColor.withAlpha(0.78),
         outline: true,
         outlineColor: Cesium.Color.WHITE,
       },
@@ -306,22 +351,16 @@
         font: "700 12px system-ui",
         fillColor: Cesium.Color.WHITE,
         showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString("#17364a").withAlpha(0.86),
+        backgroundColor: endpointColor.withAlpha(0.9),
         pixelOffset: new Cesium.Cartesian2(0, -24),
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 26000),
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 50000),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
     });
   }
 
   function addGeographicLabels() {
-    [
-      ["South San Francisco", -122.407, 37.655],
-      ["San Mateo", -122.326, 37.564],
-      ["Redwood City", -122.236, 37.485],
-      ["Palo Alto", -122.164, 37.443],
-      ["Mountain View", -122.079, 37.395],
-      ["Sunnyvale", -122.030, 37.378],
-    ].forEach(([name, lon, lat]) => viewer3d.entities.add({
+    (display.geographic_labels || []).forEach(([name, lon, lat]) => viewer3d.entities.add({
       name,
       position: Cesium.Cartesian3.fromDegrees(lon, lat, 8),
       point: { pixelSize: 5, color: Cesium.Color.WHITE, outlineColor: Cesium.Color.fromCssColorString("#17364a"), outlineWidth: 2 },

@@ -20,12 +20,21 @@
       <header class="dashboard__header">
         <div class="dashboard__brand">
           <span class="dashboard__eyebrow">REAL-CORRIDOR EXPERIMENT</span>
-          <h1>SF–SJ UAM Link-Quality Simulator</h1>
-          <p>One aircraft · 18 macro sites · 300 m centerline flight</p>
+          <h1 id="dashboard-title">Bay Area UAM Link-Quality Simulator</h1>
+          <p id="dashboard-subtitle">Loading scenario…</p>
         </div>
-        <div class="dashboard__run-status" aria-label="Simulation run status">
-          <span class="status-dot" aria-hidden="true"></span>
-          <div><strong id="run-status">Validated baseline</strong><span id="run-id">Loading run…</span></div>
+        <div class="dashboard__header-tools">
+          <label class="scenario-switcher" for="scenario-select">
+            <span>Scenario</span>
+            <select id="scenario-select" aria-label="Select corridor scenario">
+              <option value="sf_sj_full">Full SF–SJ corridor</option>
+              <option value="airport_to_airport">Airport-access corridor</option>
+            </select>
+          </label>
+          <div class="dashboard__run-status" aria-label="Simulation run status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <div><strong id="run-status">Validated baseline</strong><span id="run-id">Loading run…</span></div>
+          </div>
         </div>
       </header>
 
@@ -58,20 +67,20 @@
         <div class="views">
         <section class="map-panel" aria-labelledby="map-title">
           <div class="map-panel__heading">
-            <div><span class="section-label">LIVE FLIGHT</span><h2 id="map-title">San Francisco → San Jose</h2></div>
+            <div><span class="section-label">LIVE FLIGHT</span><h2 id="map-title">Loading route…</h2></div>
             <div class="map-panel__heading-tools">
-              <a class="map-panel__layout-link"
+              <a class="map-panel__layout-link" id="site-layout-link"
                  href="assets/site-layout/corridor-sites-layout.svg"
                  target="_blank"
                  rel="noopener"
-                 title="Open the 18-site layout with FCC macro-site classes">
-                View 18-site layout <span aria-hidden="true">↗</span>
+                 title="Open the selected scenario's macro-site layout">
+                <span id="site-layout-link-text">View site layout</span> <span aria-hidden="true">↗</span>
               </a>
               <div class="map-panel__progress"><span id="progress-km">0.00 km</span><strong id="progress-percent">0.0%</strong></div>
             </div>
           </div>
           <div class="map-panel__viewport">
-            <div id="map" role="application" aria-label="Interactive SF to San Jose UAM corridor map"></div>
+            <div id="map" role="application" aria-label="Interactive UAM corridor map"></div>
             <div class="map-legend" aria-label="Map legend">
               <span><i class="map-legend__line"></i>Flight corridor</span>
               <span><i class="map-legend__site map-legend__site--tower"></i>Macro tower</span>
@@ -108,7 +117,7 @@
             </div>
           </div>
           <div class="three-panel__legend">
-            <span><i class="three-panel__line three-panel__line--ground"></i>Ground centerline</span>
+            <span><i class="three-panel__line three-panel__line--ground"></i>Selected scenario centerline (ground projection)</span>
             <span><i class="three-panel__line three-panel__line--flight"></i>Selected flight path</span>
             <span><i class="three-panel__line three-panel__line--radio"></i>Serving link</span>
             <span><i class="three-panel__symbol three-panel__symbol--tower"></i>Tower macro</span>
@@ -164,7 +173,31 @@
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
             integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
             crossorigin="anonymous"></script>
-    <script src="data/dashboard_data.js"></script>
-    <script src="app.js"></script>
+    <script>
+      (() => {
+        const bundles = {
+          sf_sj_full: "data/sf_sj_full.js",
+          airport_to_airport: "data/airport_to_airport.js",
+        };
+        const params = new URLSearchParams(window.location.search);
+        const selected = bundles[params.get("scenario")] ? params.get("scenario") : "sf_sj_full";
+        const selector = document.getElementById("scenario-select");
+        selector.value = selected;
+        selector.addEventListener("change", () => {
+          const next = new URL(window.location.href);
+          next.searchParams.set("scenario", selector.value);
+          window.location.assign(next);
+        });
+        const dataScript = document.createElement("script");
+        const buildVersion = "20260825-aligned-site-layout-v3";
+        dataScript.src = `${bundles[selected]}?v=${buildVersion}`;
+        dataScript.addEventListener("load", () => {
+          const appScript = document.createElement("script");
+          appScript.src = `app.js?v=${buildVersion}`;
+          document.body.appendChild(appScript);
+        });
+        document.body.appendChild(dataScript);
+      })();
+    </script>
   </body>
 </html>

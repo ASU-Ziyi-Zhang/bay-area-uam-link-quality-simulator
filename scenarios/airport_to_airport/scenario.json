@@ -1,0 +1,68 @@
+{
+  "scenario_id": "airport_to_airport",
+  "display": {
+    "title": "Airport-Access UAM Link-Quality Simulator",
+    "route_label": "Millbrae Caltrain to Santa Clara Caltrain",
+    "origin_label": "Millbrae Caltrain (SFO access proxy)",
+    "destination_label": "Santa Clara Caltrain (SJC access proxy)",
+    "layout_title": "Documented macro sites along the Millbrae–Santa Clara UAM corridor",
+    "layout_subtitle": "Caltrain-referenced alignment · 12 retained physical sites",
+    "layout_origin_label": "Millbrae · SFO access proxy",
+    "layout_destination_label": "Santa Clara · SJC access proxy",
+    "site_layout_url": "assets/site-layout/airport-to-airport-sites-layout.svg",
+    "geographic_labels": [
+      ["San Mateo", -122.326, 37.564],
+      ["Belmont", -122.275, 37.520],
+      ["Redwood City", -122.236, 37.485],
+      ["Palo Alto", -122.164, 37.443],
+      ["Mountain View", -122.079, 37.395],
+      ["Sunnyvale", -122.030, 37.378]
+    ]
+  },
+  "corridor": {
+    "kind": "geojson",
+    "path": "data/corridor.geojson",
+    "source_crs": "EPSG:4326",
+    "target_crs": "EPSG:26910"
+  },
+  "base_stations": {
+    "kind": "wgs84_csv",
+    "path": "data/base_stations.csv",
+    "active_site_ids": [
+      "BS05", "BS06", "BS07", "BS08", "BS09", "BS10",
+      "BS11", "BS12", "BS13", "BS14", "BS15", "BS16"
+    ],
+    "height_column": "antenna_height_m"
+  },
+  "trajectory": {
+    "model": "constant_speed_route",
+    "speed_mps": 50.0
+  },
+  "simulation": {
+    "duration_s": 2972.56,
+    "time_step_s": 5.0
+  },
+  "radio": {
+    "frequency_ghz": 5.0,
+    "eirp_dbm": 46.0,
+    "receiver_gain_db": 0.0,
+    "noise_dbm": -99.0,
+    "resource_elements": 300,
+    "assumed_bs_height_m": null,
+    "served_set_size": 3
+  },
+  "link_quality": {
+    "sinr_threshold_db": -1.5
+  },
+  "policy": {
+    "reactive_exposure_tolerance": 0.10,
+    "coordinated_exposure_tolerance": 0.05,
+    "group_size": 5,
+    "window_s": 30.0
+  },
+  "capacity": {
+    "standstill_distance_m": 200.0,
+    "response_time_s": {"C": 15.0, "R": 30.0, "F": 60.0},
+    "braking_buffer_s2_per_m": 0.167
+  }
+}

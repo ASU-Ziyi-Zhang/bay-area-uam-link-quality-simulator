@@ -8,7 +8,8 @@
 
 ## S1 — single-UAM runner (baseline implemented)
 
-- Load `configs/scenario.json` through the scenario and geometry readers.
+- Load a selected `scenarios/<name>/scenario.json` pack through the scenario
+  and geometry readers.
 - Integrate a fixed-speed, centerline trajectory at `dt_motion_s`.
 - Evaluate RSRP/SINR at `dt_radio_s` and write a long-form trace.
 - Reproduce the validated centerline association count as a diagnostic.

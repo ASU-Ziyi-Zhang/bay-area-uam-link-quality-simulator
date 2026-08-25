@@ -17,7 +17,8 @@ capacity interfaces are present, but the dashboard does not claim those results.
 
 ## Replaceable inputs
 
-- Replace a route by changing `configs/scenario.json` and its GeoJSON input.
+- Select or add a self-contained pack under `scenarios/`; each pack owns its
+  route GeoJSON, site CSV, scenario JSON, simulator JSON, and provenance notes.
 - Add, remove, or substitute a station by editing the station CSV and the
   `active_site_ids` list. Array position is never used as a public identifier.
 - Replace the trajectory or radio model behind the existing state interfaces.
@@ -28,7 +29,8 @@ capacity interfaces are present, but the dashboard does not claim those results.
 WGS84 route and site coordinates are projected to EPSG:26910 before distance
 calculations. Route progress is arc length `s`; lateral offset is measured along
 the local normal. Antenna heights are either source-specific or explicit class
-assumptions recorded in `data/base_stations.csv` and `docs/assumptions.md`.
+assumptions recorded in the selected scenario's `data/base_stations.csv` and
+`docs/assumptions.md`.
 
 ## Baseline boundary
 
