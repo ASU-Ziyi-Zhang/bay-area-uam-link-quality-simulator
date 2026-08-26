@@ -12,8 +12,10 @@ The repository keeps one stable chain while allowing each layer to be replaced:
 6. `Policy` maps link state to an operating policy.
 7. `Capacity` consumes policy/spacing assumptions and reports capacity.
 
-Only layers 1-4 are exercised by the current real-corridor baseline. Policy and
-capacity interfaces are present, but the dashboard does not claim those results.
+The single-UAM mode exercises layers 1-4. The fixed-lane multi-UAM mode also
+exercises the accepted TRB centered-five-aircraft C/R/F mapping and its
+policy-weighted planning-capacity calculation. Neither mode implements
+operational conflict resolution or certified airborne capacity.
 
 ## Replaceable inputs
 
@@ -34,7 +36,9 @@ assumptions recorded in the selected scenario's `data/base_stations.csv` and
 
 ## Baseline boundary
 
-The accepted baseline is one UAM at 50 m/s, 300 m AGL, and zero lateral offset.
-It uses deterministic LOS planning assumptions with a three-site served set
-(the strongest serves, the other two interfere). It is not measured
-coverage, operator-network validation, or an operational capacity estimate.
+The accepted radio baseline is one UAM at 50 m/s, 300 m AGL, and zero lateral
+offset. The multi-UAM baseline uses the same speed and altitude, a 32 s entry
+interval, and fixed one-lane/one-level geometry. Both use deterministic LOS
+planning assumptions with a three-site served set (the strongest serves, the
+other two interfere). They are not measured coverage, operator-network
+validation, or operational capacity estimates.

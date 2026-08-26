@@ -6,11 +6,13 @@ corridors. The repository packages four connected layers:
 1. replaceable corridor scenario packs;
 2. documented physical macro-site locations selected for each route;
 3. deterministic RSRP/SINR link-quality analysis;
-4. a single-UAM, multi-rate simulator with an interactive 2D/3D dashboard.
+4. interactive single-UAM link-quality and multi-UAM group-policy simulators.
 
-The current release is a communication-planning baseline. It does **not**
-claim measured airborne coverage, verified operator interoperability,
-implemented C/R/F policy, multi-UAM conflict resolution, or corridor capacity.
+The current release is a communication-planning baseline. It includes a
+deterministic reproduction of the TRB five-aircraft C/R/F policy-to-capacity
+chain, but does **not** claim measured airborne coverage, verified operator
+interoperability, operational conflict resolution, or certified corridor
+capacity.
 
 ## Interactive dashboard
 
@@ -24,6 +26,9 @@ The header scenario selector switches between:
 - `?scenario=airport_to_airport` — Millbrae–Santa Clara airport-access case.
 
 The same query links work on the local server at `http://127.0.0.1:8765/`.
+Use the **Multi-UAM policy** tab, or open
+`traffic.html?scenario=airport_to_airport`, to inspect simultaneous aircraft,
+policy fractions, and reliability-qualified planning capacity.
 
 The map header links to the complete
 [18-site macro-site layout](evidence/figures/corridor_sites.svg), showing the
@@ -97,6 +102,26 @@ python scripts\serve_dashboard.py
 Open [http://127.0.0.1:8765/](http://127.0.0.1:8765/). The 3D view uses a
 fixed 315° bearing and −25° pitch; it translates with the UAM but does not
 rotate with aircraft heading.
+
+## Run the multi-UAM group-policy simulator
+
+```powershell
+python scripts\run_group_simulator.py `
+  --config scenarios\airport_to_airport\group_simulator.json `
+  --output runs\airport-to-airport-group-policy-v1
+python scripts\build_traffic_dashboard.py `
+  --run-dir runs\airport-to-airport-group-policy-v1 `
+  --scenario scenarios\airport_to_airport\scenario.json `
+  --output dashboard\data\airport_to_airport_traffic.js
+python scripts\serve_dashboard.py
+```
+
+Open
+[http://127.0.0.1:8765/traffic.html?scenario=airport_to_airport](http://127.0.0.1:8765/traffic.html?scenario=airport_to_airport).
+Green, yellow, and red aircraft denote coordinated, reactive, and fallback
+group policy. Gray aircraft do not yet have a complete centered five-aircraft
+group. See [the simulator definition](docs/multi_aircraft_policy.md) before
+interpreting the fractions or capacity.
 
 ## Verify
 

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Multi-aircraft UAM group-policy and corridor-capacity animation" />
+    <title>Bay Area UAM Traffic & Policy Simulator</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet"
+          href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css"
+          integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
+          crossorigin="anonymous" />
+    <link rel="stylesheet" href="traffic.css" />
+  </head>
+  <body>
+    <div class="traffic-dashboard">
+      <header class="traffic-header">
+        <div>
+          <span class="eyebrow">TRB FLOW REPRODUCTION · FIXED LANE / FIXED LEVEL</span>
+          <h1 id="traffic-title">Multi-UAM Traffic & Policy Simulator</h1>
+          <p id="traffic-subtitle">Individual link quality → five-aircraft group policy → corridor capacity</p>
+        </div>
+        <div class="traffic-header__controls">
+          <label for="scenario-select"><span>Scenario</span>
+            <select id="scenario-select">
+              <option value="sf_sj_full">Full SF–SJ corridor</option>
+              <option value="airport_to_airport">Airport-access corridor</option>
+            </select>
+          </label>
+          <nav class="mode-nav" aria-label="Simulator mode">
+            <a id="single-mode-link" href="index.html">Single UAM</a>
+            <a class="mode-nav__active" aria-current="page" href="traffic.html">Multi-UAM policy</a>
+          </nav>
+        </div>
+      </header>
+
+      <section class="assumption-strip" aria-label="Fixed baseline assumptions">
+        <div><span>Offered demand</span><strong id="offered-demand">—</strong><small>UAM/h</small></div>
+        <div><span>Entry interval</span><strong id="entry-interval">—</strong><small>s</small></div>
+        <div><span>Speed</span><strong id="traffic-speed">—</strong><small>m/s</small></div>
+        <div><span>Altitude</span><strong id="traffic-altitude">—</strong><small>m AGL</small></div>
+        <div><span>Geometry</span><strong>1 × 1</strong><small>lane × level</small></div>
+        <div><span>Control</span><strong>Fixed</strong><small>no switching</small></div>
+      </section>
+
+      <main class="traffic-main">
+        <section class="traffic-map-card" aria-labelledby="map-heading">
+          <div class="card-heading">
+            <div><span class="eyebrow">LIVE TRAFFIC</span><h2 id="map-heading">Corridor traffic</h2></div>
+            <div class="policy-legend" aria-label="Aircraft policy colors">
+              <span><i class="policy-dot policy-dot--c"></i>Coordinated</span>
+              <span><i class="policy-dot policy-dot--r"></i>Reactive</span>
+              <span><i class="policy-dot policy-dot--f"></i>Fallback</span>
+              <span><i class="policy-dot policy-dot--u"></i>Unclassified</span>
+            </div>
+          </div>
+          <div id="traffic-map" role="application" aria-label="Multi-aircraft corridor map"></div>
+          <div class="playback" aria-label="Traffic simulation playback controls">
+            <button id="reset-button" type="button" aria-label="Reset simulation">↺</button>
+            <button id="play-button" class="playback__primary" type="button" aria-label="Play simulation">▶</button>
+            <strong id="current-time">00:00</strong>
+            <label class="sr-only" for="time-slider">Simulation timeline</label>
+            <input id="time-slider" type="range" min="0" max="1" value="0" step="1" />
+            <span id="total-time">/ 00:00</span>
+            <label class="sr-only" for="playback-speed">Playback speed</label>
+            <select id="playback-speed"><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option></select>
+          </div>
+        </section>
+
+        <aside class="traffic-sidebar" aria-label="Policy and capacity diagnostics">
+          <section class="metric-grid">
+            <article><span>Aircraft in corridor</span><strong id="active-count">—</strong><small id="expected-count">steady-state expectation —</small></article>
+            <article><span>Current mixed capacity</span><strong id="current-capacity">—</strong><small>UAM/h · policy-weighted spacing</small></article>
+            <article><span>Reliability capacity</span><strong id="reliability-capacity">—</strong><small>Q<sub>0.95</sub> · lower 5th percentile</small></article>
+            <article><span>Demand supported?</span><strong id="demand-status">—</strong><small>offered demand ≤ Q<sub>0.95</sub></small></article>
+          </section>
+
+          <section class="policy-card" aria-labelledby="policy-heading">
+            <div class="card-heading"><div><span class="eyebrow">SERGEI REQUEST</span><h2 id="policy-heading">Policy fractions</h2></div><span id="policy-observations">—</span></div>
+            <div class="policy-bar" aria-label="Overall classified focal-aircraft group-time policy fractions">
+              <span id="share-c-bar" class="policy-bar__c"></span><span id="share-r-bar" class="policy-bar__r"></span><span id="share-f-bar" class="policy-bar__f"></span>
+            </div>
+            <div class="policy-values">
+              <div><i class="policy-dot policy-dot--c"></i><span>Coordinated</span><strong id="share-c">—</strong></div>
+              <div><i class="policy-dot policy-dot--r"></i><span>Reactive</span><strong id="share-r">—</strong></div>
+              <div><i class="policy-dot policy-dot--f"></i><span>Fallback</span><strong id="share-f">—</strong></div>
+            </div>
+            <p>Fractions use valid focal-aircraft group-time observations. Each focal aircraft inherits the policy of its centered five-UAM moving group.</p>
+          </section>
+
+          <section class="selected-card" aria-labelledby="selected-heading">
+            <div class="card-heading"><div><span class="eyebrow">SELECTED AIRCRAFT</span><h2 id="selected-heading">Aircraft detail</h2></div><strong id="selected-uam">—</strong></div>
+            <dl>
+              <div><dt>Group policy</dt><dd id="selected-policy">—</dd></div>
+              <div><dt>Exposure</dt><dd id="selected-exposure">—</dd></div>
+              <div><dt>Serving site</dt><dd id="selected-site">—</dd></div>
+              <div><dt>RSRP</dt><dd id="selected-rsrp">—</dd></div>
+              <div><dt>SINR</dt><dd id="selected-sinr">—</dd></div>
+              <div><dt>Progress</dt><dd id="selected-progress">—</dd></div>
+              <div class="selected-wide"><dt>Centered five-aircraft group</dt><dd id="selected-group">—</dd></div>
+            </dl>
+          </section>
+
+          <section class="capacity-card" aria-labelledby="capacity-heading">
+            <div class="card-heading"><div><span class="eyebrow">CAPACITY TRACE</span><h2 id="capacity-heading">Flow supported over time</h2></div><span id="current-counts">—</span></div>
+            <canvas id="capacity-chart" height="150" aria-label="Mixed corridor capacity over simulation time"></canvas>
+          </section>
+        </aside>
+
+        <section class="traffic-three-card" aria-labelledby="three-heading">
+          <div class="card-heading"><div><span class="eyebrow">FIXED OVERVIEW</span><h2 id="three-heading">3D corridor traffic</h2></div><span>Colors match group policy</span></div>
+          <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
+          <div id="three-warning" class="three-warning" hidden>Serve this directory through HTTP to load the 3D view.</div>
+        </section>
+      </main>
+
+      <footer class="traffic-footer">
+        <span>Individual radio · overlapping five-UAM group policy · deterministic planning capacity</span>
+        <span>No lane change · no level change · no controller</span>
+      </footer>
+    </div>
+    <div id="error-panel" class="error-panel" hidden role="alert"></div>
+
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
+            integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
+            crossorigin="anonymous"></script>
+    <script>
+      (() => {
+        const bundles = {
+          sf_sj_full: "data/sf_sj_full_traffic.js",
+          airport_to_airport: "data/airport_to_airport_traffic.js",
+        };
+        const params = new URLSearchParams(window.location.search);
+        const selected = bundles[params.get("scenario")] ? params.get("scenario") : "airport_to_airport";
+        const selector = document.getElementById("scenario-select");
+        selector.value = selected;
+        selector.addEventListener("change", () => {
+          const next = new URL(window.location.href);
+          next.searchParams.set("scenario", selector.value);
+          window.location.assign(next);
+        });
+        document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
+        const dataScript = document.createElement("script");
+        const version = "20260825-multi-uam-policy-v1";
+        dataScript.src = `${bundles[selected]}?v=${version}`;
+        dataScript.addEventListener("load", () => {
+          const appScript = document.createElement("script");
+          appScript.src = `traffic_app.js?v=${version}`;
+          document.body.appendChild(appScript);
+        });
+        document.body.appendChild(dataScript);
+      })();
+    </script>
+  </body>
+</html>

@@ -18,6 +18,9 @@ button, input, select { font: inherit; }
 .scenario-switcher { display: grid; gap: 4px; min-width: 220px; color: var(--muted); font-size: .68rem; font-weight: 760; }
 .scenario-switcher select { min-height: 42px; padding: 8px 34px 8px 11px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: rgba(255,253,250,.9); cursor: pointer; }
 .scenario-switcher select:focus-visible { outline: 3px solid rgba(22,140,133,.25); outline-offset: 2px; }
+.traffic-mode-link { display: grid; place-items: center; min-height: 42px; padding: 8px 13px; border: 1px solid var(--ink); border-radius: 12px; color: #fff; background: var(--ink); font-size: .76rem; font-weight: 760; text-align: center; text-decoration: none; }
+.traffic-mode-link:hover { background: #234c63; }
+.traffic-mode-link:focus-visible { outline: 3px solid rgba(22,140,133,.25); outline-offset: 2px; }
 .dashboard__run-status { display: flex; align-items: center; gap: 10px; min-width: 220px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,253,250,.82); }
 .dashboard__run-status div { display: grid; gap: 2px; }
 .dashboard__run-status strong { font-size: .82rem; }
@@ -133,6 +136,7 @@ button, input, select { font: inherit; }
   .dashboard__header { align-items: flex-start; flex-direction: column; }
   .dashboard__header-tools { width: 100%; align-items: stretch; flex-direction: column; }
   .scenario-switcher { width: 100%; }
+  .traffic-mode-link { width: 100%; }
   .dashboard__run-status { width: 100%; }
   .parameter-panel { grid-template-columns: 1fr; }
   .parameter-panel__intro, .parameter-panel__actions { grid-column: auto; }

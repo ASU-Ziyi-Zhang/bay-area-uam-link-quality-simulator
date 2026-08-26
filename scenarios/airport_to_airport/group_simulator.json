@@ -1,0 +1,29 @@
+{
+  "name": "airport_to_airport_group_policy_baseline",
+  "scenario": "scenario.json",
+  "trajectory": {
+    "speed_mps": 50.0,
+    "altitude_m": 300.0,
+    "lateral_offset_m": 0.0,
+    "level_id": "L300",
+    "lane_id": "lane_0"
+  },
+  "traffic": {
+    "entry_demand_uam_h": 112.5,
+    "reliability_rho": 0.95,
+    "duration_s": null
+  },
+  "clock": {
+    "dt_motion_s": 1.0,
+    "dt_radio_s": 5.0,
+    "dt_control_s": 5.0,
+    "policy_window_s": 30.0,
+    "capacity_aggregation_s": 60.0
+  },
+  "metadata": {
+    "phase": "fixed_single_lane_single_level",
+    "lane_change_allowed": false,
+    "level_change_allowed": false
+  }
+}
+
