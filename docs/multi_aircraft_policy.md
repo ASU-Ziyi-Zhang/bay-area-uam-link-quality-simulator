@@ -122,10 +122,15 @@ computed five-second TRB row is unchanged.
 - `reliability capacity` is the lower fifth percentile of the complete trace;
 - `demand supported` tests whether offered demand is no greater than `Q0.95`.
 
-The primary 3D view uses a fixed third-person camera, canvas-rendered aircraft
-and base-station icons, and a `Recenter` control. If its external Cesium module
-is unavailable, the dashboard automatically replaces the panel with a real-map
-fallback containing the same semantic layers.
+The primary 3D view is synchronized with the selected aircraft used by the
+right-hand metrics. It reuses the single-UAM drone and macro-site geometry,
+keeps a fixed 315-degree bearing and fixed pitch while translating with that
+focal aircraft, and renders the remaining active aircraft as surrounding
+traffic with C/R/F silhouettes. The focal aircraft has an altitude reference
+and a dashed line to its current serving site. Selecting another aircraft
+immediately transfers the 3D focal view; `Recenter` restores follow mode after
+free camera interaction. If Cesium is unavailable, a selected-aircraft map
+fallback preserves the traffic and serving-link layers.
 
 ## Explicit non-features
 

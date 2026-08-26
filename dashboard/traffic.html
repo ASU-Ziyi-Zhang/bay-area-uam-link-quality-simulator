@@ -112,12 +112,22 @@
         </aside>
 
         <section class="traffic-three-card" aria-labelledby="three-heading">
-          <div class="card-heading"><div><span class="eyebrow">FIXED OVERVIEW</span><h2 id="three-heading">3D corridor traffic</h2></div><span>Colors match group policy</span></div>
+          <div class="card-heading traffic-three-heading">
+            <div><span class="eyebrow">GEOREFERENCED 3D VIEW</span><h2 id="three-heading">3D focal-aircraft traffic</h2></div>
+            <div class="traffic-three-camera"><span id="three-camera-state">315° bearing · fixed pitch</span><button id="three-recenter" type="button" aria-label="Recenter the three-dimensional view on the selected aircraft">Recenter</button></div>
+          </div>
           <div class="traffic-3d-stage">
             <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
-            <button id="three-recenter" class="three-recenter" type="button" aria-label="Recenter the three-dimensional corridor view">Recenter</button>
+            <div id="three-camera-note" class="traffic-three-note">Fixed bearing and pitch · camera follows the selected aircraft.</div>
           </div>
           <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; a fixed real-map fallback is shown.</div>
+          <div class="traffic-three-legend" aria-label="Three-dimensional view legend">
+            <span><i class="traffic-three-line traffic-three-line--ground"></i>Corridor ground projection</span>
+            <span><i class="traffic-three-line traffic-three-line--flight"></i>300 m flight path</span>
+            <span><i class="traffic-three-line traffic-three-line--radio"></i>Selected serving link</span>
+            <span><i class="traffic-three-symbol traffic-three-symbol--selected"></i>Selected aircraft</span>
+            <span><i class="traffic-three-symbol traffic-three-symbol--traffic"></i>Surrounding traffic</span>
+          </div>
         </section>
       </main>
 
@@ -149,7 +159,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260826-one-second-policy-v4";
+        const version = "20260826-focal-aircraft-3d-v5";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

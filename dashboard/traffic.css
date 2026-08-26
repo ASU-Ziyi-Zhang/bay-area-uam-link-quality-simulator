@@ -88,11 +88,22 @@ button, select, input { font: inherit; }
 #link-quality-chart { display: block; width: 100%; height: 220px; }
 
 .traffic-three-card { grid-column: 1 / -1; overflow: hidden; }
+.traffic-three-heading { align-items: end; }
+.traffic-three-camera { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .7rem; }
+.traffic-three-camera button { min-height: 31px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); font: inherit; font-weight: 750; cursor: pointer; }
+.traffic-three-camera button:focus-visible { outline: 3px solid rgb(22 140 133 / 28%); outline-offset: 2px; }
 .traffic-3d-stage { position: relative; }
 #traffic-3d { height: 440px; border-top: 1px solid var(--line); }
-.three-recenter { position: absolute; z-index: 700; top: 14px; right: 14px; padding: 8px 12px; border: 1px solid rgb(23 54 74 / 28%); border-radius: 8px; background: rgb(255 255 255 / 92%); color: var(--ink); font: inherit; font-size: .72rem; font-weight: 750; box-shadow: 0 3px 12px rgb(23 54 74 / 16%); cursor: pointer; }
-.three-recenter:hover { background: white; }
-.three-recenter:focus-visible { outline: 3px solid rgb(22 140 133 / 35%); outline-offset: 2px; }
+.traffic-three-note { position: absolute; z-index: 600; top: 12px; left: 12px; padding: 7px 10px; border: 1px solid rgb(23 54 74 / 15%); border-radius: 8px; background: rgb(255 253 250 / 90%); color: var(--ink); font-size: .68rem; font-weight: 700; pointer-events: none; backdrop-filter: blur(8px); }
+.traffic-three-legend { display: flex; flex-wrap: wrap; gap: 9px 16px; padding: 10px 15px 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: .67rem; }
+.traffic-three-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.traffic-three-line { width: 20px; border-top: 2px solid var(--ink); }
+.traffic-three-line--ground { border-top-style: dashed; border-color: #607177; }
+.traffic-three-line--flight { border-color: var(--teal); }
+.traffic-three-line--radio { border-top-style: dotted; border-color: var(--coral); }
+.traffic-three-symbol { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.traffic-three-symbol--selected { width: 13px; height: 13px; border: 2px solid white; background: var(--coral); box-shadow: 0 0 0 2px var(--coral); }
+.traffic-three-symbol--traffic { background: var(--coordinated); }
 .traffic-3d-fallback { position: relative; width: 100%; height: 100%; background: #dfe9e5; }
 .traffic-3d-fallback .leaflet-control-attribution { font-size: 9px; }
 .fallback-aircraft { position: relative; width: 30px; height: 54px; transform: translate(-15px, -45px); }
@@ -111,6 +122,8 @@ button, select, input { font: inherit; }
   .assumption-strip { grid-template-columns: repeat(3, 1fr); }
   .traffic-main { grid-template-columns: 1fr; }
   .traffic-three-card { grid-column: 1; }
+  .traffic-three-heading { align-items: flex-start; flex-direction: column; }
+  .traffic-three-camera { width: 100%; justify-content: space-between; }
 }
 
 @media (max-width: 620px) {

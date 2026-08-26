@@ -17,6 +17,7 @@ def read_bundle(path: Path) -> dict:
 def test_traffic_page_declares_policy_colors_and_mode_links():
     html = (ROOT / "dashboard" / "traffic.html").read_text(encoding="utf-8")
     css = (ROOT / "dashboard" / "traffic.css").read_text(encoding="utf-8")
+    app = (ROOT / "dashboard" / "traffic_app.js").read_text(encoding="utf-8")
     single_html = (ROOT / "dashboard" / "index.html").read_text(encoding="utf-8")
     assert "Green for coordinated" not in html
     assert "Unclassified" not in html
@@ -29,6 +30,11 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "Selected-aircraft radio profile" in html
     assert "three-recenter" in html
     assert "Recenter" in html
+    assert "camera follows the selected aircraft" in html
+    assert "FIXED OVERVIEW" not in html
+    assert "assets/models/cesium-drone/CesiumDrone.glb" in app
+    assert "servingLink3d" in app and "altitudeLine3d" in app
+    assert "applyFollowCamera(selected)" in app
     assert "uam-traffic-marker--group" in css
     assert "Multi-UAM policy simulator" in single_html
 
