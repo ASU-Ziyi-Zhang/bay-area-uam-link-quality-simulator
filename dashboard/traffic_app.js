@@ -12,8 +12,24 @@
   }
 
   const colors = { C: "#238b57", R: "#e3b735", F: "#d65353" };
-  const frames = data.frames;
-  const entrants = data.entrants;
+  const entrants = [...data.entrants].sort((left, right) => left.index - right.index);
+  function expandFrame(frame) {
+    if (frame.policies) return frame;
+    const activeIds = entrants
+      .filter((uam) => uam.entry <= frame.t + 1e-9 && uam.exit >= frame.t - 1e-9)
+      .map((uam) => uam.id);
+    if (activeIds.length !== frame.policy_codes.length || activeIds.length !== frame.exposure_values.length) {
+      throw new Error(`Compact traffic frame mismatch at ${frame.t}s`);
+    }
+    const policies = Object.fromEntries(activeIds.map((uamId, index) => [uamId, frame.policy_codes[index]]));
+    const exposure = Object.fromEntries(activeIds.map((uamId, index) => [uamId, frame.exposure_values[index]]));
+    const groups = Object.fromEntries(activeIds.map((uamId, index) => [
+      uamId,
+      activeIds.slice(Math.max(0, index - 2), Math.min(activeIds.length, index + 3)),
+    ]));
+    return { ...frame, policies, exposure, groups };
+  }
+  const frames = data.frames.map(expandFrame);
   const route = data.route_metric;
   const summary = data.summary;
   const display = summary.display || {};
@@ -28,7 +44,7 @@
     "active-count", "expected-count", "current-capacity", "reliability-capacity", "demand-status",
     "policy-observations", "share-c", "share-r", "share-f", "share-c-bar", "share-r-bar", "share-f-bar",
     "selected-uam", "selected-policy", "selected-exposure", "selected-site", "selected-rsrp", "selected-sinr", "selected-progress", "selected-group",
-    "current-counts", "link-current", "three-warning", "three-recenter",
+    "current-counts", "link-current", "three-warning", "three-recenter", "three-camera-state", "three-camera-note",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const capacityCanvas = document.getElementById("capacity-chart");
@@ -564,6 +580,12 @@
   let rafId = null;
   el["time-slider"].max = String(frames.length - 1);
   el["total-time"].textContent = `/ ${formatTime(frames.at(-1).t)}`;
+  el["reset-button"].disabled = false;
+  el["play-button"].disabled = false;
+  el["play-button"].textContent = "▶";
+  el["play-button"].setAttribute("aria-label", "Play simulation");
+  el["time-slider"].disabled = false;
+  el["playback-speed"].disabled = false;
 
   function updateFrame(nextIndex) {
     index = Math.max(0, Math.min(frames.length - 1, Math.round(nextIndex)));

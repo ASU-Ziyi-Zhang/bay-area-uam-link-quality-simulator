@@ -55,6 +55,7 @@ button, select, input { font: inherit; }
 
 .playback { display: grid; grid-template-columns: auto auto auto 1fr auto auto; align-items: center; gap: 10px; padding: 11px 14px; }
 .playback button, .playback select { border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); padding: 6px 9px; }
+.playback button:disabled, .playback select:disabled, .playback input:disabled { cursor: wait; opacity: .55; }
 .playback__primary { color: white !important; background: var(--teal) !important; }
 .playback input { width: 100%; accent-color: var(--teal); }
 .playback span { color: var(--muted); font-size: .76rem; }

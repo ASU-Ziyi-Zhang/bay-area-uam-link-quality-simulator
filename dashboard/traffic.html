@@ -55,14 +55,14 @@
           </div>
           <div id="traffic-map" role="application" aria-label="Multi-aircraft corridor map"></div>
           <div class="playback" aria-label="Traffic simulation playback controls">
-            <button id="reset-button" type="button" aria-label="Reset simulation">↺</button>
-            <button id="play-button" class="playback__primary" type="button" aria-label="Play simulation">▶</button>
+            <button id="reset-button" type="button" aria-label="Reset simulation" disabled>↺</button>
+            <button id="play-button" class="playback__primary" type="button" aria-label="Loading simulation data" disabled>…</button>
             <strong id="current-time">00:00</strong>
             <label class="sr-only" for="time-slider">Simulation timeline</label>
-            <input id="time-slider" type="range" min="0" max="1" value="0" step="1" />
-            <span id="total-time">/ 00:00</span>
+            <input id="time-slider" type="range" min="0" max="1" value="0" step="1" disabled />
+            <span id="total-time" role="status" aria-live="polite">Loading traffic data…</span>
             <label class="sr-only" for="playback-speed">Playback speed</label>
-            <select id="playback-speed"><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option></select>
+            <select id="playback-speed" disabled><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option></select>
           </div>
         </section>
 
@@ -159,12 +159,18 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260826-focal-aircraft-3d-v5";
+        const version = "20260826-compact-traffic-v6";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");
           appScript.src = `traffic_app.js?v=${version}`;
           document.body.appendChild(appScript);
+        });
+        dataScript.addEventListener("error", () => {
+          const panel = document.getElementById("error-panel");
+          panel.hidden = false;
+          panel.textContent = "Traffic data could not be loaded. Confirm that the dashboard server is running, then refresh the page.";
+          document.getElementById("total-time").textContent = "Traffic data unavailable";
         });
         document.body.appendChild(dataScript);
       })();

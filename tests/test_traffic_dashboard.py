@@ -14,6 +14,21 @@ def read_bundle(path: Path) -> dict:
     return json.loads(text[len(prefix) :].strip().removesuffix(";"))
 
 
+def expand_frame(bundle: dict, frame: dict) -> tuple[list[str], dict[str, str], dict[str, list[str]]]:
+    active_ids = [
+        entrant["id"]
+        for entrant in sorted(bundle["entrants"], key=lambda row: row["index"])
+        if entrant["entry"] <= frame["t"] + 1e-9
+        and entrant["exit"] >= frame["t"] - 1e-9
+    ]
+    policies = dict(zip(active_ids, frame["policy_codes"], strict=True))
+    groups = {
+        uam_id: active_ids[max(0, index - 2) : min(len(active_ids), index + 3)]
+        for index, uam_id in enumerate(active_ids)
+    }
+    return active_ids, policies, groups
+
+
 def test_traffic_page_declares_policy_colors_and_mode_links():
     html = (ROOT / "dashboard" / "traffic.html").read_text(encoding="utf-8")
     css = (ROOT / "dashboard" / "traffic.css").read_text(encoding="utf-8")
@@ -35,6 +50,9 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "assets/models/cesium-drone/CesiumDrone.glb" in app
     assert "servingLink3d" in app and "altitudeLine3d" in app
     assert "applyFollowCamera(selected)" in app
+    assert '"three-camera-state", "three-camera-note"' in app
+    assert "Loading traffic data" in html
+    assert "20260826-compact-traffic-v6" in html
     assert "uam-traffic-marker--group" in css
     assert "Multi-UAM policy simulator" in single_html
 
@@ -50,8 +68,11 @@ def test_airport_traffic_bundle_matches_group_run_summary():
     assert len(bundle["frames"]) == summary["capacity"]["snapshot_count"]
     assert bundle["frames"][0]["t"] == 0.0
     assert bundle["frames"][0]["active_count"] == 1
-    assert bundle["frames"][0]["policies"] == {"UAM001": "C"}
-    assert bundle["frames"][0]["groups"] == {"UAM001": ["UAM001"]}
+    active_ids, policies, groups = expand_frame(bundle, bundle["frames"][0])
+    assert active_ids == ["UAM001"]
+    assert policies == {"UAM001": "C"}
+    assert groups == {"UAM001": ["UAM001"]}
+    assert len(bundle["frames"][0]["exposure_values"]) == 1
     assert bundle["summary"]["clock"]["dt_radio_s"] == 1.0
     assert bundle["summary"]["clock"]["dt_control_s"] == 1.0
     assert bundle["frames"][1]["t"] - bundle["frames"][0]["t"] == 1.0
@@ -71,11 +92,22 @@ def test_full_traffic_bundle_reproduces_slide_policy_capacity_baseline():
 def test_each_frame_policy_count_matches_capacity_counts():
     bundle = read_bundle(ROOT / "dashboard" / "data" / "airport_to_airport_traffic.js")
     for frame in bundle["frames"]:
-        counts = {key: list(frame["policies"].values()).count(key) for key in "CRF"}
+        active_ids, policies, groups = expand_frame(bundle, frame)
+        counts = {key: list(policies.values()).count(key) for key in "CRF"}
         assert counts["C"] == frame["n_C"]
         assert counts["R"] == frame["n_R"]
         assert counts["F"] == frame["n_F"]
-        assert len(frame["policies"]) == frame["classified_count"]
-        assert len(frame["policies"]) == frame["active_count"]
-        assert set(frame["groups"]) == set(frame["policies"])
-        assert all(1 <= len(group) <= 5 for group in frame["groups"].values())
+        assert len(policies) == frame["classified_count"]
+        assert len(policies) == frame["active_count"]
+        assert len(frame["exposure_values"]) == len(active_ids)
+        assert set(groups) == set(policies)
+        assert all(1 <= len(group) <= 5 for group in groups.values())
+
+
+def test_airport_bundle_is_compact_enough_for_interactive_startup():
+    path = ROOT / "dashboard" / "data" / "airport_to_airport_traffic.js"
+    bundle = read_bundle(path)
+    assert path.stat().st_size < 4_000_000
+    assert "policy_codes" in bundle["frames"][0]
+    assert "policies" not in bundle["frames"][0]
+    assert "groups" not in bundle["frames"][0]

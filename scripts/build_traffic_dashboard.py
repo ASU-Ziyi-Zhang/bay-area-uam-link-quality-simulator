@@ -35,6 +35,7 @@ def main() -> None:
         raise ValueError("group run and scenario IDs do not match")
 
     entrants = read_csv(run_dir / "entrants.csv")
+    entrant_index = {row["uam_id"]: int(row["uam_index"]) for row in entrants}
     policy_rows = read_csv(run_dir / "group_policy_trace.csv")
     capacity_rows = read_csv(run_dir / "capacity_trace.csv")
     policies_by_time: dict[float, dict[str, str]] = defaultdict(dict)
@@ -59,6 +60,13 @@ def main() -> None:
             raise ValueError(
                 f"policy count mismatch at {timestamp}: {len(policies)} != {expected}"
             )
+        active_ids = sorted(policies, key=entrant_index.__getitem__)
+        expected_groups = {
+            uam_id: active_ids[max(0, index - 2) : min(len(active_ids), index + 3)]
+            for index, uam_id in enumerate(active_ids)
+        }
+        if groups_by_time[timestamp] != expected_groups:
+            raise ValueError(f"local-group ordering mismatch at {timestamp}")
         frames.append(
             {
                 "t": timestamp,
@@ -70,9 +78,12 @@ def main() -> None:
                 "mean_spacing_m": float(row["mean_spacing_m"]),
                 "q_mix": float(row["q_mix_uam_h"]),
                 "q_bottleneck": float(row["q_bottleneck_uam_h"]),
-                "policies": policies,
-                "exposure": exposure_by_time[timestamp],
-                "groups": groups_by_time[timestamp],
+                # Compact browser payload. Active UAM IDs and their local groups are
+                # reconstructed deterministically from entrants and timestamp.
+                "policy_codes": "".join(policies[uam_id] for uam_id in active_ids),
+                "exposure_values": [
+                    exposure_by_time[timestamp][uam_id] for uam_id in active_ids
+                ],
             }
         )
 
