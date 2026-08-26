@@ -88,7 +88,11 @@ button, select, input { font: inherit; }
 #link-quality-chart { display: block; width: 100%; height: 220px; }
 
 .traffic-three-card { grid-column: 1 / -1; overflow: hidden; }
+.traffic-3d-stage { position: relative; }
 #traffic-3d { height: 440px; border-top: 1px solid var(--line); }
+.three-recenter { position: absolute; z-index: 700; top: 14px; right: 14px; padding: 8px 12px; border: 1px solid rgb(23 54 74 / 28%); border-radius: 8px; background: rgb(255 255 255 / 92%); color: var(--ink); font: inherit; font-size: .72rem; font-weight: 750; box-shadow: 0 3px 12px rgb(23 54 74 / 16%); cursor: pointer; }
+.three-recenter:hover { background: white; }
+.three-recenter:focus-visible { outline: 3px solid rgb(22 140 133 / 35%); outline-offset: 2px; }
 .traffic-3d-fallback { position: relative; width: 100%; height: 100%; background: #dfe9e5; }
 .traffic-3d-fallback .leaflet-control-attribution { font-size: 9px; }
 .fallback-aircraft { position: relative; width: 30px; height: 54px; transform: translate(-15px, -45px); }

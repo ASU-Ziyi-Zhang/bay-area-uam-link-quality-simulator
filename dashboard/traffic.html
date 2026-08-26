@@ -113,7 +113,10 @@
 
         <section class="traffic-three-card" aria-labelledby="three-heading">
           <div class="card-heading"><div><span class="eyebrow">FIXED OVERVIEW</span><h2 id="three-heading">3D corridor traffic</h2></div><span>Colors match group policy</span></div>
-          <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
+          <div class="traffic-3d-stage">
+            <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
+            <button id="three-recenter" class="three-recenter" type="button" aria-label="Recenter the three-dimensional corridor view">Recenter</button>
+          </div>
           <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; a fixed real-map fallback is shown.</div>
         </section>
       </main>
@@ -146,7 +149,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260825-multi-uam-policy-v3";
+        const version = "20260826-one-second-policy-v4";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

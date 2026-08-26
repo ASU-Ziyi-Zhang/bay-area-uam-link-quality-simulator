@@ -19,6 +19,9 @@ def test_group_config_declares_fixed_lane_level_baseline():
     assert config.entry_interval_s == 32.0
     assert config.altitude_m == 300.0
     assert config.lateral_offset_m == 0.0
+    assert config.simulation.clock.dt_motion_s == 1.0
+    assert config.simulation.clock.dt_radio_s == 1.0
+    assert config.simulation.clock.dt_control_s == 1.0
     assert config.simulation.metadata["lane_change_allowed"] is False
     assert config.simulation.metadata["level_change_allowed"] is False
 
@@ -39,6 +42,9 @@ def test_real_airport_group_run_emits_policy_shares_and_capacity(tmp_path):
     assert summary["policy"]["observation_count"] > 0
     assert summary["capacity"]["q_mix_rho_uam_h"] > 0.0
     assert summary["warmup_s"] == 0.0
+    assert summary["clock"]["dt_radio_s"] == 1.0
+    assert summary["clock"]["dt_control_s"] == 1.0
+    assert summary["trb_reference_regression"]["sampling_interval_s"] == 5.0
     assert (tmp_path / "run" / "entrants.csv").exists()
     assert (tmp_path / "run" / "group_policy_trace.csv").exists()
     assert (tmp_path / "run" / "capacity_trace.csv").exists()

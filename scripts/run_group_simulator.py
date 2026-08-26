@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=ROOT / "runs" / "airport-to-airport-group-policy-v2",
+        default=ROOT / "runs" / "airport-to-airport-group-policy-v3",
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()

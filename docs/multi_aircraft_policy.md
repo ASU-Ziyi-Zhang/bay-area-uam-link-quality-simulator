@@ -63,6 +63,8 @@ in the animation.
 | Entry interval | 32 s |
 | Maximum local group | 5 aircraft |
 | Policy history | up to 30 s |
+| Motion/radio/adaptive policy step | 1 s |
+| Legacy TRB reference step | 5 s |
 
 All model and policy parameters are stored in each scenario's
 `group_simulator.json`. No random number generator is used.
@@ -72,19 +74,19 @@ All model and policy parameters are stored in each scenario's
 ```powershell
 python scripts\run_group_simulator.py `
   --config scenarios\airport_to_airport\group_simulator.json `
-  --output runs\airport-to-airport-group-policy-v2
+  --output runs\airport-to-airport-group-policy-v3
 
 python scripts\run_group_simulator.py `
   --config scenarios\sf_sj_full\group_simulator.json `
-  --output runs\sf-sj-full-group-policy-v2
+  --output runs\sf-sj-full-group-policy-v3
 
 python scripts\build_traffic_dashboard.py `
-  --run-dir runs\airport-to-airport-group-policy-v2 `
+  --run-dir runs\airport-to-airport-group-policy-v3 `
   --scenario scenarios\airport_to_airport\scenario.json `
   --output dashboard\data\airport_to_airport_traffic.js
 
 python scripts\build_traffic_dashboard.py `
-  --run-dir runs\sf-sj-full-group-policy-v2 `
+  --run-dir runs\sf-sj-full-group-policy-v3 `
   --scenario scenarios\sf_sj_full\scenario.json `
   --output dashboard\data\sf_sj_full_traffic.js
 
@@ -98,11 +100,15 @@ directory.
 
 | Definition | Scenario | C | R | F | Q0.95 (UAM/h) |
 |---|---|---:|---:|---:|---:|
-| Dynamic local group, all active observations | Airport access | 30.90% | 31.40% | 37.70% | 64.403 |
-| Dynamic local group, all active observations | Full SF-SJ | 44.68% | 32.34% | 22.97% | 76.569 |
+| Dynamic one-second local group, all active observations | Airport access | 32.57% | 33.71% | 33.72% | 71.322 |
+| Dynamic one-second local group, all active observations | Full SF-SJ | 45.81% | 32.90% | 21.28% | 82.411 |
 | Original centered-five TRB regression | Full SF-SJ | 36.57% | 35.82% | 27.61% | 72.470 |
 
 These are planning-model outputs, not measured or certified capacities.
+The one-second run changes the dynamic estimates because each 30 s exposure
+window contains up to 31 observations instead of seven. It is therefore a
+model-resolution revision, not merely smoother animation. The separately
+computed five-second TRB row is unchanged.
 
 ## Dashboard interpretation
 
@@ -116,9 +122,10 @@ These are planning-model outputs, not measured or certified capacities.
 - `reliability capacity` is the lower fifth percentile of the complete trace;
 - `demand supported` tests whether offered demand is no greater than `Q0.95`.
 
-The primary 3D view uses a fixed third-person camera. If its external Cesium
-module is unavailable, the dashboard automatically replaces the black panel
-with a real-map fallback containing explicit aircraft and base-station icons.
+The primary 3D view uses a fixed third-person camera, canvas-rendered aircraft
+and base-station icons, and a `Recenter` control. If its external Cesium module
+is unavailable, the dashboard automatically replaces the panel with a real-map
+fallback containing the same semantic layers.
 
 ## Explicit non-features
 

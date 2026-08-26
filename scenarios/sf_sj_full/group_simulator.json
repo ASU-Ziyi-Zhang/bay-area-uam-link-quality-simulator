@@ -15,8 +15,8 @@
   },
   "clock": {
     "dt_motion_s": 1.0,
-    "dt_radio_s": 5.0,
-    "dt_control_s": 5.0,
+    "dt_radio_s": 1.0,
+    "dt_control_s": 1.0,
     "policy_window_s": 30.0,
     "capacity_aggregation_s": 60.0
   },
@@ -26,4 +26,3 @@
     "level_change_allowed": false
   }
 }
-

@@ -27,6 +27,8 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "--fallback: #d65353" in css
     assert "Current local policy group" in html
     assert "Selected-aircraft radio profile" in html
+    assert "three-recenter" in html
+    assert "Recenter" in html
     assert "uam-traffic-marker--group" in css
     assert "Multi-UAM policy simulator" in single_html
 
@@ -34,7 +36,7 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
 def test_airport_traffic_bundle_matches_group_run_summary():
     bundle = read_bundle(ROOT / "dashboard" / "data" / "airport_to_airport_traffic.js")
     summary = json.loads(
-        (ROOT / "runs" / "airport-to-airport-group-policy-v2" / "summary.json").read_text()
+        (ROOT / "runs" / "airport-to-airport-group-policy-v3" / "summary.json").read_text()
     )
     assert bundle["summary"]["scenario_id"] == "airport_to_airport"
     assert bundle["summary"]["policy"]["shares"] == summary["policy"]["shares"]
@@ -44,6 +46,9 @@ def test_airport_traffic_bundle_matches_group_run_summary():
     assert bundle["frames"][0]["active_count"] == 1
     assert bundle["frames"][0]["policies"] == {"UAM001": "C"}
     assert bundle["frames"][0]["groups"] == {"UAM001": ["UAM001"]}
+    assert bundle["summary"]["clock"]["dt_radio_s"] == 1.0
+    assert bundle["summary"]["clock"]["dt_control_s"] == 1.0
+    assert bundle["frames"][1]["t"] - bundle["frames"][0]["t"] == 1.0
 
 
 def test_full_traffic_bundle_reproduces_slide_policy_capacity_baseline():

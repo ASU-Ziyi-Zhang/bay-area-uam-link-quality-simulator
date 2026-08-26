@@ -28,7 +28,7 @@
     "active-count", "expected-count", "current-capacity", "reliability-capacity", "demand-status",
     "policy-observations", "share-c", "share-r", "share-f", "share-c-bar", "share-r-bar", "share-f-bar",
     "selected-uam", "selected-policy", "selected-exposure", "selected-site", "selected-rsrp", "selected-sinr", "selected-progress", "selected-group",
-    "current-counts", "link-current", "three-warning",
+    "current-counts", "link-current", "three-warning", "three-recenter",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const capacityCanvas = document.getElementById("capacity-chart");
@@ -234,8 +234,58 @@
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="${color}" stroke="white" stroke-width="4"/><path d="M29 11h6l4 17 15 8v5l-16-3-3 15h-6l-3-15-16 3v-5l15-8z" fill="white"/></svg>`)}`;
   }
 
-  function stationSvg() {
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80"><path d="M32 7v62M19 69h26M24 69l8-42 8 42M24 43h16M21 54h22" fill="none" stroke="#17364a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 18c-8 6-8 15 0 21M43 18c8 6 8 15 0 21M14 10C0 22 0 38 14 49M50 10c14 12 14 28 0 39" fill="none" stroke="#e46f51" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="22" r="5" fill="#e46f51" stroke="white" stroke-width="2"/></svg>`)}`;
+  const planeCanvasCache = new Map();
+  function planeCanvas(policy) {
+    if (planeCanvasCache.has(policy)) return planeCanvasCache.get(policy);
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = colors[policy] || colors.F;
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(32, 32, 27, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(29, 10); ctx.lineTo(35, 10); ctx.lineTo(39, 27);
+    ctx.lineTo(54, 35); ctx.lineTo(54, 41); ctx.lineTo(38, 38);
+    ctx.lineTo(35, 54); ctx.lineTo(29, 54); ctx.lineTo(26, 38);
+    ctx.lineTo(10, 41); ctx.lineTo(10, 35); ctx.lineTo(25, 27);
+    ctx.closePath();
+    ctx.fill();
+    planeCanvasCache.set(policy, canvas);
+    return canvas;
+  }
+
+  let stationCanvasCache = null;
+  function stationCanvas() {
+    if (stationCanvasCache) return stationCanvasCache;
+    const canvas = document.createElement("canvas");
+    canvas.width = 48;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.strokeStyle = "#17364a";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(24, 14); ctx.lineTo(24, 58);
+    ctx.moveTo(12, 58); ctx.lineTo(36, 58);
+    ctx.moveTo(17, 58); ctx.lineTo(24, 27); ctx.lineTo(31, 58);
+    ctx.moveTo(18, 41); ctx.lineTo(30, 41);
+    ctx.stroke();
+    ctx.strokeStyle = "#e46f51";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(24, 18, 10, -Math.PI * .72, Math.PI * .72);
+    ctx.moveTo(10, 5); ctx.arc(24, 18, 18, -Math.PI * .75, Math.PI * .75);
+    ctx.stroke();
+    ctx.fillStyle = "#e46f51";
+    ctx.beginPath(); ctx.arc(24, 18, 4, 0, Math.PI * 2); ctx.fill();
+    stationCanvasCache = canvas;
+    return canvas;
   }
 
   function fallbackAircraftIcon(row) {
@@ -316,8 +366,8 @@
       viewer3d.entities.add({
         position: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, site.height_m / 2),
         cylinder: { length: site.height_m, topRadius: 1.4, bottomRadius: 2.2, material: Cesium.Color.fromCssColorString("#17364a").withAlpha(.85) },
-        billboard: { image: stationSvg(), width: 30, height: 38, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY },
-        label: { text: site.id, font: "11px system-ui", fillColor: Cesium.Color.fromCssColorString("#17364a"), outlineColor: Cesium.Color.WHITE, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, 11), disableDepthTestDistance: Number.POSITIVE_INFINITY },
+        billboard: { image: stationCanvas(), width: 18, height: 24, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY },
+        label: { text: site.id, font: "9px system-ui", fillColor: Cesium.Color.fromCssColorString("#17364a"), outlineColor: Cesium.Color.WHITE, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, 8), disableDepthTestDistance: Number.POSITIVE_INFINITY },
       });
     });
     const minLon = Math.min(...data.route.map((p) => p[0]));
@@ -334,11 +384,40 @@
       new Cesium.HeadingPitchRange(
         Cesium.Math.toRadians(315),
         Cesium.Math.toRadians(-48),
-        Math.max(28000, diagonal * 1.05),
+        Math.max(36000, diagonal * 1.35),
       ),
     );
   }
   initialize3d();
+
+  function recenter3d() {
+    if (fallbackMap) {
+      fallbackMap.fitBounds(
+        L.latLngBounds(data.route.map(([lon, lat]) => [lat, lon])),
+        { padding: [60, 60] },
+      );
+      return;
+    }
+    if (!viewer3d || !window.Cesium) return;
+    const minLon = Math.min(...data.route.map((point) => point[0]));
+    const minLat = Math.min(...data.route.map((point) => point[1]));
+    const maxLon = Math.max(...data.route.map((point) => point[0]));
+    const maxLat = Math.max(...data.route.map((point) => point[1]));
+    const center = Cesium.Cartesian3.fromDegrees((minLon + maxLon) / 2, (minLat + maxLat) / 2, 0);
+    const diagonal = Cesium.Cartesian3.distance(
+      Cesium.Cartesian3.fromDegrees(minLon, minLat, 0),
+      Cesium.Cartesian3.fromDegrees(maxLon, maxLat, 0),
+    );
+    viewer3d.camera.lookAt(
+      center,
+      new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(315),
+        Cesium.Math.toRadians(-48),
+        Math.max(36000, diagonal * 1.35),
+      ),
+    );
+  }
+  el["three-recenter"].addEventListener("click", recenter3d);
 
   function activeAircraft(frame) {
     return entrants.filter((uam) => uam.entry <= frame.t + 1e-9 && uam.exit >= frame.t - 1e-9).map((uam) => {
@@ -412,14 +491,14 @@
       if (!entity) {
         entity = viewer3d.entities.add({
           position: Cesium.Cartesian3.fromDegrees(row.position.lon, row.position.lat, altitudeM),
-          billboard: { image: planeSvg(row.policy), width: 32, height: 32, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: Number.POSITIVE_INFINITY },
+          billboard: { image: planeCanvas(row.policy), width: 18, height: 18, verticalOrigin: Cesium.VerticalOrigin.CENTER, disableDepthTestDistance: Number.POSITIVE_INFINITY },
         });
         aircraft3d.set(row.id, entity);
       }
       entity.position = Cesium.Cartesian3.fromDegrees(row.position.lon, row.position.lat, altitudeM);
-      entity.billboard.image = planeSvg(row.policy);
-      entity.billboard.width = row.id === selectedUamId ? 44 : 32;
-      entity.billboard.height = row.id === selectedUamId ? 44 : 32;
+      entity.billboard.image = planeCanvas(row.policy);
+      entity.billboard.width = row.id === selectedUamId ? 26 : 18;
+      entity.billboard.height = row.id === selectedUamId ? 26 : 18;
       entity.billboard.rotation = Cesium.Math.toRadians(-row.heading);
     });
   }

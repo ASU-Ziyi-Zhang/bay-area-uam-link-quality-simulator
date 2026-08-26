@@ -174,14 +174,16 @@ def run_group_simulation(
         raise ValueError("group simulator and scenario speed must match")
     if not np.isclose(
         cfg.simulation.clock.dt_control_s,
-        scenario.time_step_s,
+        cfg.simulation.clock.dt_radio_s,
         atol=1e-9,
         rtol=0.0,
     ):
-        raise ValueError("policy/control clock must match the scenario time step")
+        raise ValueError("adaptive policy and radio clocks must match")
+    if cfg.simulation.clock.dt_motion_s > cfg.simulation.clock.dt_radio_s:
+        raise ValueError("motion clock cannot be coarser than the radio clock")
 
     duration_s = cfg.duration_s or scenario.simulation_duration_s
-    time_s = make_time_grid(duration_s, scenario.time_step_s)
+    time_s = make_time_grid(duration_s, cfg.simulation.clock.dt_radio_s)
     entry_time_s = np.arange(
         0.0, duration_s, cfg.entry_interval_s, dtype=float
     )
@@ -195,7 +197,24 @@ def run_group_simulation(
     )
     radio = compute_link_state(trajectory, scenario.base_stations, scenario.radio)
     link_quality = evaluate_link_quality(radio, scenario.link_quality)
-    reference_policy = assign_policy(link_quality, scenario.policy)
+    # Preserve the accepted TRB regression at the scenario's legacy sampling
+    # interval.  The adaptive stream may use a finer radio/policy clock without
+    # silently changing that reference definition.
+    reference_time_s = make_time_grid(duration_s, scenario.time_step_s)
+    reference_trajectory = ConstantSpeedTrajectory(cfg.speed_mps).realize(
+        scenario.corridor,
+        reference_time_s,
+        entry_time_s,
+        np.full(entry_time_s.shape, cfg.altitude_m),
+        np.full(entry_time_s.shape, cfg.lateral_offset_m),
+    )
+    reference_radio = compute_link_state(
+        reference_trajectory, scenario.base_stations, scenario.radio
+    )
+    reference_link_quality = evaluate_link_quality(
+        reference_radio, scenario.link_quality
+    )
+    reference_policy = assign_policy(reference_link_quality, scenario.policy)
     reference_capacity = snapshot_capacity(
         reference_policy["policy"],
         reference_policy["valid_after_warmup"],
@@ -351,8 +370,10 @@ def run_group_simulation(
         "trb_reference_regression": {
             "definition": (
                 "Original full centered-five-aircraft groups after the legacy "
-                "warmup; retained only as a regression comparison."
+                f"warmup, sampled every {scenario.time_step_s:g} s; retained "
+                "only as a regression comparison."
             ),
+            "sampling_interval_s": scenario.time_step_s,
             "warmup_s": scenario.policy.warmup_s,
             "observation_count": reference_total,
             "counts": reference_counts,
@@ -392,8 +413,10 @@ def run_group_simulation(
         "status": "awaiting_review",
         "created_utc": summary["created_utc"],
         "objective": (
-            "Reproduce the accepted TRB individual-radio to group-policy to "
-            "capacity chain on one fixed real corridor lane and altitude level."
+            "Evaluate the individual-radio to local-group-policy to capacity "
+            f"chain every {cfg.simulation.clock.dt_radio_s:g} s on one fixed "
+            "real corridor lane and altitude level while preserving the legacy "
+            "TRB reference."
         ),
         "command": (
             "python scripts/run_group_simulator.py "
@@ -435,6 +458,14 @@ def run_group_simulation(
                 n_policy == int(trajectory.active.sum())
             ),
             "simulation_starts_at_zero": bool(capacity["t"][0] == 0.0),
+            "adaptive_step_matches_declared_clock": bool(
+                np.allclose(
+                    np.diff(capacity["t"]),
+                    cfg.simulation.clock.dt_control_s,
+                    atol=1e-12,
+                    rtol=0.0,
+                )
+            ),
         },
         "evidence_grade": "estimated under the declared deterministic planning model",
         "limitations": [
@@ -461,6 +492,8 @@ multi-lane geometry or dynamic switching.
 - Entry interval: {cfg.entry_interval_s:.3f} s.
 - Speed/altitude/offset: {cfg.speed_mps:.1f} m/s / {cfg.altitude_m:.1f} m / {cfg.lateral_offset_m:.1f} m.
 - Local group/window: up to {scenario.policy.group_size} aircraft / {scenario.policy.window_s:.1f} s.
+- Motion/radio/adaptive-policy step: {cfg.simulation.clock.dt_radio_s:.1f} s.
+- Legacy TRB reference step: {scenario.time_step_s:.1f} s.
 - Startup: begins at 0 s; each active aircraft is classified from its available neighbors and history.
 
 ## Result
@@ -477,6 +510,7 @@ multi-lane geometry or dynamic switching.
 - Every active aircraft has C/R/F policy; no unclassified state is used.
 - Interior groups contain five aircraft; boundary/startup groups shrink to the available local neighbors.
 - The original centered-five TRB reference remains separately reported in `summary.json`.
+- Consecutive adaptive capacity snapshots match the declared policy clock.
 - Lane and level changes are disabled.
 
 ## Boundary and unresolved risks
