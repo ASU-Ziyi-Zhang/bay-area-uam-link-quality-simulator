@@ -36,6 +36,23 @@ button, select, input { font: inherit; }
 .assumption-strip strong { font-size: 1.05rem; }
 .assumption-strip small { color: var(--muted); }
 
+.experiment-controls { margin: 14px 14px 0; padding: 14px 16px 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 5px 18px rgb(23 54 74 / 5%); }
+.experiment-controls__heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 11px; }
+.experiment-controls__heading h2 { margin: 2px 0 0; font-size: 1rem; }
+.experiment-controls__heading > span { color: var(--muted); font-size: .72rem; }
+.experiment-controls form { display: grid; grid-template-columns: minmax(380px, .9fr) minmax(620px, 1.5fr) auto; align-items: end; gap: 12px; }
+.experiment-controls fieldset { display: grid; grid-template-columns: repeat(4, minmax(110px, 1fr)); gap: 9px; min-width: 0; margin: 0; padding: 10px; border: 1px solid var(--line); border-radius: 9px; }
+.experiment-controls fieldset:nth-of-type(2) { grid-template-columns: repeat(4, minmax(116px, 1fr)); }
+.experiment-controls legend { padding: 0 5px; color: var(--teal); font-size: .68rem; font-weight: 800; letter-spacing: .04em; }
+.experiment-controls label { display: grid; align-content: start; gap: 5px; color: var(--muted); font-size: .67rem; font-weight: 700; }
+.experiment-controls label span { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; font-weight: 500; }
+.experiment-controls input, .experiment-controls select { width: 100%; min-height: 34px; padding: 6px 8px; border: 1px solid #c6d0cb; border-radius: 7px; background: white; color: var(--ink); }
+.experiment-controls input:focus, .experiment-controls select:focus { outline: 3px solid rgb(22 140 133 / 18%); border-color: var(--teal); }
+.experiment-controls__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; min-width: 220px; }
+.experiment-controls__actions button { min-height: 35px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); cursor: pointer; font-size: .72rem; font-weight: 750; }
+.experiment-controls__actions .experiment-controls__run { border-color: var(--teal); background: var(--teal); color: white; }
+.experiment-controls__actions small { grid-column: 1 / -1; max-width: 270px; color: var(--muted); font-size: .62rem; line-height: 1.35; }
+
 .traffic-main { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(340px, .78fr); gap: 14px; padding: 14px; }
 .traffic-map-card, .traffic-three-card, .policy-card, .selected-card, .link-card, .capacity-card, .metric-grid article { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 5px 18px rgb(23 54 74 / 5%); }
 .traffic-map-card { overflow: hidden; }
@@ -49,7 +66,8 @@ button, select, input { font: inherit; }
 .policy-dot--c { background: var(--coordinated); }
 .policy-dot--r { background: var(--reactive); }
 .policy-dot--f { background: var(--fallback); }
-.uam-traffic-marker { width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid white; border-radius: 50% 50% 50% 0; color: white; font-size: 11px; box-shadow: 0 2px 6px rgb(0 0 0 / 30%); transform-origin: center; }
+.uam-traffic-hit { width: 100%; height: 100%; display: grid; place-items: center; cursor: pointer; pointer-events: none; }
+.uam-traffic-marker { width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid white; border-radius: 50% 50% 50% 0; color: white; font-size: 11px; box-shadow: 0 2px 6px rgb(0 0 0 / 30%); transform-origin: center; pointer-events: none; }
 .uam-traffic-marker--selected { width: 28px; height: 28px; outline: 3px solid rgb(23 54 74 / 35%); font-size: 13px; }
 .uam-traffic-marker--group { box-shadow: 0 0 0 3px rgb(23 54 74 / 38%), 0 3px 8px rgb(0 0 0 / 18%); }
 
@@ -125,6 +143,9 @@ button, select, input { font: inherit; }
   .traffic-three-card { grid-column: 1; }
   .traffic-three-heading { align-items: flex-start; flex-direction: column; }
   .traffic-three-camera { width: 100%; justify-content: space-between; }
+  .experiment-controls form { grid-template-columns: 1fr; }
+  .experiment-controls__actions { grid-template-columns: auto auto 1fr; align-items: center; }
+  .experiment-controls__actions small { grid-column: auto; max-width: none; }
 }
 
 @media (max-width: 620px) {
@@ -133,6 +154,11 @@ button, select, input { font: inherit; }
   .mode-nav a { flex: 1; text-align: center; }
   .assumption-strip { grid-template-columns: repeat(2, 1fr); }
   .traffic-main { padding: 8px; }
+  .experiment-controls { margin: 8px 8px 0; padding: 12px; }
+  .experiment-controls__heading { align-items: start; flex-direction: column; }
+  .experiment-controls fieldset, .experiment-controls fieldset:nth-of-type(2) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .experiment-controls__actions { grid-template-columns: 1fr 1fr; }
+  .experiment-controls__actions small { grid-column: 1 / -1; }
   #traffic-map { min-height: 390px; }
   .card-heading { align-items: start; flex-direction: column; }
   .policy-legend { justify-content: start; }

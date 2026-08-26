@@ -30,6 +30,15 @@ Use the **Multi-UAM policy** tab, or open
 `traffic.html?scenario=airport_to_airport`, to inspect simultaneous aircraft,
 policy fractions, and reliability-qualified planning capacity.
 
+The multi-UAM page can deterministically rerun the selected scenario in the
+browser. Editable inputs include altitude, route-relative lateral offset,
+speed, departure interval, SINR threshold, local-group size, exposure window,
+policy-update interval, C/R exposure limits, and the reliability level.
+Offered demand is then derived as `3600 / departure interval`; the 1-lane x
+1-level geometry and fixed control are scenario status in this baseline mode.
+Clicking an aircraft on the 2D corridor synchronizes its detail record, radio
+profile, serving link, and the focal-aircraft 3D camera.
+
 The map header links to the complete
 [18-site macro-site layout](evidence/figures/corridor_sites.svg), showing the
 corridor-wide `Macro_Tower`, `Macro_Building`, and `Macro_Other` classes and

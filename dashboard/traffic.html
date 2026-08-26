@@ -34,13 +34,44 @@
         </div>
       </header>
 
-      <section class="assumption-strip" aria-label="Fixed baseline assumptions">
+      <section class="assumption-strip" aria-label="Applied inputs and scenario status">
         <div><span>Offered demand</span><strong id="offered-demand">—</strong><small>UAM/h</small></div>
         <div><span>Entry interval</span><strong id="entry-interval">—</strong><small>s</small></div>
         <div><span>Speed</span><strong id="traffic-speed">—</strong><small>m/s</small></div>
         <div><span>Altitude</span><strong id="traffic-altitude">—</strong><small>m AGL</small></div>
         <div><span>Geometry</span><strong>1 × 1</strong><small>lane × level</small></div>
         <div><span>Control</span><strong>Fixed</strong><small>no switching</small></div>
+      </section>
+
+      <section class="experiment-controls" aria-labelledby="experiment-heading">
+        <div class="experiment-controls__heading">
+          <div><span class="eyebrow">EXPERIMENT INPUTS</span><h2 id="experiment-heading">Trajectory, traffic and policy settings</h2></div>
+          <span id="experiment-status" role="status" aria-live="polite">Baseline parameters loaded</span>
+        </div>
+        <form id="experiment-form">
+          <fieldset>
+            <legend>Flight and departures</legend>
+            <label>Altitude <span><input id="input-altitude" type="number" min="50" max="2000" step="50" /> m AGL</span></label>
+            <label>Lateral offset <span><input id="input-offset" type="number" min="-5000" max="5000" step="100" /> m</span></label>
+            <label>Speed <span><input id="input-speed" type="number" min="10" max="120" step="5" /> m/s</span></label>
+            <label>Departure interval <span><input id="input-departure" type="number" min="5" max="300" step="1" /> s</span></label>
+          </fieldset>
+          <fieldset>
+            <legend>Policy mapping</legend>
+            <label>SINR threshold Θ <span><input id="input-theta" type="number" min="-20" max="20" step="0.5" /> dB</span></label>
+            <label>Maximum local group <select id="input-group-size"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
+            <label>Exposure window <span><input id="input-window" type="number" min="1" max="300" step="1" /> s</span></label>
+            <label>Policy update interval <span><input id="input-policy-interval" type="number" min="1" max="30" step="1" /> s</span></label>
+            <label>Coordinated max exposure <span><input id="input-c-tolerance" type="number" min="0" max="100" step="1" /> %</span></label>
+            <label>Reactive max exposure <span><input id="input-r-tolerance" type="number" min="0" max="100" step="1" /> %</span></label>
+            <label>Reliability ρ <span><input id="input-reliability" type="number" min="50" max="100" step="1" /> %</span></label>
+          </fieldset>
+          <div class="experiment-controls__actions">
+            <button id="run-experiment" class="experiment-controls__run" type="submit">Run experiment</button>
+            <button id="reset-experiment" type="button">Reset baseline</button>
+            <small>Offered demand is derived as 3600 ÷ departure interval. Geometry remains fixed at 1 lane × 1 level in this mode.</small>
+          </div>
+        </form>
       </section>
 
       <main class="traffic-main">
@@ -70,8 +101,8 @@
           <section class="metric-grid">
             <article><span>Aircraft in corridor</span><strong id="active-count">—</strong><small id="expected-count">steady-state expectation —</small></article>
             <article><span>Current mixed capacity</span><strong id="current-capacity">—</strong><small>UAM/h · policy-weighted spacing</small></article>
-            <article><span>Reliability capacity</span><strong id="reliability-capacity">—</strong><small>Q<sub>0.95</sub> · lower 5th percentile</small></article>
-            <article><span>Demand supported?</span><strong id="demand-status">—</strong><small>offered demand ≤ Q<sub>0.95</sub></small></article>
+            <article><span>Reliability capacity</span><strong id="reliability-capacity">—</strong><small id="reliability-caption">Q<sub>0.95</sub> · lower 5th percentile</small></article>
+            <article><span>Demand supported?</span><strong id="demand-status">—</strong><small id="demand-caption">offered demand ≤ Q<sub>0.95</sub></small></article>
           </section>
 
           <section class="policy-card" aria-labelledby="policy-heading">
@@ -84,7 +115,7 @@
               <div><i class="policy-dot policy-dot--r"></i><span>Reactive</span><strong id="share-r">—</strong></div>
               <div><i class="policy-dot policy-dot--f"></i><span>Fallback</span><strong id="share-f">—</strong></div>
             </div>
-            <p>Fractions use all active-aircraft time observations. Each aircraft is classified from its available local neighbors, up to two ahead and two behind.</p>
+            <p id="policy-description">Fractions use all active-aircraft time observations. Each aircraft is classified from its available local neighbors.</p>
           </section>
 
           <section class="selected-card" aria-labelledby="selected-heading">
@@ -123,7 +154,7 @@
           <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; a fixed real-map fallback is shown.</div>
           <div class="traffic-three-legend" aria-label="Three-dimensional view legend">
             <span><i class="traffic-three-line traffic-three-line--ground"></i>Corridor ground projection</span>
-            <span><i class="traffic-three-line traffic-three-line--flight"></i>300 m flight path</span>
+            <span><i class="traffic-three-line traffic-three-line--flight"></i><span id="flight-altitude-legend">300 m flight path</span></span>
             <span><i class="traffic-three-line traffic-three-line--radio"></i>Selected serving link</span>
             <span><i class="traffic-three-symbol traffic-three-symbol--selected"></i>Selected aircraft</span>
             <span><i class="traffic-three-symbol traffic-three-symbol--traffic"></i>Surrounding traffic</span>
@@ -132,13 +163,14 @@
       </main>
 
       <footer class="traffic-footer">
-        <span>Individual radio · overlapping five-UAM group policy · deterministic planning capacity</span>
+        <span id="footer-policy-description">Individual radio · overlapping five-UAM group policy · deterministic planning capacity</span>
         <span>No lane change · no level change · no controller</span>
       </footer>
     </div>
     <div id="error-panel" class="error-panel" hidden role="alert"></div>
 
     <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="traffic_engine.js?v=20260826-interactive-traffic-v7"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
             integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
             crossorigin="anonymous"></script>
@@ -159,7 +191,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260826-compact-traffic-v6";
+        const version = "20260826-interactive-traffic-v7";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

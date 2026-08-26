@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import shutil
+import subprocess
 
 import numpy as np
 
@@ -52,7 +54,16 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "applyFollowCamera(selected)" in app
     assert '"three-camera-state", "three-camera-note"' in app
     assert "Loading traffic data" in html
-    assert "20260826-compact-traffic-v6" in html
+    assert "20260826-interactive-traffic-v7" in html
+    assert "traffic_engine.js" in html
+    for control_id in (
+        "input-altitude", "input-offset", "input-speed", "input-departure",
+        "input-theta", "input-group-size", "input-window", "input-policy-interval",
+        "input-c-tolerance", "input-r-tolerance", "input-reliability",
+    ):
+        assert f'id="{control_id}"' in html
+    assert "setPlaying(false);\n    selectedUamId = uamId" in app
+    assert "uam-traffic-hit" in css
     assert "uam-traffic-marker--group" in css
     assert "Multi-UAM policy simulator" in single_html
 
@@ -75,6 +86,7 @@ def test_airport_traffic_bundle_matches_group_run_summary():
     assert len(bundle["frames"][0]["exposure_values"]) == 1
     assert bundle["summary"]["clock"]["dt_radio_s"] == 1.0
     assert bundle["summary"]["clock"]["dt_control_s"] == 1.0
+    assert "capacity" in bundle["summary"]["model_config"]
     assert bundle["frames"][1]["t"] - bundle["frames"][0]["t"] == 1.0
 
 
@@ -111,3 +123,57 @@ def test_airport_bundle_is_compact_enough_for_interactive_startup():
     assert "policy_codes" in bundle["frames"][0]
     assert "policies" not in bundle["frames"][0]
     assert "groups" not in bundle["frames"][0]
+
+
+def test_browser_engine_exactly_reproduces_airport_baseline():
+    node = shutil.which("node")
+    if node is None:
+        return
+    script = r"""
+const fs = require('fs');
+const vm = require('vm');
+const context = { window: {}, globalThis: {} };
+vm.createContext(context);
+vm.runInContext(fs.readFileSync(process.argv[2], 'utf8'), context);
+vm.runInContext(fs.readFileSync(process.argv[3], 'utf8'), context);
+const data = context.window.UAM_TRAFFIC_DATA;
+const engine = context.globalThis.UAM_TRAFFIC_ENGINE;
+const parameters = {
+  speedMps: data.summary.trajectory.speed_mps,
+  altitudeM: data.summary.trajectory.altitude_m,
+  lateralOffsetM: data.summary.trajectory.lateral_offset_m,
+  departureIntervalS: data.summary.traffic.entry_interval_s,
+  sinrThresholdDb: data.summary.policy.sinr_threshold_db,
+  groupSize: data.summary.policy.maximum_group_size,
+  exposureWindowS: data.summary.policy.window_s,
+  policyIntervalS: data.summary.clock.dt_control_s,
+  coordinatedTolerance: data.summary.policy.coordinated_exposure_tolerance,
+  reactiveTolerance: data.summary.policy.reactive_exposure_tolerance,
+  reliabilityRho: data.summary.capacity.reliability_rho,
+};
+const output = engine.simulate(data, parameters);
+console.log(JSON.stringify({
+  frames: output.frames.length,
+  entrants: output.entrants.length,
+  observations: output.results.observationCount,
+  shares: output.results.policyShares,
+  reliability: output.results.reliabilityCapacity,
+}));
+"""
+    bundle_path = ROOT / "dashboard" / "data" / "airport_to_airport_traffic.js"
+    engine_path = ROOT / "dashboard" / "traffic_engine.js"
+    completed = subprocess.run(
+        [node, "--input-type=commonjs", "-", str(bundle_path), str(engine_path)],
+        input=script,
+        text=True,
+        capture_output=True,
+        check=True,
+        timeout=30,
+    )
+    result = json.loads(completed.stdout)
+    bundle = read_bundle(bundle_path)
+    assert result["frames"] == len(bundle["frames"])
+    assert result["entrants"] == len(bundle["entrants"])
+    assert result["observations"] == bundle["summary"]["policy"]["observation_count"]
+    assert result["shares"] == bundle["summary"]["policy"]["shares"]
+    assert result["reliability"] == bundle["summary"]["capacity"]["q_mix_rho_uam_h"]

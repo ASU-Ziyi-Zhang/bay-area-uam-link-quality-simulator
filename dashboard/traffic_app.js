@@ -2,17 +2,18 @@
   "use strict";
 
   const data = window.UAM_TRAFFIC_DATA;
+  const engine = window.UAM_TRAFFIC_ENGINE;
   const errorPanel = document.getElementById("error-panel");
-  if (!data || !window.L) {
+  if (!data || !window.L || !engine) {
     errorPanel.hidden = false;
     errorPanel.textContent = !data
       ? "Traffic data bundle is missing. Rebuild it with scripts/build_traffic_dashboard.py."
-      : "The bundled Leaflet map library did not load.";
+      : !window.L ? "The bundled Leaflet map library did not load." : "The deterministic traffic engine did not load.";
     return;
   }
 
   const colors = { C: "#238b57", R: "#e3b735", F: "#d65353" };
-  const entrants = [...data.entrants].sort((left, right) => left.index - right.index);
+  let entrants = [...data.entrants].sort((left, right) => left.index - right.index);
   function expandFrame(frame) {
     if (frame.policies) return frame;
     const activeIds = entrants
@@ -29,14 +30,38 @@
     ]));
     return { ...frame, policies, exposure, groups };
   }
-  const frames = data.frames.map(expandFrame);
+  let frames = data.frames.map(expandFrame);
   const route = data.route_metric;
   const summary = data.summary;
   const display = summary.display || {};
-  const speedMps = Number(summary.trajectory.speed_mps);
-  const altitudeM = Number(summary.trajectory.altitude_m);
+  let speedMps = Number(summary.trajectory.speed_mps);
+  let altitudeM = Number(summary.trajectory.altitude_m);
+  let lateralOffsetM = Number(summary.trajectory.lateral_offset_m || 0);
   const corridorLengthM = Number(summary.corridor_length_km) * 1000;
   const stationById = new Map(data.stations.map((site) => [site.id, site]));
+  const baselineParameters = {
+    speedMps,
+    altitudeM,
+    lateralOffsetM,
+    departureIntervalS: Number(summary.traffic.entry_interval_s),
+    sinrThresholdDb: Number(summary.policy.sinr_threshold_db),
+    groupSize: Number(summary.policy.maximum_group_size),
+    exposureWindowS: Number(summary.policy.window_s),
+    policyIntervalS: Number(summary.clock.dt_control_s),
+    coordinatedTolerance: Number(summary.policy.coordinated_exposure_tolerance),
+    reactiveTolerance: Number(summary.policy.reactive_exposure_tolerance),
+    reliabilityRho: Number(summary.capacity.reliability_rho),
+  };
+  let currentParameters = { ...baselineParameters };
+  let currentResults = {
+    offeredDemand: Number(summary.traffic.entry_demand_uam_h),
+    transitTimeS: Number(summary.transit_time_s),
+    expectedOccupancy: Number(summary.traffic.expected_steady_occupancy),
+    reliabilityCapacity: Number(summary.capacity.q_mix_rho_uam_h),
+    demandSupported: Boolean(summary.capacity.demand_supported_by_q_mix_rho),
+    observationCount: Number(summary.policy.observation_count),
+    policyShares: { ...summary.policy.shares },
+  };
 
   const ids = [
     "traffic-title", "traffic-subtitle", "offered-demand", "entry-interval", "traffic-speed", "traffic-altitude",
@@ -45,6 +70,10 @@
     "policy-observations", "share-c", "share-r", "share-f", "share-c-bar", "share-r-bar", "share-f-bar",
     "selected-uam", "selected-policy", "selected-exposure", "selected-site", "selected-rsrp", "selected-sinr", "selected-progress", "selected-group",
     "current-counts", "link-current", "three-warning", "three-recenter", "three-camera-state", "three-camera-note",
+    "reliability-caption", "demand-caption", "policy-description", "flight-altitude-legend", "footer-policy-description",
+    "experiment-form", "experiment-status", "run-experiment", "reset-experiment", "input-altitude", "input-offset",
+    "input-speed", "input-departure", "input-theta", "input-group-size", "input-window", "input-policy-interval",
+    "input-c-tolerance", "input-r-tolerance", "input-reliability",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const capacityCanvas = document.getElementById("capacity-chart");
@@ -52,22 +81,63 @@
 
   el["traffic-title"].textContent = `${display.route_label || summary.scenario_id} · Multi-UAM Policy`;
   el["traffic-subtitle"].textContent = "Individual link quality → available local-neighbor group policy → reliability-qualified capacity";
-  el["offered-demand"].textContent = Number(summary.traffic.entry_demand_uam_h).toFixed(1);
-  el["entry-interval"].textContent = Number(summary.traffic.entry_interval_s).toFixed(1);
-  el["traffic-speed"].textContent = speedMps.toFixed(0);
-  el["traffic-altitude"].textContent = altitudeM.toFixed(0);
-  el["expected-count"].textContent = `steady-state expectation ${Number(summary.traffic.expected_steady_occupancy).toFixed(1)}`;
-  el["reliability-capacity"].textContent = Number(summary.capacity.q_mix_rho_uam_h).toFixed(1);
-  el["policy-observations"].textContent = `${Number(summary.policy.observation_count).toLocaleString()} observations`;
+  function populateParameterForm(parameters) {
+    el["input-altitude"].value = String(parameters.altitudeM);
+    el["input-offset"].value = String(parameters.lateralOffsetM);
+    el["input-speed"].value = String(parameters.speedMps);
+    el["input-departure"].value = String(parameters.departureIntervalS);
+    el["input-theta"].value = String(parameters.sinrThresholdDb);
+    el["input-group-size"].value = String(parameters.groupSize);
+    el["input-window"].value = String(parameters.exposureWindowS);
+    el["input-policy-interval"].value = String(parameters.policyIntervalS);
+    el["input-c-tolerance"].value = String(100 * parameters.coordinatedTolerance);
+    el["input-r-tolerance"].value = String(100 * parameters.reactiveTolerance);
+    el["input-reliability"].value = String(100 * parameters.reliabilityRho);
+  }
 
-  ["C", "R", "F"].forEach((policy) => {
-    const share = Number(summary.policy.shares[policy]);
-    el[`share-${policy.toLowerCase()}`].textContent = `${(100 * share).toFixed(1)}%`;
-    el[`share-${policy.toLowerCase()}-bar`].style.width = `${100 * share}%`;
-  });
-  const supported = Boolean(summary.capacity.demand_supported_by_q_mix_rho);
-  el["demand-status"].textContent = supported ? "Yes" : "No";
-  el["demand-status"].className = supported ? "supported" : "unsupported";
+  function readParameterForm() {
+    return {
+      altitudeM: Number(el["input-altitude"].value),
+      lateralOffsetM: Number(el["input-offset"].value),
+      speedMps: Number(el["input-speed"].value),
+      departureIntervalS: Number(el["input-departure"].value),
+      sinrThresholdDb: Number(el["input-theta"].value),
+      groupSize: Number(el["input-group-size"].value),
+      exposureWindowS: Number(el["input-window"].value),
+      policyIntervalS: Number(el["input-policy-interval"].value),
+      coordinatedTolerance: Number(el["input-c-tolerance"].value) / 100,
+      reactiveTolerance: Number(el["input-r-tolerance"].value) / 100,
+      reliabilityRho: Number(el["input-reliability"].value) / 100,
+    };
+  }
+
+  function updateScenarioSummary(results, parameters) {
+    el["offered-demand"].textContent = results.offeredDemand.toFixed(1);
+    el["entry-interval"].textContent = parameters.departureIntervalS.toFixed(1);
+    el["traffic-speed"].textContent = parameters.speedMps.toFixed(0);
+    el["traffic-altitude"].textContent = parameters.altitudeM.toFixed(0);
+    el["expected-count"].textContent = `steady-state expectation ${results.expectedOccupancy.toFixed(1)}`;
+    el["reliability-capacity"].textContent = results.reliabilityCapacity.toFixed(1);
+    const tailPercent = 100 * (1 - parameters.reliabilityRho);
+    const qLabel = `Q${parameters.reliabilityRho.toFixed(2)}`;
+    el["reliability-caption"].innerHTML = `${qLabel} · lower ${tailPercent.toFixed(0)}th percentile`;
+    el["demand-caption"].innerHTML = `offered demand ≤ ${qLabel}`;
+    el["policy-observations"].textContent = `${results.observationCount.toLocaleString()} observations`;
+    ["C", "R", "F"].forEach((policy) => {
+      const share = Number(results.policyShares[policy] || 0);
+      el[`share-${policy.toLowerCase()}`].textContent = `${(100 * share).toFixed(1)}%`;
+      el[`share-${policy.toLowerCase()}-bar`].style.width = `${100 * share}%`;
+    });
+    el["demand-status"].textContent = results.demandSupported ? "Yes" : "No";
+    el["demand-status"].className = results.demandSupported ? "supported" : "unsupported";
+    const half = Math.floor(parameters.groupSize / 2);
+    el["policy-description"].textContent = `Fractions use all active-aircraft time observations. Each aircraft uses up to ${half} ahead and ${half} behind (maximum group ${parameters.groupSize}), updated every ${parameters.policyIntervalS.toFixed(0)} s.`;
+    el["flight-altitude-legend"].textContent = `${parameters.altitudeM.toFixed(0)} m flight path`;
+    el["footer-policy-description"].textContent = `Individual radio · overlapping maximum-${parameters.groupSize}-UAM group policy · deterministic planning capacity`;
+  }
+
+  populateParameterForm(baselineParameters);
+  updateScenarioSummary(currentResults, currentParameters);
 
   function formatTime(seconds) {
     const value = Math.max(0, Math.round(seconds));
@@ -76,62 +146,21 @@
   }
 
   function interpolateRoute(sM) {
-    if (sM <= 0) return { ...route[0], tangentX: route[1].x_m - route[0].x_m, tangentY: route[1].y_m - route[0].y_m };
-    if (sM >= corridorLengthM) {
-      const last = route.length - 1;
-      return { ...route[last], tangentX: route[last].x_m - route[last - 1].x_m, tangentY: route[last].y_m - route[last - 1].y_m };
-    }
-    let low = 0;
-    let high = route.length - 1;
-    while (high - low > 1) {
-      const middle = Math.floor((low + high) / 2);
-      if (route[middle].s_m <= sM) low = middle; else high = middle;
-    }
-    const a = route[low];
-    const b = route[high];
-    const fraction = (sM - a.s_m) / (b.s_m - a.s_m);
-    return {
-      s_m: sM,
-      x_m: a.x_m + fraction * (b.x_m - a.x_m),
-      y_m: a.y_m + fraction * (b.y_m - a.y_m),
-      lon: a.lon + fraction * (b.lon - a.lon),
-      lat: a.lat + fraction * (b.lat - a.lat),
-      tangentX: b.x_m - a.x_m,
-      tangentY: b.y_m - a.y_m,
-    };
+    return engine.interpolateRoute(route, corridorLengthM, sM, lateralOffsetM);
   }
 
   function evaluateRadio(position) {
-    const radio = summary.radio;
-    const servedSetSize = radio.served_set_size == null ? null : Number(radio.served_set_size);
-    const links = data.stations.map((site, index) => {
-      const dx = position.x_m - site.x_m;
-      const dy = position.y_m - site.y_m;
-      const dz = altitudeM - site.height_m;
-      const d2 = Math.max(dx * dx + dy * dy + dz * dz, Number.MIN_VALUE);
-      const rx = Number(radio.eirp_dbm) + Number(radio.receiver_gain_db) - 28 - 11 * Math.log10(d2) - 20 * Math.log10(Number(radio.frequency_ghz));
-      return { index, d2, rx };
-    });
-    const served = servedSetSize !== null && servedSetSize < links.length
-      ? [...links].sort((a, b) => a.d2 - b.d2).slice(0, servedSetSize)
-      : links;
-    let serving = served[0];
-    served.forEach((link) => { if (link.rx > serving.rx) serving = link; });
-    const desiredMw = 10 ** (serving.rx / 10);
-    const interferenceMw = Math.max(served.reduce((total, link) => total + 10 ** (link.rx / 10), 0) - desiredMw, Number.MIN_VALUE);
-    const noiseMw = 10 ** (Number(radio.noise_dbm) / 10);
-    return {
-      site: data.stations[serving.index],
-      rsrp: serving.rx - 10 * Math.log10(Number(radio.resource_elements)),
-      sinr: 10 * Math.log10(desiredMw / (interferenceMw + noiseMw)),
-    };
+    return engine.evaluateRadio(data.stations, summary.radio, position, altitudeM);
   }
 
-  const linkProfile = Array.from({ length: 241 }, (_unused, sampleIndex) => {
-    const sM = corridorLengthM * sampleIndex / 240;
-    const link = evaluateRadio(interpolateRoute(sM));
-    return { sM, rsrp: link.rsrp, sinr: link.sinr, siteId: link.site.id };
-  });
+  function buildLinkProfile() {
+    return Array.from({ length: 241 }, (_unused, sampleIndex) => {
+      const sM = corridorLengthM * sampleIndex / 240;
+      const link = evaluateRadio(interpolateRoute(sM));
+      return { sM, rsrp: link.rsrp, sinr: link.sinr, siteId: link.site.id };
+    });
+  }
+  let linkProfile = buildLinkProfile();
 
   function drawLinkQualityChart(selected) {
     const ratio = window.devicePixelRatio || 1;
@@ -155,8 +184,8 @@
       },
       {
         top: 116, height: 78, key: "sinr", color: "#168c85", label: "SINR (dB)",
-        min: Math.floor(Math.min(...linkProfile.map((row) => row.sinr), Number(summary.policy.sinr_threshold_db)) / 5) * 5 - 5,
-        max: Math.ceil(Math.max(...linkProfile.map((row) => row.sinr), Number(summary.policy.sinr_threshold_db)) / 5) * 5 + 5,
+        min: Math.floor(Math.min(...linkProfile.map((row) => row.sinr), currentParameters.sinrThresholdDb) / 5) * 5 - 5,
+        max: Math.ceil(Math.max(...linkProfile.map((row) => row.sinr), currentParameters.sinrThresholdDb) / 5) * 5 + 5,
       },
     ];
 
@@ -176,7 +205,7 @@
       ctx.fillText(panel.max.toFixed(0), 5, panel.top + 4);
       ctx.fillText(panel.min.toFixed(0), 5, bottom);
       if (panel.key === "sinr") {
-        const threshold = Number(summary.policy.sinr_threshold_db);
+        const threshold = currentParameters.sinrThresholdDb;
         ctx.strokeStyle = "#d65353";
         ctx.setLineDash([5, 4]);
         ctx.beginPath();
@@ -220,7 +249,10 @@
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap contributors",
   }).addTo(map);
-  const groundRoute = L.polyline(data.route.map(([lon, lat]) => [lat, lon]), { color: "#168c85", weight: 4, opacity: .85 }).addTo(map);
+  function flightRoutePositions() {
+    return route.map((row) => interpolateRoute(row.s_m));
+  }
+  const groundRoute = L.polyline(flightRoutePositions().map((row) => [row.lat, row.lon]), { color: "#168c85", weight: 4, opacity: .85 }).addTo(map);
   map.fitBounds(groundRoute.getBounds(), { padding: [55, 55] });
   data.stations.forEach((site) => {
     L.circleMarker([site.lat, site.lon], { radius: 4, color: "#fff", weight: 1.2, fillColor: "#17364a", fillOpacity: .85 })
@@ -230,14 +262,15 @@
   const servingLine = L.polyline([], { color: "#e46f51", weight: 2, opacity: .7, dashArray: "5 5" }).addTo(map);
   const markers = new Map();
   let selectedUamId = null;
+  let visibleAircraftRows = [];
 
   function markerIcon(policy, headingDeg, selected, groupMember) {
     const color = colors[policy] || colors.F;
     return L.divIcon({
       className: "",
-      html: `<div class="uam-traffic-marker${groupMember ? " uam-traffic-marker--group" : ""}${selected ? " uam-traffic-marker--selected" : ""}" style="background:${color};transform:rotate(${headingDeg + 45}deg)" aria-label="${policy} policy aircraft">✈</div>`,
-      iconSize: selected ? [28, 28] : [22, 22],
-      iconAnchor: selected ? [14, 14] : [11, 11],
+      html: `<div class="uam-traffic-hit"><div class="uam-traffic-marker${groupMember ? " uam-traffic-marker--group" : ""}${selected ? " uam-traffic-marker--selected" : ""}" style="background:${color};transform:rotate(${headingDeg + 45}deg)" aria-label="${policy} policy aircraft">✈</div></div>`,
+      iconSize: selected ? [36, 36] : [30, 30],
+      iconAnchor: selected ? [18, 18] : [15, 15],
     });
   }
 
@@ -246,9 +279,11 @@
   let fallbackMap = null;
   const fallbackAircraft = new Map();
   let fallbackServingLine = null;
+  let fallbackFlightRoute = null;
   let servingLink3d = null;
   let servingSite3d = null;
   let altitudeLine3d = null;
+  let flightPath3d = null;
   let cameraMode = "follow";
   const CAMERA_HEADING_DEG = 315;
   const CAMERA_PITCH_DEG = -25;
@@ -285,7 +320,7 @@
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap contributors",
     }).addTo(fallbackMap);
-    L.polyline(data.route.map(([lon, lat]) => [lat, lon]), { color: "#168c85", weight: 4, opacity: .9 }).addTo(fallbackMap);
+    fallbackFlightRoute = L.polyline(flightRoutePositions().map((row) => [row.lat, row.lon]), { color: "#168c85", weight: 4, opacity: .9 }).addTo(fallbackMap);
     data.stations.forEach((site) => {
       L.marker([site.lat, site.lon], {
         icon: L.divIcon({ className: "", html: `<div class="fallback-station" aria-label="${site.id} base station"></div>`, iconSize: [22, 34], iconAnchor: [11, 32] }),
@@ -365,7 +400,7 @@
     viewer3d.scene.fog.density = .00018;
     viewer3d.scene.screenSpaceCameraController.enableCollisionDetection = false;
     viewer3d.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(data.route.flat()), width: 3, material: new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.fromCssColorString("#607177"), dashLength: 14 }), clampToGround: true } });
-    viewer3d.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(data.route.flatMap(([lon, lat]) => [lon, lat, altitudeM])), width: 5, material: Cesium.Color.fromCssColorString("#21b7aa").withAlpha(.94), arcType: Cesium.ArcType.GEODESIC } });
+    flightPath3d = viewer3d.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(flightRoutePositions().flatMap((row) => [row.lon, row.lat, altitudeM])), width: 5, material: Cesium.Color.fromCssColorString("#21b7aa").withAlpha(.94), arcType: Cesium.ArcType.GEODESIC } });
     const start = data.route[0];
     const end = data.route.at(-1);
     addVertiport3d(start[0], start[1], `START · ${display.origin_label || "Corridor origin"}`, "#17364a");
@@ -417,6 +452,67 @@
   }
   el["three-recenter"].addEventListener("click", recenter3d);
 
+  function updateFlightRouteGeometry() {
+    const positions = flightRoutePositions();
+    groundRoute.setLatLngs(positions.map((row) => [row.lat, row.lon]));
+    if (fallbackFlightRoute) fallbackFlightRoute.setLatLngs(positions.map((row) => [row.lat, row.lon]));
+    if (viewer3d && flightPath3d) {
+      flightPath3d.polyline.positions = Cesium.Cartesian3.fromDegreesArrayHeights(
+        positions.flatMap((row) => [row.lon, row.lat, altitudeM]),
+      );
+    }
+  }
+
+  function setExperimentBusy(busy) {
+    el["run-experiment"].disabled = busy;
+    el["reset-experiment"].disabled = busy;
+    el["run-experiment"].textContent = busy ? "Running…" : "Run experiment";
+  }
+
+  function applyExperiment(parameters, statusLabel) {
+    setPlaying(false);
+    setExperimentBusy(true);
+    el["experiment-status"].textContent = "Running deterministic one-second simulation…";
+    window.setTimeout(() => {
+      try {
+        const simulation = engine.simulate(data, parameters);
+        currentParameters = simulation.parameters;
+        currentResults = simulation.results;
+        entrants = simulation.entrants;
+        frames = simulation.frames;
+        speedMps = currentParameters.speedMps;
+        altitudeM = currentParameters.altitudeM;
+        lateralOffsetM = currentParameters.lateralOffsetM;
+        selectedUamId = null;
+        cameraMode = "follow";
+        index = 0;
+        simulatedTime = frames[0].t;
+        linkProfile = buildLinkProfile();
+        updateFlightRouteGeometry();
+        populateParameterForm(currentParameters);
+        updateScenarioSummary(currentResults, currentParameters);
+        el["time-slider"].max = String(frames.length - 1);
+        el["time-slider"].value = "0";
+        el["total-time"].textContent = `/ ${formatTime(frames.at(-1).t)}`;
+        updateFrame(0);
+        el["experiment-status"].textContent = `${statusLabel} · ${frames.length.toLocaleString()} one-second snapshots`;
+      } catch (error) {
+        el["experiment-status"].textContent = `Input error: ${error.message}`;
+      } finally {
+        setExperimentBusy(false);
+      }
+    }, 20);
+  }
+
+  el["experiment-form"].addEventListener("submit", (event) => {
+    event.preventDefault();
+    applyExperiment(readParameterForm(), "Experiment complete");
+  });
+  el["reset-experiment"].addEventListener("click", () => {
+    populateParameterForm(baselineParameters);
+    applyExperiment({ ...baselineParameters }, "Baseline restored");
+  });
+
   function activeAircraft(frame) {
     return entrants.filter((uam) => uam.entry <= frame.t + 1e-9 && uam.exit >= frame.t - 1e-9).map((uam) => {
       const sM = Math.max(0, Math.min(corridorLengthM, speedMps * (frame.t - uam.entry)));
@@ -429,12 +525,22 @@
   }
 
   function setSelected(uamId) {
+    setPlaying(false);
     selectedUamId = uamId;
     cameraMode = "follow";
     updateFrame(index);
   }
 
+  map.on("click", (event) => {
+    const clickPoint = map.latLngToContainerPoint(event.latlng);
+    const nearest = visibleAircraftRows
+      .map((row) => ({ row, distance: clickPoint.distanceTo(map.latLngToContainerPoint([row.position.lat, row.position.lon])) }))
+      .sort((left, right) => left.distance - right.distance)[0];
+    if (nearest && nearest.distance <= 34) setSelected(nearest.row.id);
+  });
+
   function update2d(aircraftRows, groups) {
+    visibleAircraftRows = aircraftRows;
     const focal = aircraftRows.find((row) => row.id === selectedUamId);
     const groupIds = new Set(focal ? groups[focal.id] : []);
     const activeIds = new Set(aircraftRows.map((row) => row.id));
@@ -445,7 +551,14 @@
       const selected = row.id === selectedUamId;
       let marker = markers.get(row.id);
       if (!marker) {
-        marker = L.marker([row.position.lat, row.position.lon], { zIndexOffset: selected ? 1300 : 900 })
+        marker = L.marker([row.position.lat, row.position.lon], {
+          zIndexOffset: selected ? 1300 : 900,
+          interactive: true,
+          keyboard: true,
+          riseOnHover: true,
+          bubblingMouseEvents: true,
+          title: `Select ${row.id}`,
+        })
           .on("click", () => setSelected(row.id))
           .addTo(map);
         markers.set(row.id, marker);
@@ -560,8 +673,8 @@
     ctx.clearRect(0, 0, width, height);
     const pad = { left: 38, right: 10, top: 10, bottom: 22 };
     const values = frames.map((frame) => frame.q_mix);
-    const demand = Number(summary.traffic.entry_demand_uam_h);
-    const q95 = Number(summary.capacity.q_mix_rho_uam_h);
+    const demand = currentResults.offeredDemand;
+    const q95 = currentResults.reliabilityCapacity;
     const minY = Math.min(...values, demand, q95) - 5;
     const maxY = Math.max(...values, demand, q95) + 5;
     const xAt = (i) => pad.left + i / (frames.length - 1) * (width - pad.left - pad.right);

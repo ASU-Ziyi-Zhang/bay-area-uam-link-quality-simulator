@@ -126,6 +126,9 @@ def main() -> None:
             "run_id": run_dir.name,
             "display": scenario.get("display", {}),
             "radio": scenario["radio"],
+            "model_config": {
+                "capacity": scenario["capacity"],
+            },
         },
         "route": route,
         "route_metric": [

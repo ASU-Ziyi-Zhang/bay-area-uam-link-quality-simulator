@@ -69,6 +69,15 @@ in the animation.
 All model and policy parameters are stored in each scenario's
 `group_simulator.json`. No random number generator is used.
 
+The dashboard preserves that frozen baseline and also provides a deterministic
+experiment panel. `Departure interval` is the traffic input and offered demand
+is the derived quantity `3600 / interval`. Altitude, lateral offset, speed,
+SINR threshold, maximum local-group size, exposure window, policy-update
+interval, C/R exposure limits, and reliability level can be changed. Motion,
+radio evaluation, and output sampling remain at one second; when a policy
+interval above one second is selected, the most recently calculated C/R/F
+policy is held between policy updates.
+
 ## Reproduction
 
 ```powershell
