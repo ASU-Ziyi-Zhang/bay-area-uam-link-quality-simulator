@@ -79,37 +79,85 @@ def _scenario_input_paths(scenario_path: Path) -> tuple[Path, Path]:
 
 
 def _policy_records(
-    policy_result: dict[str, np.ndarray],
+    link_quality: dict[str, np.ndarray],
     uam_ids: list[str],
     group_size: int,
-) -> list[dict[str, object]]:
+    window_s: float,
+    coordinated_tolerance: float,
+    reactive_tolerance: float,
+) -> tuple[np.ndarray, np.ndarray, list[dict[str, object]]]:
+    """Assign every active aircraft a policy from its available local group.
+
+    Interior aircraft use two active neighbors on either side. Boundary and
+    startup aircraft use the available subset, so no active aircraft is left
+    unclassified. Temporal exposure uses the available history up to
+    ``window_s`` rather than imposing a separate startup warmup.
+    """
     if group_size % 2 != 1:
         raise ValueError("group_size must be odd so each group has one focal UAM")
-    policy = np.asarray(policy_result["policy"], dtype=int)
-    valid = np.asarray(policy_result["valid_after_warmup"], dtype=bool)
-    exposure = np.asarray(policy_result["exposure"], dtype=float)
-    t_obs = np.asarray(policy_result["t_obs"], dtype=float)
+    active = np.asarray(link_quality["active"], dtype=bool)
+    link_ok = np.asarray(link_quality["link_ok"], dtype=bool)
+    t_obs = np.asarray(link_quality["t"], dtype=float)
+    if active.shape != link_ok.shape or active.shape[0] != len(uam_ids):
+        raise ValueError("adaptive policy inputs are inconsistent")
     half = group_size // 2
+    support = np.full(active.shape, np.nan, dtype=float)
+    exposure = np.full(active.shape, np.nan, dtype=float)
+    policy = np.full(active.shape, POLICY_C, dtype=int)
+    groups: list[list[list[int] | None]] = [
+        [None for _ in range(active.shape[1])] for _ in range(active.shape[0])
+    ]
+
+    for time_index in range(active.shape[1]):
+        active_indices = np.flatnonzero(active[:, time_index])
+        for order_index, focal_index in enumerate(active_indices):
+            members = active_indices[
+                max(0, order_index - half) : order_index + half + 1
+            ]
+            groups[focal_index][time_index] = members.tolist()
+            support[focal_index, time_index] = float(
+                link_ok[members, time_index].mean()
+            )
+
+    for time_index, timestamp in enumerate(t_obs):
+        start_index = int(np.searchsorted(t_obs, timestamp - window_s, side="left"))
+        for focal_index in np.flatnonzero(active[:, time_index]):
+            history = support[focal_index, start_index : time_index + 1]
+            history = history[np.isfinite(history)]
+            if history.size == 0:
+                raise RuntimeError("active aircraft has no policy-support history")
+            exposure[focal_index, time_index] = 1.0 - float(history.mean())
+            if exposure[focal_index, time_index] <= coordinated_tolerance + 1e-12:
+                policy[focal_index, time_index] = POLICY_C
+            elif exposure[focal_index, time_index] <= reactive_tolerance + 1e-12:
+                policy[focal_index, time_index] = POLICY_R
+            else:
+                policy[focal_index, time_index] = POLICY_F
+
     rows: list[dict[str, object]] = []
-    for group_index in range(policy.shape[0]):
-        focal_index = group_index + half
-        members = uam_ids[group_index : group_index + group_size]
-        for time_index in np.flatnonzero(valid[group_index]):
-            code = int(policy[group_index, time_index])
+    for time_index, timestamp in enumerate(t_obs):
+        for focal_index in np.flatnonzero(active[:, time_index]):
+            member_indices = groups[focal_index][time_index]
+            if member_indices is None:
+                raise RuntimeError("active aircraft has no local group")
+            code = int(policy[focal_index, time_index])
             rows.append(
                 {
-                    "timestamp_s": float(t_obs[time_index]),
-                    "group_id": f"G{group_index + 1:03d}",
+                    "timestamp_s": float(timestamp),
+                    "group_id": f"{uam_ids[focal_index]}@{timestamp:.3f}",
                     "focal_uam_id": uam_ids[focal_index],
                     "focal_uam_index": focal_index,
-                    "member_uam_ids": "|".join(members),
+                    "group_size": len(member_indices),
+                    "member_uam_ids": "|".join(
+                        uam_ids[index] for index in member_indices
+                    ),
                     "policy": POLICY_LABEL[code],
-                    "exposure_fraction": float(exposure[group_index, time_index]),
+                    "exposure_fraction": float(exposure[focal_index, time_index]),
                 }
             )
     if not rows:
-        raise RuntimeError("no valid group-policy observations after warmup")
-    return rows
+        raise RuntimeError("no active-aircraft policy observations")
+    return policy, active, rows
 
 
 def run_group_simulation(
@@ -147,11 +195,25 @@ def run_group_simulation(
     )
     radio = compute_link_state(trajectory, scenario.base_stations, scenario.radio)
     link_quality = evaluate_link_quality(radio, scenario.link_quality)
-    policy = assign_policy(link_quality, scenario.policy)
+    reference_policy = assign_policy(link_quality, scenario.policy)
+    reference_capacity = snapshot_capacity(
+        reference_policy["policy"],
+        reference_policy["valid_after_warmup"],
+        reference_policy["t_obs"],
+        scenario.capacity,
+    )
+    adaptive_policy, adaptive_valid, policy_rows = _policy_records(
+        link_quality,
+        uam_ids,
+        scenario.policy.group_size,
+        scenario.policy.window_s,
+        scenario.policy.coordinated_exposure_tolerance,
+        scenario.policy.reactive_exposure_tolerance,
+    )
     capacity = snapshot_capacity(
-        policy["policy"],
-        policy["valid_after_warmup"],
-        policy["t_obs"],
+        adaptive_policy,
+        adaptive_valid,
+        time_s,
         scenario.capacity,
     )
 
@@ -169,7 +231,6 @@ def run_group_simulation(
         }
         for index, uam_id in enumerate(uam_ids)
     ]
-    policy_rows = _policy_records(policy, uam_ids, scenario.policy.group_size)
     time_index = {
         round(float(timestamp), 9): index for index, timestamp in enumerate(time_s)
     }
@@ -200,6 +261,19 @@ def run_group_simulation(
     policy_shares = {
         label: policy_counts[label] / policy_total for label in policy_counts
     }
+    reference_valid = np.asarray(
+        reference_policy["valid_after_warmup"], dtype=bool
+    )
+    reference_codes = np.asarray(reference_policy["policy"], dtype=int)
+    reference_counts = {
+        label: int(((reference_codes == code) & reference_valid).sum())
+        for label, code in (("C", POLICY_C), ("R", POLICY_R), ("F", POLICY_F))
+    }
+    reference_total = sum(reference_counts.values())
+    reference_shares = {
+        label: reference_counts[label] / reference_total
+        for label in reference_counts
+    }
     q_mix = np.asarray(capacity["q_mix_UAM_h"], dtype=float)
     q_bottleneck = np.asarray(capacity["q_bottleneck_UAM_h"], dtype=float)
     q_mix_rho = reliability_floor(q_mix, cfg.reliability_rho)
@@ -227,7 +301,7 @@ def run_group_simulation(
         "corridor_length_km": scenario.corridor.length_m / 1000.0,
         "transit_time_s": scenario.transit_time_s,
         "simulation_duration_s": duration_s,
-        "warmup_s": scenario.policy.warmup_s,
+        "warmup_s": 0.0,
         "site_count": len(scenario.base_stations.stations),
         "traffic": {
             "entry_demand_uam_h": cfg.entry_demand_uam_h,
@@ -245,7 +319,8 @@ def run_group_simulation(
             "lane_id": cfg.lane_id,
         },
         "policy": {
-            "group_size": scenario.policy.group_size,
+            "maximum_group_size": scenario.policy.group_size,
+            "minimum_group_size": min(int(row["group_size"]) for row in policy_rows),
             "window_s": scenario.policy.window_s,
             "sinr_threshold_db": scenario.link_quality.sinr_threshold_db,
             "coordinated_exposure_tolerance": (
@@ -258,9 +333,10 @@ def run_group_simulation(
             "counts": policy_counts,
             "shares": policy_shares,
             "mapping": (
-                "Each aircraft receives the policy of the overlapping five-UAM "
-                "group centered on that focal aircraft; unclassified edge or "
-                "warmup aircraft are not included in the shares."
+                "Every active aircraft receives a policy. The local group uses "
+                "up to two active neighbors on each side; boundary and startup "
+                "groups shrink to the available aircraft. Temporal exposure uses "
+                "the available history up to the configured window."
             ),
         },
         "capacity": {
@@ -272,12 +348,26 @@ def run_group_simulation(
                 cfg.entry_demand_uam_h <= q_mix_rho + 1e-12
             ),
         },
+        "trb_reference_regression": {
+            "definition": (
+                "Original full centered-five-aircraft groups after the legacy "
+                "warmup; retained only as a regression comparison."
+            ),
+            "warmup_s": scenario.policy.warmup_s,
+            "observation_count": reference_total,
+            "counts": reference_counts,
+            "shares": reference_shares,
+            "q_mix_rho_uam_h": reliability_floor(
+                np.asarray(reference_capacity["q_mix_UAM_h"], dtype=float),
+                cfg.reliability_rho,
+            ),
+        },
         "clock": asdict(cfg.simulation.clock),
         "scientific_boundary": (
             "Deterministic single-lane/single-level planning-model stream. "
-            "Radio is individual; policy is assigned to an overlapping five-UAM "
-            "group centered on each focal aircraft; capacity is aggregated from "
-            "valid focal-group policies. No lane change or controller is active."
+            "Radio is individual; every active aircraft receives a policy from "
+            "its available local neighbor group; capacity is aggregated from all "
+            "active-aircraft policies. No lane change or controller is active."
         ),
     }
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
@@ -341,12 +431,17 @@ def run_group_simulation(
             ),
             "no_lane_or_level_change": True,
             "focal_group_mapping_declared": True,
+            "all_active_aircraft_classified": bool(
+                n_policy == int(trajectory.active.sum())
+            ),
+            "simulation_starts_at_zero": bool(capacity["t"][0] == 0.0),
         },
         "evidence_grade": "estimated under the declared deterministic planning model",
         "limitations": [
             "Uniform deterministic entry times; no stochastic demand or scheduling.",
             "No lane/level change, merge, conflict, vertiport, or controller model.",
-            "Policy fractions are focal-aircraft group-time shares, not unique-aircraft shares.",
+            "Policy fractions are active focal-aircraft time shares, not unique-aircraft shares.",
+            "Startup and corridor-edge groups use fewer than five aircraft when fewer neighbors are available.",
             "Radio remains a deterministic LOS/co-channel planning estimate.",
         ],
     }
@@ -365,11 +460,12 @@ multi-lane geometry or dynamic switching.
 - Offered entry demand: {cfg.entry_demand_uam_h:.1f} UAM/h.
 - Entry interval: {cfg.entry_interval_s:.3f} s.
 - Speed/altitude/offset: {cfg.speed_mps:.1f} m/s / {cfg.altitude_m:.1f} m / {cfg.lateral_offset_m:.1f} m.
-- Group/window: {scenario.policy.group_size} aircraft / {scenario.policy.window_s:.1f} s.
+- Local group/window: up to {scenario.policy.group_size} aircraft / {scenario.policy.window_s:.1f} s.
+- Startup: begins at 0 s; each active aircraft is classified from its available neighbors and history.
 
 ## Result
 
-- Classified focal group-time observations: {n_policy:,}.
+- Active focal-aircraft time observations: {n_policy:,}.
 - Policy shares C/R/F: {policy_shares['C']:.4f} / {policy_shares['R']:.4f} / {policy_shares['F']:.4f}.
 - Q{cfg.reliability_rho:.2f} mixed capacity: {q_mix_rho:.3f} UAM/h.
 - Offered demand supported: {cfg.entry_demand_uam_h <= q_mix_rho + 1e-12}.
@@ -378,13 +474,15 @@ multi-lane geometry or dynamic switching.
 
 - Policy shares sum to one.
 - Capacity snapshots are finite and positive.
-- Every policy is attached to the focal aircraft of one overlapping five-UAM group.
+- Every active aircraft has C/R/F policy; no unclassified state is used.
+- Interior groups contain five aircraft; boundary/startup groups shrink to the available local neighbors.
+- The original centered-five TRB reference remains separately reported in `summary.json`.
 - Lane and level changes are disabled.
 
 ## Boundary and unresolved risks
 
-These are deterministic planning-model estimates. Fractions are group-time
-fractions mapped to focal aircraft, not fractions of unique vehicles. Common
+These are deterministic planning-model estimates. Fractions are active
+focal-aircraft time fractions, not fractions of unique vehicles. Common
 terminal, merge, spectrum scheduling and conflict bottlenecks are excluded.
 
 ## Artifacts
@@ -400,4 +498,3 @@ to demand, group mapping, policy share definition, or capacity metric.
         encoding="utf-8",
     )
     return summary
-

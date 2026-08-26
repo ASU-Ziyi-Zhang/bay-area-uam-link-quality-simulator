@@ -18,7 +18,7 @@
         <div>
           <span class="eyebrow">TRB FLOW REPRODUCTION · FIXED LANE / FIXED LEVEL</span>
           <h1 id="traffic-title">Multi-UAM Traffic & Policy Simulator</h1>
-          <p id="traffic-subtitle">Individual link quality → five-aircraft group policy → corridor capacity</p>
+          <p id="traffic-subtitle">Individual link quality → available local-neighbor group policy → corridor capacity</p>
         </div>
         <div class="traffic-header__controls">
           <label for="scenario-select"><span>Scenario</span>
@@ -51,7 +51,6 @@
               <span><i class="policy-dot policy-dot--c"></i>Coordinated</span>
               <span><i class="policy-dot policy-dot--r"></i>Reactive</span>
               <span><i class="policy-dot policy-dot--f"></i>Fallback</span>
-              <span><i class="policy-dot policy-dot--u"></i>Unclassified</span>
             </div>
           </div>
           <div id="traffic-map" role="application" aria-label="Multi-aircraft corridor map"></div>
@@ -76,7 +75,7 @@
           </section>
 
           <section class="policy-card" aria-labelledby="policy-heading">
-            <div class="card-heading"><div><span class="eyebrow">SERGEI REQUEST</span><h2 id="policy-heading">Policy fractions</h2></div><span id="policy-observations">—</span></div>
+            <div class="card-heading"><div><span class="eyebrow">SCENARIO SUMMARY</span><h2 id="policy-heading">Policy fractions</h2></div><span id="policy-observations">—</span></div>
             <div class="policy-bar" aria-label="Overall classified focal-aircraft group-time policy fractions">
               <span id="share-c-bar" class="policy-bar__c"></span><span id="share-r-bar" class="policy-bar__r"></span><span id="share-f-bar" class="policy-bar__f"></span>
             </div>
@@ -85,7 +84,7 @@
               <div><i class="policy-dot policy-dot--r"></i><span>Reactive</span><strong id="share-r">—</strong></div>
               <div><i class="policy-dot policy-dot--f"></i><span>Fallback</span><strong id="share-f">—</strong></div>
             </div>
-            <p>Fractions use valid focal-aircraft group-time observations. Each focal aircraft inherits the policy of its centered five-UAM moving group.</p>
+            <p>Fractions use all active-aircraft time observations. Each aircraft is classified from its available local neighbors, up to two ahead and two behind.</p>
           </section>
 
           <section class="selected-card" aria-labelledby="selected-heading">
@@ -97,8 +96,13 @@
               <div><dt>RSRP</dt><dd id="selected-rsrp">—</dd></div>
               <div><dt>SINR</dt><dd id="selected-sinr">—</dd></div>
               <div><dt>Progress</dt><dd id="selected-progress">—</dd></div>
-              <div class="selected-wide"><dt>Centered five-aircraft group</dt><dd id="selected-group">—</dd></div>
+              <div class="selected-wide"><dt>Current local policy group</dt><dd id="selected-group">—</dd></div>
             </dl>
+          </section>
+
+          <section class="link-card" aria-labelledby="link-heading">
+            <div class="card-heading"><div><span class="eyebrow">INDIVIDUAL LINK QUALITY</span><h2 id="link-heading">Selected-aircraft radio profile</h2></div><span id="link-current">—</span></div>
+            <canvas id="link-quality-chart" height="220" aria-label="Selected aircraft RSRP and SINR along the corridor"></canvas>
           </section>
 
           <section class="capacity-card" aria-labelledby="capacity-heading">
@@ -110,7 +114,7 @@
         <section class="traffic-three-card" aria-labelledby="three-heading">
           <div class="card-heading"><div><span class="eyebrow">FIXED OVERVIEW</span><h2 id="three-heading">3D corridor traffic</h2></div><span>Colors match group policy</span></div>
           <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
-          <div id="three-warning" class="three-warning" hidden>Serve this directory through HTTP to load the 3D view.</div>
+          <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; a fixed real-map fallback is shown.</div>
         </section>
       </main>
 
@@ -142,7 +146,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260825-multi-uam-policy-v1";
+        const version = "20260825-multi-uam-policy-v3";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

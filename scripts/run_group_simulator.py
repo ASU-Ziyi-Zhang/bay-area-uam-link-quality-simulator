@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=ROOT / "runs" / "airport-to-airport-group-policy-v1",
+        default=ROOT / "runs" / "airport-to-airport-group-policy-v2",
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
@@ -40,4 +40,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

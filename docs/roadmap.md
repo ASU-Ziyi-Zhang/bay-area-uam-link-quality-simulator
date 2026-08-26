@@ -17,7 +17,8 @@
 ## S2A — TRB group policy reproduction (implemented)
 
 - Assign individual link quality to each aircraft.
-- Evaluate overlapping centered five-aircraft groups.
+- Evaluate a local group for every active focal aircraft, using up to two
+  neighbors on either side and shrinking startup/boundary groups as needed.
 - Map group exposure to C/R/F policy and policy-weighted spacing/capacity.
 - Preserve policy thresholds/configuration outside the radio model.
 

@@ -11,7 +11,7 @@
     return;
   }
 
-  const colors = { C: "#238b57", R: "#e3b735", F: "#d65353", U: "#829095" };
+  const colors = { C: "#238b57", R: "#e3b735", F: "#d65353" };
   const frames = data.frames;
   const entrants = data.entrants;
   const route = data.route_metric;
@@ -28,13 +28,14 @@
     "active-count", "expected-count", "current-capacity", "reliability-capacity", "demand-status",
     "policy-observations", "share-c", "share-r", "share-f", "share-c-bar", "share-r-bar", "share-f-bar",
     "selected-uam", "selected-policy", "selected-exposure", "selected-site", "selected-rsrp", "selected-sinr", "selected-progress", "selected-group",
-    "current-counts", "three-warning",
+    "current-counts", "link-current", "three-warning",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const capacityCanvas = document.getElementById("capacity-chart");
+  const linkCanvas = document.getElementById("link-quality-chart");
 
   el["traffic-title"].textContent = `${display.route_label || summary.scenario_id} · Multi-UAM Policy`;
-  el["traffic-subtitle"].textContent = "Individual link quality → centered five-aircraft group policy → reliability-qualified capacity";
+  el["traffic-subtitle"].textContent = "Individual link quality → available local-neighbor group policy → reliability-qualified capacity";
   el["offered-demand"].textContent = Number(summary.traffic.entry_demand_uam_h).toFixed(1);
   el["entry-interval"].textContent = Number(summary.traffic.entry_interval_s).toFixed(1);
   el["traffic-speed"].textContent = speedMps.toFixed(0);
@@ -110,6 +111,94 @@
     };
   }
 
+  const linkProfile = Array.from({ length: 241 }, (_unused, sampleIndex) => {
+    const sM = corridorLengthM * sampleIndex / 240;
+    const link = evaluateRadio(interpolateRoute(sM));
+    return { sM, rsrp: link.rsrp, sinr: link.sinr, siteId: link.site.id };
+  });
+
+  function drawLinkQualityChart(selected) {
+    const ratio = window.devicePixelRatio || 1;
+    const width = Math.max(320, linkCanvas.clientWidth);
+    const height = 220;
+    linkCanvas.width = width * ratio;
+    linkCanvas.height = height * ratio;
+    const ctx = linkCanvas.getContext("2d");
+    ctx.scale(ratio, ratio);
+    ctx.clearRect(0, 0, width, height);
+    const pad = { left: 44, right: 12 };
+    const plotWidth = width - pad.left - pad.right;
+    const xAt = (sM) => pad.left + sM / corridorLengthM * plotWidth;
+    const cursorS = selected ? selected.sM : 0;
+
+    const panels = [
+      {
+        top: 13, height: 78, key: "rsrp", color: "#294f70", label: "RSRP (dBm/RE)",
+        min: Math.floor(Math.min(...linkProfile.map((row) => row.rsrp)) / 5) * 5 - 5,
+        max: Math.ceil(Math.max(...linkProfile.map((row) => row.rsrp)) / 5) * 5 + 5,
+      },
+      {
+        top: 116, height: 78, key: "sinr", color: "#168c85", label: "SINR (dB)",
+        min: Math.floor(Math.min(...linkProfile.map((row) => row.sinr), Number(summary.policy.sinr_threshold_db)) / 5) * 5 - 5,
+        max: Math.ceil(Math.max(...linkProfile.map((row) => row.sinr), Number(summary.policy.sinr_threshold_db)) / 5) * 5 + 5,
+      },
+    ];
+
+    panels.forEach((panel) => {
+      const bottom = panel.top + panel.height;
+      const yAt = (value) => panel.top + (panel.max - value) / (panel.max - panel.min) * panel.height;
+      ctx.strokeStyle = "#d7ddd9";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, panel.top);
+      ctx.lineTo(pad.left, bottom);
+      ctx.lineTo(width - pad.right, bottom);
+      ctx.stroke();
+      ctx.fillStyle = "#64747c";
+      ctx.font = "10px system-ui";
+      ctx.fillText(panel.label, pad.left + 4, panel.top - 3);
+      ctx.fillText(panel.max.toFixed(0), 5, panel.top + 4);
+      ctx.fillText(panel.min.toFixed(0), 5, bottom);
+      if (panel.key === "sinr") {
+        const threshold = Number(summary.policy.sinr_threshold_db);
+        ctx.strokeStyle = "#d65353";
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, yAt(threshold));
+        ctx.lineTo(width - pad.right, yAt(threshold));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#d65353";
+        ctx.fillText(`Θ ${threshold.toFixed(1)} dB`, width - pad.right - 67, yAt(threshold) - 3);
+      }
+      ctx.strokeStyle = panel.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      linkProfile.forEach((row, rowIndex) => {
+        const x = xAt(row.sM);
+        const y = yAt(row[panel.key]);
+        if (rowIndex === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      const current = evaluateRadio(interpolateRoute(cursorS));
+      ctx.fillStyle = panel.color;
+      ctx.beginPath();
+      ctx.arc(xAt(cursorS), yAt(current[panel.key]), 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.strokeStyle = "#17364a";
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(xAt(cursorS), 10);
+    ctx.lineTo(xAt(cursorS), 198);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#64747c";
+    ctx.font = "10px system-ui";
+    ctx.fillText("0 km", pad.left, 215);
+    ctx.fillText(`${(corridorLengthM / 1000).toFixed(1)} km`, width - pad.right - 42, 215);
+  }
+
   const map = L.map("traffic-map", { preferCanvas: true });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -127,7 +216,7 @@
   let selectedUamId = null;
 
   function markerIcon(policy, headingDeg, selected, groupMember) {
-    const color = colors[policy] || colors.U;
+    const color = colors[policy] || colors.F;
     return L.divIcon({
       className: "",
       html: `<div class="uam-traffic-marker${groupMember ? " uam-traffic-marker--group" : ""}${selected ? " uam-traffic-marker--selected" : ""}" style="background:${color};transform:rotate(${headingDeg + 45}deg)" aria-label="${policy} policy aircraft">✈</div>`,
@@ -138,22 +227,87 @@
 
   let viewer3d = null;
   const aircraft3d = new Map();
+  let fallbackMap = null;
+  const fallbackAircraft = new Map();
   function planeSvg(policy) {
-    const color = colors[policy] || colors.U;
+    const color = colors[policy] || colors.F;
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="${color}" stroke="white" stroke-width="4"/><path d="M29 11h6l4 17 15 8v5l-16-3-3 15h-6l-3-15-16 3v-5l15-8z" fill="white"/></svg>`)}`;
+  }
+
+  function stationSvg() {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80"><path d="M32 7v62M19 69h26M24 69l8-42 8 42M24 43h16M21 54h22" fill="none" stroke="#17364a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 18c-8 6-8 15 0 21M43 18c8 6 8 15 0 21M14 10C0 22 0 38 14 49M50 10c14 12 14 28 0 39" fill="none" stroke="#e46f51" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="22" r="5" fill="#e46f51" stroke="white" stroke-width="2"/></svg>`)}`;
+  }
+
+  function fallbackAircraftIcon(row) {
+    return L.divIcon({
+      className: "",
+      html: `<div class="fallback-aircraft"><img src="${planeSvg(row.policy)}" style="transform:rotate(${-row.heading}deg)" alt="${row.policy} policy aircraft" /></div>`,
+      iconSize: [30, 54],
+      iconAnchor: [15, 50],
+    });
+  }
+
+  function initializeFallback3d() {
+    if (fallbackMap) return;
+    if (viewer3d) {
+      try { viewer3d.destroy(); } catch (_error) { /* Cesium already stopped. */ }
+      viewer3d = null;
+    }
+    const container = document.getElementById("traffic-3d");
+    container.replaceChildren();
+    const fallbackNode = document.createElement("div");
+    fallbackNode.className = "traffic-3d-fallback";
+    container.appendChild(fallbackNode);
+    fallbackMap = L.map(fallbackNode, {
+      preferCanvas: true,
+      zoomControl: false,
+      attributionControl: true,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+    });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(fallbackMap);
+    const routeLayer = L.polyline(
+      data.route.map(([lon, lat]) => [lat, lon]),
+      { color: "#168c85", weight: 4, opacity: .9 },
+    ).addTo(fallbackMap);
+    data.stations.forEach((site) => {
+      L.marker([site.lat, site.lon], {
+        icon: L.divIcon({
+          className: "",
+          html: `<div class="fallback-station" aria-label="${site.id} base station"></div>`,
+          iconSize: [22, 34],
+          iconAnchor: [11, 32],
+        }),
+      }).bindTooltip(`${site.id} · ${site.physical_form}`).addTo(fallbackMap);
+    });
+    fallbackMap.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+    el["three-warning"].hidden = false;
+    window.setTimeout(() => updateFrame(index), 0);
   }
 
   function initialize3d() {
     if (window.location.protocol === "file:" || !window.Cesium) {
-      el["three-warning"].hidden = false;
+      initializeFallback3d();
       return;
     }
-    viewer3d = new Cesium.Viewer("traffic-3d", {
-      animation: false, timeline: false, geocoder: false, homeButton: false,
-      sceneModePicker: false, baseLayerPicker: false, navigationHelpButton: false,
-      fullscreenButton: false, selectionIndicator: false, infoBox: false,
-      baseLayer: new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({ url: "https://tile.openstreetmap.org/" })),
-    });
+    try {
+      viewer3d = new Cesium.Viewer("traffic-3d", {
+        animation: false, timeline: false, geocoder: false, homeButton: false,
+        sceneModePicker: false, baseLayerPicker: false, navigationHelpButton: false,
+        fullscreenButton: false, selectionIndicator: false, infoBox: false,
+        baseLayer: new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({ url: "https://tile.openstreetmap.org/" })),
+      });
+    } catch (_error) {
+      initializeFallback3d();
+      return;
+    }
+    viewer3d.scene.renderError.addEventListener(() => initializeFallback3d());
     viewer3d.scene.globe.depthTestAgainstTerrain = false;
     viewer3d.entities.add({
       polyline: { positions: Cesium.Cartesian3.fromDegreesArray(data.route.flat()), width: 3, material: Cesium.Color.fromCssColorString("#168c85") },
@@ -162,7 +316,8 @@
       viewer3d.entities.add({
         position: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, site.height_m / 2),
         cylinder: { length: site.height_m, topRadius: 1.4, bottomRadius: 2.2, material: Cesium.Color.fromCssColorString("#17364a").withAlpha(.85) },
-        point: { pixelSize: 7, color: Cesium.Color.fromCssColorString("#17364a"), outlineColor: Cesium.Color.WHITE, outlineWidth: 1, disableDepthTestDistance: Number.POSITIVE_INFINITY },
+        billboard: { image: stationSvg(), width: 30, height: 38, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY },
+        label: { text: site.id, font: "11px system-ui", fillColor: Cesium.Color.fromCssColorString("#17364a"), outlineColor: Cesium.Color.WHITE, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, 11), disableDepthTestDistance: Number.POSITIVE_INFINITY },
       });
     });
     const minLon = Math.min(...data.route.map((p) => p[0]));
@@ -190,7 +345,9 @@
       const sM = Math.max(0, Math.min(corridorLengthM, speedMps * (frame.t - uam.entry)));
       const position = interpolateRoute(sM);
       const heading = Math.atan2(position.tangentX, position.tangentY) * 180 / Math.PI;
-      return { ...uam, sM, position, heading, policy: frame.policies[uam.id] || "U", exposure: frame.exposure[uam.id] };
+      const policy = frame.policies[uam.id];
+      if (!colors[policy]) throw new Error(`Missing C/R/F policy for active ${uam.id} at ${frame.t}s`);
+      return { ...uam, sM, position, heading, policy, exposure: frame.exposure[uam.id] };
     });
   }
 
@@ -199,11 +356,9 @@
     updateFrame(index);
   }
 
-  function update2d(aircraftRows) {
+  function update2d(aircraftRows, groups) {
     const focal = aircraftRows.find((row) => row.id === selectedUamId);
-    const groupIds = focal && focal.policy !== "U"
-      ? new Set(entrants.slice(focal.index - 2, focal.index + 3).map((row) => row.id))
-      : new Set();
+    const groupIds = new Set(focal ? groups[focal.id] : []);
     const activeIds = new Set(aircraftRows.map((row) => row.id));
     for (const [uamId, marker] of markers) {
       if (!activeIds.has(uamId)) { map.removeLayer(marker); markers.delete(uamId); }
@@ -219,11 +374,34 @@
       }
       marker.setLatLng([row.position.lat, row.position.lon]);
       marker.setIcon(markerIcon(row.policy, row.heading, selected, groupIds.has(row.id)));
-      marker.bindTooltip(`${row.id} · ${row.policy === "U" ? "unclassified" : row.policy}`, { direction: "top" });
+      marker.bindTooltip(`${row.id} · ${row.policy}`, { direction: "top" });
     });
   }
 
   function update3d(aircraftRows) {
+    if (fallbackMap) {
+      const activeIds = new Set(aircraftRows.map((row) => row.id));
+      for (const [uamId, marker] of fallbackAircraft) {
+        if (!activeIds.has(uamId)) {
+          fallbackMap.removeLayer(marker);
+          fallbackAircraft.delete(uamId);
+        }
+      }
+      aircraftRows.forEach((row) => {
+        let marker = fallbackAircraft.get(row.id);
+        if (!marker) {
+          marker = L.marker([row.position.lat, row.position.lon], {
+            icon: fallbackAircraftIcon(row),
+            zIndexOffset: row.id === selectedUamId ? 1200 : 900,
+          }).addTo(fallbackMap);
+          fallbackAircraft.set(row.id, marker);
+        }
+        marker.setLatLng([row.position.lat, row.position.lon]);
+        marker.setIcon(fallbackAircraftIcon(row));
+        marker.bindTooltip(`${row.id} · ${row.policy}`);
+      });
+      return;
+    }
     if (!viewer3d) return;
     const activeIds = new Set(aircraftRows.map((row) => row.id));
     for (const [uamId, entity] of aircraft3d) {
@@ -284,9 +462,9 @@
     const frame = frames[index];
     const aircraftRows = activeAircraft(frame);
     if (!selectedUamId || !aircraftRows.some((row) => row.id === selectedUamId)) {
-      selectedUamId = aircraftRows.find((row) => row.policy !== "U")?.id || aircraftRows[0]?.id || null;
+      selectedUamId = aircraftRows[0]?.id || null;
     }
-    update2d(aircraftRows);
+    update2d(aircraftRows, frame.groups);
     update3d(aircraftRows);
     el["time-slider"].value = String(index);
     el["current-time"].textContent = formatTime(frame.t);
@@ -297,19 +475,21 @@
     if (selected) {
       const link = evaluateRadio(selected.position);
       el["selected-uam"].textContent = selected.id;
-      el["selected-policy"].textContent = selected.policy === "U" ? "Unclassified" : selected.policy;
+      el["selected-policy"].textContent = selected.policy;
       el["selected-policy"].style.color = colors[selected.policy];
-      el["selected-exposure"].textContent = selected.exposure == null ? "Not yet valid" : `${(100 * selected.exposure).toFixed(1)}% below Θ`;
+      el["selected-exposure"].textContent = `${(100 * selected.exposure).toFixed(1)}% below Θ`;
       el["selected-site"].textContent = link.site.id;
       el["selected-rsrp"].textContent = `${link.rsrp.toFixed(1)} dBm/RE`;
       el["selected-sinr"].textContent = `${link.sinr.toFixed(1)} dB`;
       el["selected-progress"].textContent = `${(selected.sM / 1000).toFixed(2)} km · ${(100 * selected.sM / corridorLengthM).toFixed(1)}%`;
-      el["selected-group"].textContent = selected.policy === "U"
-        ? "Not yet valid"
-        : entrants.slice(selected.index - 2, selected.index + 3).map((row) => row.id).join(" · ");
+      el["selected-group"].textContent = frame.groups[selected.id].join(" · ");
+      el["link-current"].textContent = `${selected.id} · ${(selected.sM / 1000).toFixed(2)} km`;
       servingLine.setLatLngs([[selected.position.lat, selected.position.lon], [link.site.lat, link.site.lon]]);
+      drawLinkQualityChart(selected);
     } else {
       servingLine.setLatLngs([]);
+      el["link-current"].textContent = "—";
+      drawLinkQualityChart(null);
     }
     drawCapacityChart(index);
   }
@@ -340,6 +520,10 @@
   });
   el["reset-button"].addEventListener("click", () => { setPlaying(false); index = 0; simulatedTime = frames[0].t; updateFrame(0); });
   el["time-slider"].addEventListener("input", () => { setPlaying(false); index = Number(el["time-slider"].value); simulatedTime = frames[index].t; updateFrame(index); });
-  window.addEventListener("resize", () => drawCapacityChart(index));
+  window.addEventListener("resize", () => {
+    drawCapacityChart(index);
+    const selected = activeAircraft(frames[index]).find((row) => row.id === selectedUamId);
+    drawLinkQualityChart(selected || null);
+  });
   updateFrame(0);
 })();

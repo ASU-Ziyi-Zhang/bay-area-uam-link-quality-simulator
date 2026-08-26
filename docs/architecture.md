@@ -13,9 +13,11 @@ The repository keeps one stable chain while allowing each layer to be replaced:
 7. `Capacity` consumes policy/spacing assumptions and reports capacity.
 
 The single-UAM mode exercises layers 1-4. The fixed-lane multi-UAM mode also
-exercises the accepted TRB centered-five-aircraft C/R/F mapping and its
-policy-weighted planning-capacity calculation. Neither mode implements
-operational conflict resolution or certified airborne capacity.
+assigns every active aircraft a C/R/F policy using its available local
+neighbors and computes policy-weighted planning capacity. The original
+centered-five TRB definition is retained as a separate regression comparison.
+Neither mode implements operational conflict resolution or certified airborne
+capacity.
 
 ## Replaceable inputs
 

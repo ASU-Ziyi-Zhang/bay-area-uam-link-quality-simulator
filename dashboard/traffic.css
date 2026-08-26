@@ -37,7 +37,7 @@ button, select, input { font: inherit; }
 .assumption-strip small { color: var(--muted); }
 
 .traffic-main { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(340px, .78fr); gap: 14px; padding: 14px; }
-.traffic-map-card, .traffic-three-card, .policy-card, .selected-card, .capacity-card, .metric-grid article { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 5px 18px rgb(23 54 74 / 5%); }
+.traffic-map-card, .traffic-three-card, .policy-card, .selected-card, .link-card, .capacity-card, .metric-grid article { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 5px 18px rgb(23 54 74 / 5%); }
 .traffic-map-card { overflow: hidden; }
 .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 15px 11px; }
 .card-heading h2 { margin: 2px 0 0; font-size: 1rem; }
@@ -49,7 +49,6 @@ button, select, input { font: inherit; }
 .policy-dot--c { background: var(--coordinated); }
 .policy-dot--r { background: var(--reactive); }
 .policy-dot--f { background: var(--fallback); }
-.policy-dot--u { background: var(--unknown); }
 .uam-traffic-marker { width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid white; border-radius: 50% 50% 50% 0; color: white; font-size: 11px; box-shadow: 0 2px 6px rgb(0 0 0 / 30%); transform-origin: center; }
 .uam-traffic-marker--selected { width: 28px; height: 28px; outline: 3px solid rgb(23 54 74 / 35%); font-size: 13px; }
 .uam-traffic-marker--group { box-shadow: 0 0 0 3px rgb(23 54 74 / 38%), 0 3px 8px rgb(0 0 0 / 18%); }
@@ -69,7 +68,7 @@ button, select, input { font: inherit; }
 .metric-grid .supported { color: var(--coordinated); }
 .metric-grid .unsupported { color: var(--fallback); }
 
-.policy-card, .selected-card, .capacity-card { overflow: hidden; }
+.policy-card, .selected-card, .link-card, .capacity-card { overflow: hidden; }
 .policy-bar { display: flex; height: 16px; margin: 0 15px 11px; overflow: hidden; border-radius: 9px; background: #e5e8e6; }
 .policy-bar span { min-width: 0; }
 .policy-bar__c { background: var(--coordinated); }
@@ -86,9 +85,18 @@ button, select, input { font: inherit; }
 .selected-card dt { color: var(--muted); font-size: .66rem; text-transform: uppercase; }
 .selected-card dd { margin: 3px 0 0; font-weight: 750; }
 #capacity-chart { display: block; width: 100%; height: 150px; }
+#link-quality-chart { display: block; width: 100%; height: 220px; }
 
 .traffic-three-card { grid-column: 1 / -1; overflow: hidden; }
 #traffic-3d { height: 440px; border-top: 1px solid var(--line); }
+.traffic-3d-fallback { position: relative; width: 100%; height: 100%; background: #dfe9e5; }
+.traffic-3d-fallback .leaflet-control-attribution { font-size: 9px; }
+.fallback-aircraft { position: relative; width: 30px; height: 54px; transform: translate(-15px, -45px); }
+.fallback-aircraft::after { position: absolute; left: 14px; top: 26px; width: 2px; height: 24px; content: ""; background: linear-gradient(rgb(23 54 74 / 55%), rgb(23 54 74 / 5%)); }
+.fallback-aircraft img { position: relative; z-index: 2; width: 30px; height: 30px; filter: drop-shadow(0 3px 3px rgb(0 0 0 / 25%)); }
+.fallback-station { position: relative; width: 22px; height: 34px; transform: translate(-11px, -28px); }
+.fallback-station::before { position: absolute; left: 9px; top: 8px; width: 4px; height: 25px; content: ""; border-radius: 2px; background: #17364a; }
+.fallback-station::after { position: absolute; left: 3px; top: 2px; width: 16px; height: 10px; content: ""; border: 3px solid #17364a; border-top: 0; border-bottom: 0; }
 .three-warning { padding: 12px 15px; color: #8a5b15; background: #fff2d8; }
 .traffic-footer { display: flex; justify-content: space-between; gap: 20px; padding: 12px 18px 18px; color: var(--muted); font-size: .72rem; }
 .error-panel { position: fixed; inset: 20px; z-index: 9999; padding: 24px; border: 2px solid var(--fallback); border-radius: 12px; background: white; color: #7b2222; }

@@ -39,12 +39,16 @@ def main() -> None:
     capacity_rows = read_csv(run_dir / "capacity_trace.csv")
     policies_by_time: dict[float, dict[str, str]] = defaultdict(dict)
     exposure_by_time: dict[float, dict[str, float]] = defaultdict(dict)
+    groups_by_time: dict[float, dict[str, list[str]]] = defaultdict(dict)
     for row in policy_rows:
         timestamp = round(float(row["timestamp_s"]), 9)
         policies_by_time[timestamp][row["focal_uam_id"]] = row["policy"]
         exposure_by_time[timestamp][row["focal_uam_id"]] = float(
             row["exposure_fraction"]
         )
+        groups_by_time[timestamp][row["focal_uam_id"]] = row[
+            "member_uam_ids"
+        ].split("|")
 
     frames = []
     for row in capacity_rows:
@@ -68,6 +72,7 @@ def main() -> None:
                 "q_bottleneck": float(row["q_bottleneck_uam_h"]),
                 "policies": policies,
                 "exposure": exposure_by_time[timestamp],
+                "groups": groups_by_time[timestamp],
             }
         )
 

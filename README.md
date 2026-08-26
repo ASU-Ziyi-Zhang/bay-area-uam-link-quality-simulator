@@ -108,9 +108,9 @@ rotate with aircraft heading.
 ```powershell
 python scripts\run_group_simulator.py `
   --config scenarios\airport_to_airport\group_simulator.json `
-  --output runs\airport-to-airport-group-policy-v1
+  --output runs\airport-to-airport-group-policy-v2
 python scripts\build_traffic_dashboard.py `
-  --run-dir runs\airport-to-airport-group-policy-v1 `
+  --run-dir runs\airport-to-airport-group-policy-v2 `
   --scenario scenarios\airport_to_airport\scenario.json `
   --output dashboard\data\airport_to_airport_traffic.js
 python scripts\serve_dashboard.py
@@ -119,9 +119,10 @@ python scripts\serve_dashboard.py
 Open
 [http://127.0.0.1:8765/traffic.html?scenario=airport_to_airport](http://127.0.0.1:8765/traffic.html?scenario=airport_to_airport).
 Green, yellow, and red aircraft denote coordinated, reactive, and fallback
-group policy. Gray aircraft do not yet have a complete centered five-aircraft
-group. See [the simulator definition](docs/multi_aircraft_policy.md) before
-interpreting the fractions or capacity.
+group policy. Every active aircraft is classified; startup and corridor-edge
+groups use the available local neighbors up to a maximum of five. See
+[the simulator definition](docs/multi_aircraft_policy.md) before interpreting
+the fractions or capacity.
 
 ## Verify
 
