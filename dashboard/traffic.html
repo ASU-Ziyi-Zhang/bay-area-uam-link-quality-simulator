@@ -167,7 +167,7 @@
     <div id="error-panel" class="error-panel" hidden role="alert"></div>
 
     <script src="vendor/leaflet/leaflet.js"></script>
-    <script src="traffic_engine.js?v=20260826-3d-controls-v9"></script>
+    <script src="traffic_engine.js?v=20260827-free-view-v11"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
             integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
             crossorigin="anonymous"></script>
@@ -188,7 +188,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260826-3d-controls-v9";
+        const version = "20260827-free-view-v11";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

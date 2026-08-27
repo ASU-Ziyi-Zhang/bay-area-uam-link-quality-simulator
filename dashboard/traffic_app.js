@@ -284,10 +284,45 @@
   const CAMERA_HEADING_DEG = 315;
   const CAMERA_PITCH_DEG = -25;
   const CAMERA_RANGE_M = 3300;
+  const planeBillboardCanvases = new Map();
+  let stationBillboardCanvasCache = null;
 
   function planeSvg(policy) {
     const color = colors[policy] || colors.F;
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="${color}" stroke="white" stroke-width="4"/><path d="M29 11h6l4 17 15 8v5l-16-3-3 15h-6l-3-15-16 3v-5l15-8z" fill="white"/></svg>`)}`;
+  }
+
+  function planeBillboardCanvas(policy) {
+    if (planeBillboardCanvases.has(policy)) return planeBillboardCanvases.get(policy);
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = colors[policy] || colors.F;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(32, 32, 29, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(29, 11);
+    ctx.lineTo(35, 11);
+    ctx.lineTo(39, 28);
+    ctx.lineTo(54, 36);
+    ctx.lineTo(54, 41);
+    ctx.lineTo(38, 38);
+    ctx.lineTo(35, 53);
+    ctx.lineTo(29, 53);
+    ctx.lineTo(26, 38);
+    ctx.lineTo(10, 41);
+    ctx.lineTo(10, 36);
+    ctx.lineTo(25, 28);
+    ctx.closePath();
+    ctx.fill();
+    planeBillboardCanvases.set(policy, canvas);
+    return canvas;
   }
 
   function fallbackAircraftIcon(row, selected) {
@@ -356,8 +391,34 @@
     });
   }
 
-  function stationSvg() {
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 56"><path d="M20 12h4v38h-4z" fill="#17364a"/><path d="M8 15h28v5H8zm4 10h20v5H12z" rx="2" fill="#17364a"/><path d="M22 4c8 0 15 4 20 10M22 4C14 4 7 8 2 14" fill="none" stroke="#e46f51" stroke-width="3" stroke-linecap="round"/><circle cx="22" cy="7" r="4" fill="#e46f51" stroke="white" stroke-width="2"/></svg>`)}`;
+  function stationBillboardCanvas() {
+    if (stationBillboardCanvasCache) return stationBillboardCanvasCache;
+    const canvas = document.createElement("canvas");
+    canvas.width = 44;
+    canvas.height = 56;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#17364a";
+    ctx.fillRect(20, 12, 4, 38);
+    ctx.fillRect(8, 15, 28, 5);
+    ctx.fillRect(12, 25, 20, 5);
+    ctx.strokeStyle = "#e46f51";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(22, 4);
+    ctx.bezierCurveTo(30, 4, 37, 8, 42, 14);
+    ctx.moveTo(22, 4);
+    ctx.bezierCurveTo(14, 4, 7, 8, 2, 14);
+    ctx.stroke();
+    ctx.fillStyle = "#e46f51";
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(22, 7, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    stationBillboardCanvasCache = canvas;
+    return canvas;
   }
 
   function addStation3d(site) {
@@ -384,7 +445,7 @@
       name: `${site.id} base-station symbol`,
       position: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, site.height_m),
       billboard: {
-        image: stationSvg(),
+        image: stationBillboardCanvas(),
         width: 22,
         height: 28,
         pixelOffset: new Cesium.Cartesian2(0, -18),
@@ -652,7 +713,7 @@
             silhouetteSize: 1,
           },
           billboard: {
-            image: planeSvg(row.policy),
+            image: planeBillboardCanvas(row.policy),
             width: 24,
             height: 24,
             pixelOffset: new Cesium.Cartesian2(0, -34),
@@ -681,7 +742,7 @@
       entity.model.silhouetteColor = Cesium.Color.fromCssColorString(colors[row.policy]);
       entity.model.silhouetteSize = isSelected ? 2 : 1;
       if (entity._policyCode !== row.policy) {
-        entity.billboard.image = planeSvg(row.policy);
+        entity.billboard.image = planeBillboardCanvas(row.policy);
         entity._policyCode = row.policy;
       }
       entity.billboard.width = isSelected ? 38 : 24;
@@ -748,11 +809,9 @@
     index = Math.max(0, Math.min(frames.length - 1, Math.round(nextIndex)));
     const frame = frames[index];
     const aircraftRows = activeAircraft(frame);
-    const previousSelection = selectedUamId;
     if (!selectedUamId || !aircraftRows.some((row) => row.id === selectedUamId)) {
       selectedUamId = aircraftRows[0]?.id || null;
     }
-    if (selectedUamId !== previousSelection) cameraMode = "follow";
     const selected = aircraftRows.find((row) => row.id === selectedUamId);
     const selectedLink = selected ? evaluateRadio(selected.position) : null;
     update2d(aircraftRows, frame.groups);

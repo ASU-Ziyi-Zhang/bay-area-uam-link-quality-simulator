@@ -56,7 +56,7 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "applyFollowCamera(selected)" in app
     assert '"three-camera-state", "three-camera-note"' in app
     assert "Loading traffic data" in html
-    assert "20260826-3d-controls-v9" in html
+    assert "20260827-free-view-v11" in html
     assert "traffic_engine.js" in html
     for control_id in (
         "input-altitude", "input-offset", "input-speed", "input-departure",
@@ -66,8 +66,10 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
         assert f'id="{control_id}"' in html
     assert "setPlaying(false);\n    selectedUamId = uamId" in app
     assert "uam-traffic-hit" in css
-    assert "entity.billboard.image = planeSvg(row.policy)" in app
-    assert "stationSvg()" in app
+    assert "entity.billboard.image = planeBillboardCanvas(row.policy)" in app
+    assert "image: stationBillboardCanvas()" in app
+    assert 'image: planeBillboardCanvas(row.policy)' in app
+    assert 'if (selectedUamId !== previousSelection) cameraMode = "follow";' not in app
     assert "uam-traffic-marker--group" in css
     assert "Multi-UAM policy simulator" in single_html
 
