@@ -34,15 +34,6 @@
         </div>
       </header>
 
-      <section class="assumption-strip" aria-label="Applied inputs and scenario status">
-        <div><span>Offered demand</span><strong id="offered-demand">—</strong><small>UAM/h</small></div>
-        <div><span>Entry interval</span><strong id="entry-interval">—</strong><small>s</small></div>
-        <div><span>Speed</span><strong id="traffic-speed">—</strong><small>m/s</small></div>
-        <div><span>Altitude</span><strong id="traffic-altitude">—</strong><small>m AGL</small></div>
-        <div><span>Geometry</span><strong>1 × 1</strong><small>lane × level</small></div>
-        <div><span>Control</span><strong>Fixed</strong><small>no switching</small></div>
-      </section>
-
       <section class="experiment-controls" aria-labelledby="experiment-heading">
         <div class="experiment-controls__heading">
           <div><span class="eyebrow">EXPERIMENT INPUTS</span><h2 id="experiment-heading">Trajectory, traffic and policy settings</h2></div>
@@ -145,7 +136,13 @@
         <section class="traffic-three-card" aria-labelledby="three-heading">
           <div class="card-heading traffic-three-heading">
             <div><span class="eyebrow">GEOREFERENCED 3D VIEW</span><h2 id="three-heading">3D focal-aircraft traffic</h2></div>
-            <div class="traffic-three-camera"><span id="three-camera-state">315° bearing · fixed pitch</span><button id="three-recenter" type="button" aria-label="Recenter the three-dimensional view on the selected aircraft">Recenter</button></div>
+            <div class="traffic-three-camera">
+              <span id="three-camera-state">315° bearing · fixed pitch</span>
+              <div class="traffic-three-camera__actions">
+                <button id="three-free-view" type="button" aria-label="Release the three-dimensional camera for free rotation">Free view</button>
+                <button id="three-recenter" type="button" aria-label="Follow the selected aircraft in the three-dimensional view">Follow selected</button>
+              </div>
+            </div>
           </div>
           <div class="traffic-3d-stage">
             <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
@@ -170,7 +167,7 @@
     <div id="error-panel" class="error-panel" hidden role="alert"></div>
 
     <script src="vendor/leaflet/leaflet.js"></script>
-    <script src="traffic_engine.js?v=20260826-interactive-traffic-v7"></script>
+    <script src="traffic_engine.js?v=20260826-3d-controls-v9"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
             integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
             crossorigin="anonymous"></script>
@@ -191,7 +188,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260826-interactive-traffic-v7";
+        const version = "20260826-3d-controls-v9";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

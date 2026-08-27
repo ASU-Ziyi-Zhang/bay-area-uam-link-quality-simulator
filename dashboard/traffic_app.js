@@ -64,12 +64,12 @@
   };
 
   const ids = [
-    "traffic-title", "traffic-subtitle", "offered-demand", "entry-interval", "traffic-speed", "traffic-altitude",
+    "traffic-title", "traffic-subtitle",
     "play-button", "reset-button", "time-slider", "playback-speed", "current-time", "total-time",
     "active-count", "expected-count", "current-capacity", "reliability-capacity", "demand-status",
     "policy-observations", "share-c", "share-r", "share-f", "share-c-bar", "share-r-bar", "share-f-bar",
     "selected-uam", "selected-policy", "selected-exposure", "selected-site", "selected-rsrp", "selected-sinr", "selected-progress", "selected-group",
-    "current-counts", "link-current", "three-warning", "three-recenter", "three-camera-state", "three-camera-note",
+    "current-counts", "link-current", "three-warning", "three-free-view", "three-recenter", "three-camera-state", "three-camera-note",
     "reliability-caption", "demand-caption", "policy-description", "flight-altitude-legend", "footer-policy-description",
     "experiment-form", "experiment-status", "run-experiment", "reset-experiment", "input-altitude", "input-offset",
     "input-speed", "input-departure", "input-theta", "input-group-size", "input-window", "input-policy-interval",
@@ -112,10 +112,6 @@
   }
 
   function updateScenarioSummary(results, parameters) {
-    el["offered-demand"].textContent = results.offeredDemand.toFixed(1);
-    el["entry-interval"].textContent = parameters.departureIntervalS.toFixed(1);
-    el["traffic-speed"].textContent = parameters.speedMps.toFixed(0);
-    el["traffic-altitude"].textContent = parameters.altitudeM.toFixed(0);
     el["expected-count"].textContent = `steady-state expectation ${results.expectedOccupancy.toFixed(1)}`;
     el["reliability-capacity"].textContent = results.reliabilityCapacity.toFixed(1);
     const tailPercent = 100 * (1 - parameters.reliabilityRho);
@@ -360,6 +356,10 @@
     });
   }
 
+  function stationSvg() {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 56"><path d="M20 12h4v38h-4z" fill="#17364a"/><path d="M8 15h28v5H8zm4 10h20v5H12z" rx="2" fill="#17364a"/><path d="M22 4c8 0 15 4 20 10M22 4C14 4 7 8 2 14" fill="none" stroke="#e46f51" stroke-width="3" stroke-linecap="round"/><circle cx="22" cy="7" r="4" fill="#e46f51" stroke="white" stroke-width="2"/></svg>`)}`;
+  }
+
   function addStation3d(site) {
     const form = site.physical_form.toLowerCase();
     if (site.site_class === "Macro_Building") {
@@ -380,6 +380,19 @@
       viewer3d.entities.add({ position: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, height / 2), cylinder: { length: height, topRadius: .48, bottomRadius: .85, material: Cesium.Color.fromCssColorString("#58656c") } });
       addAntennaCrown3d(site, Cesium.Color.fromCssColorString("#dce4e5"));
     }
+    viewer3d.entities.add({
+      name: `${site.id} base-station symbol`,
+      position: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, site.height_m),
+      billboard: {
+        image: stationSvg(),
+        width: 22,
+        height: 28,
+        pixelOffset: new Cesium.Cartesian2(0, -18),
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 18000),
+      },
+    });
   }
 
   function initialize3d() {
@@ -398,7 +411,13 @@
     viewer3d.scene.globe.enableLighting = true;
     viewer3d.scene.fog.enabled = true;
     viewer3d.scene.fog.density = .00018;
-    viewer3d.scene.screenSpaceCameraController.enableCollisionDetection = false;
+    const controller = viewer3d.scene.screenSpaceCameraController;
+    controller.enableCollisionDetection = false;
+    controller.enableRotate = true;
+    controller.enableTranslate = true;
+    controller.enableZoom = true;
+    controller.enableTilt = true;
+    controller.enableLook = true;
     viewer3d.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(data.route.flat()), width: 3, material: new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.fromCssColorString("#607177"), dashLength: 14 }), clampToGround: true } });
     flightPath3d = viewer3d.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(flightRoutePositions().flatMap((row) => [row.lon, row.lat, altitudeM])), width: 5, material: Cesium.Color.fromCssColorString("#21b7aa").withAlpha(.94), arcType: Cesium.ArcType.GEODESIC } });
     const start = data.route[0];
@@ -413,13 +432,15 @@
       point: { pixelSize: 16, color: Cesium.Color.fromCssColorString("#ff7658").withAlpha(.3), outlineColor: Cesium.Color.fromCssColorString("#ff7658"), outlineWidth: 3, disableDepthTestDistance: Number.POSITIVE_INFINITY },
     });
     const canvas = viewer3d.scene.canvas;
-    canvas.addEventListener("pointerdown", releaseCameraToFree);
-    canvas.addEventListener("wheel", releaseCameraToFree, { passive: true });
+    canvas.addEventListener("pointerdown", releaseCameraToFree, { capture: true });
+    canvas.addEventListener("wheel", releaseCameraToFree, { capture: true, passive: true });
   }
   initialize3d();
 
   function annotateCamera() {
     el["three-camera-state"].textContent = cameraMode === "follow" ? `${CAMERA_HEADING_DEG}° bearing · fixed pitch` : "Free view";
+    el["three-free-view"].setAttribute("aria-pressed", String(cameraMode === "free"));
+    el["three-recenter"].setAttribute("aria-pressed", String(cameraMode === "follow"));
     el["three-camera-note"].textContent = cameraMode === "follow"
       ? `Following ${selectedUamId || "selected aircraft"} · fixed bearing and pitch.`
       : "Free view · drag to orbit, scroll to zoom · Recenter restores focal-aircraft follow.";
@@ -438,18 +459,24 @@
   }
 
   function releaseCameraToFree() {
-    if (!viewer3d || cameraMode === "free") return;
+    if (cameraMode === "free") return;
     cameraMode = "free";
-    viewer3d.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    if (viewer3d) viewer3d.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     annotateCamera();
   }
 
   function recenter3d() {
     const focal = activeAircraft(frames[index]).find((row) => row.id === selectedUamId);
     if (!focal) return;
-    if (fallbackMap) { fallbackMap.setView([focal.position.lat, focal.position.lon], 13); return; }
+    if (fallbackMap) {
+      cameraMode = "follow";
+      fallbackMap.setView([focal.position.lat, focal.position.lon], 13);
+      annotateCamera();
+      return;
+    }
     setFocalCamera(focal);
   }
+  el["three-free-view"].addEventListener("click", releaseCameraToFree);
   el["three-recenter"].addEventListener("click", recenter3d);
 
   function updateFlightRouteGeometry() {
@@ -618,11 +645,20 @@
           orientation: Cesium.Transforms.headingPitchRollQuaternion(position, new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(row.heading), 0, 0)),
           model: {
             uri: "assets/models/cesium-drone/CesiumDrone.glb",
-            scale: 4,
-            minimumPixelSize: 22,
+            scale: 6,
+            minimumPixelSize: 28,
             maximumScale: 120,
             silhouetteColor: Cesium.Color.fromCssColorString(colors[row.policy]),
             silhouetteSize: 1,
+          },
+          billboard: {
+            image: planeSvg(row.policy),
+            width: 24,
+            height: 24,
+            pixelOffset: new Cesium.Cartesian2(0, -34),
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 18000),
           },
           label: {
             text: row.id,
@@ -630,19 +666,27 @@
             fillColor: Cesium.Color.WHITE,
             showBackground: true,
             backgroundColor: Cesium.Color.fromCssColorString(colors[row.policy]).withAlpha(.88),
-            pixelOffset: new Cesium.Cartesian2(0, -38),
+            pixelOffset: new Cesium.Cartesian2(0, -78),
             distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 16000),
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
+        entity._policyCode = row.policy;
         aircraft3d.set(row.id, entity);
       }
       entity.position = position;
       entity.orientation = Cesium.Transforms.headingPitchRollQuaternion(position, new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(row.heading), 0, 0));
-      entity.model.scale = isSelected ? 9 : 4;
-      entity.model.minimumPixelSize = isSelected ? 70 : 22;
+      entity.model.scale = isSelected ? 10 : 6;
+      entity.model.minimumPixelSize = isSelected ? 76 : 28;
       entity.model.silhouetteColor = Cesium.Color.fromCssColorString(colors[row.policy]);
       entity.model.silhouetteSize = isSelected ? 2 : 1;
+      if (entity._policyCode !== row.policy) {
+        entity.billboard.image = planeSvg(row.policy);
+        entity._policyCode = row.policy;
+      }
+      entity.billboard.width = isSelected ? 38 : 24;
+      entity.billboard.height = isSelected ? 38 : 24;
+      entity.billboard.pixelOffset = new Cesium.Cartesian2(0, isSelected ? -58 : -34);
       entity.label.show = isSelected;
       entity.label.text = `${row.id} · ${altitudeM.toFixed(0)} m · ${row.policy}`;
       entity.label.backgroundColor = Cesium.Color.fromCssColorString(colors[row.policy]).withAlpha(.88);
@@ -781,6 +825,8 @@
     scene: () => ({
       engine: viewer3d ? "cesium" : "fallback",
       aircraft_count: viewer3d ? aircraft3d.size : fallbackAircraft.size,
+      aircraft_symbol_count: viewer3d ? [...aircraft3d.values()].filter((entity) => Boolean(entity.billboard)).length : fallbackAircraft.size,
+      station_symbol_count: viewer3d ? viewer3d.entities.values.filter((entity) => entity.name?.endsWith("base-station symbol")).length : data.stations.length,
       serving_link: Boolean(viewer3d ? servingLink3d : fallbackServingLine),
       altitude_reference: Boolean(viewer3d && altitudeLine3d),
     }),

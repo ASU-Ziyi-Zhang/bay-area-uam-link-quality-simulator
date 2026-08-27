@@ -30,12 +30,6 @@ button, select, input { font: inherit; }
 .mode-nav a { padding: 8px 11px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: .78rem; font-weight: 750; }
 .mode-nav__active { color: white !important; background: var(--ink); }
 
-.assumption-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; border-bottom: 1px solid var(--line); background: var(--line); }
-.assumption-strip > div { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 3px 7px; padding: 11px 16px; background: #f9f7f2; }
-.assumption-strip span { grid-column: 1 / -1; color: var(--muted); font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
-.assumption-strip strong { font-size: 1.05rem; }
-.assumption-strip small { color: var(--muted); }
-
 .experiment-controls { margin: 14px 14px 0; padding: 14px 16px 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 5px 18px rgb(23 54 74 / 5%); }
 .experiment-controls__heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 11px; }
 .experiment-controls__heading h2 { margin: 2px 0 0; font-size: 1rem; }
@@ -109,7 +103,9 @@ button, select, input { font: inherit; }
 .traffic-three-card { grid-column: 1 / -1; overflow: hidden; }
 .traffic-three-heading { align-items: end; }
 .traffic-three-camera { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .7rem; }
+.traffic-three-camera__actions { display: flex; gap: 6px; }
 .traffic-three-camera button { min-height: 31px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); font: inherit; font-weight: 750; cursor: pointer; }
+.traffic-three-camera button[aria-pressed="true"] { border-color: var(--teal); background: var(--teal); color: white; }
 .traffic-three-camera button:focus-visible { outline: 3px solid rgb(22 140 133 / 28%); outline-offset: 2px; }
 .traffic-3d-stage { position: relative; }
 #traffic-3d { height: 440px; border-top: 1px solid var(--line); }
@@ -138,7 +134,6 @@ button, select, input { font: inherit; }
 @media (max-width: 980px) {
   .traffic-header { align-items: start; flex-direction: column; }
   .traffic-header__controls { width: 100%; flex-wrap: wrap; }
-  .assumption-strip { grid-template-columns: repeat(3, 1fr); }
   .traffic-main { grid-template-columns: 1fr; }
   .traffic-three-card { grid-column: 1; }
   .traffic-three-heading { align-items: flex-start; flex-direction: column; }
@@ -152,7 +147,6 @@ button, select, input { font: inherit; }
   .traffic-header { padding: 17px 15px; }
   .traffic-header__controls, .mode-nav { width: 100%; }
   .mode-nav a { flex: 1; text-align: center; }
-  .assumption-strip { grid-template-columns: repeat(2, 1fr); }
   .traffic-main { padding: 8px; }
   .experiment-controls { margin: 8px 8px 0; padding: 12px; }
   .experiment-controls__heading { align-items: start; flex-direction: column; }

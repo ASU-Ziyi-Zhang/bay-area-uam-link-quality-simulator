@@ -46,15 +46,17 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "Current local policy group" in html
     assert "Selected-aircraft radio profile" in html
     assert "three-recenter" in html
-    assert "Recenter" in html
+    assert "three-free-view" in html
+    assert "Free view" in html and "Follow selected" in html
     assert "camera follows the selected aircraft" in html
+    assert "assumption-strip" not in html
     assert "FIXED OVERVIEW" not in html
     assert "assets/models/cesium-drone/CesiumDrone.glb" in app
     assert "servingLink3d" in app and "altitudeLine3d" in app
     assert "applyFollowCamera(selected)" in app
     assert '"three-camera-state", "three-camera-note"' in app
     assert "Loading traffic data" in html
-    assert "20260826-interactive-traffic-v7" in html
+    assert "20260826-3d-controls-v9" in html
     assert "traffic_engine.js" in html
     for control_id in (
         "input-altitude", "input-offset", "input-speed", "input-departure",
@@ -64,6 +66,8 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
         assert f'id="{control_id}"' in html
     assert "setPlaying(false);\n    selectedUamId = uamId" in app
     assert "uam-traffic-hit" in css
+    assert "entity.billboard.image = planeSvg(row.policy)" in app
+    assert "stationSvg()" in app
     assert "uam-traffic-marker--group" in css
     assert "Multi-UAM policy simulator" in single_html
 

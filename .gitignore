@@ -10,3 +10,4 @@ runs/*
 !runs/.gitkeep
 .DS_Store
 Thumbs.db
+.playwright-cli/
