@@ -31,6 +31,7 @@
               <option value="airport_to_airport">Airport-access corridor</option>
             </select>
           </label>
+          <a class="traffic-mode-link" id="traffic-mode-link" href="traffic.html">Multi-UAM policy simulator</a>
           <div class="dashboard__run-status" aria-label="Simulation run status">
             <span class="status-dot" aria-hidden="true"></span>
             <div><strong id="run-status">Validated baseline</strong><span id="run-id">Loading run…</span></div>
@@ -183,6 +184,7 @@
         const selected = bundles[params.get("scenario")] ? params.get("scenario") : "sf_sj_full";
         const selector = document.getElementById("scenario-select");
         selector.value = selected;
+        document.getElementById("traffic-mode-link").href = `traffic.html?scenario=${selected}`;
         selector.addEventListener("change", () => {
           const next = new URL(window.location.href);
           next.searchParams.set("scenario", selector.value);
