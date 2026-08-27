@@ -18,7 +18,8 @@ capacity.
 
 A hosted build is published from `dashboard/` on every push to `main`:
 
-**https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/**
+- [Single-UAM link-quality dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/)
+- [Multi-UAM policy dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/traffic.html?scenario=airport_to_airport)
 
 The header scenario selector switches between:
 

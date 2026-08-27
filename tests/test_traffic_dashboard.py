@@ -5,6 +5,8 @@ import subprocess
 
 import numpy as np
 
+from uam_simulator.group_runner import run_group_simulation
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,10 +76,11 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "Multi-UAM policy simulator" in single_html
 
 
-def test_airport_traffic_bundle_matches_group_run_summary():
+def test_airport_traffic_bundle_matches_group_run_summary(tmp_path):
     bundle = read_bundle(ROOT / "dashboard" / "data" / "airport_to_airport_traffic.js")
-    summary = json.loads(
-        (ROOT / "runs" / "airport-to-airport-group-policy-v3" / "summary.json").read_text()
+    summary = run_group_simulation(
+        ROOT / "scenarios" / "airport_to_airport" / "group_simulator.json",
+        tmp_path / "airport-group-run",
     )
     assert bundle["summary"]["scenario_id"] == "airport_to_airport"
     assert bundle["summary"]["policy"]["shares"] == summary["policy"]["shares"]
