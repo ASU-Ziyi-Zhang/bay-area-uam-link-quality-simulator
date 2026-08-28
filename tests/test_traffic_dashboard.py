@@ -51,6 +51,9 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "three-free-view" in html
     assert "Free view" in html and "Follow selected" in html
     assert "camera follows the selected aircraft" in html
+    assert "traffic.css?v=20260827-left-stack-v12" in html
+    assert '<div class="traffic-visuals">' in html
+    assert ".traffic-visuals { display: grid; align-content: start; gap: 14px;" in css
     assert "assumption-strip" not in html
     assert "FIXED OVERVIEW" not in html
     assert "assets/models/cesium-drone/CesiumDrone.glb" in app
