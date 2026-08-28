@@ -23,8 +23,8 @@ A hosted build is published from `dashboard/` on every push to `main`:
 
 The header scenario selector switches between:
 
-- `?scenario=sf_sj_full` — full 75.423 km corridor;
-- `?scenario=airport_to_airport` — Millbrae–Santa Clara airport-access case.
+- `scenario=sf_sj_full` — full 75.423 km corridor;
+- `scenario=airport_to_airport` — Millbrae–Santa Clara airport-access case.
 
 The same query links work on the local server at `http://127.0.0.1:8765/`.
 Use the **Multi-UAM policy** tab, or open
