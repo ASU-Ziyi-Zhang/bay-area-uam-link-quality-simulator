@@ -10,7 +10,7 @@
           href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css"
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
-    <link rel="stylesheet" href="traffic.css" />
+    <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
   </head>
   <body>
     <div class="traffic-dashboard">
@@ -66,7 +66,8 @@
       </section>
 
       <main class="traffic-main">
-        <section class="traffic-map-card" aria-labelledby="map-heading">
+        <div class="traffic-visuals">
+          <section class="traffic-map-card" aria-labelledby="map-heading">
           <div class="card-heading">
             <div><span class="eyebrow">LIVE TRAFFIC</span><h2 id="map-heading">Corridor traffic</h2></div>
             <div class="policy-legend" aria-label="Aircraft policy colors">
@@ -86,7 +87,33 @@
             <label class="sr-only" for="playback-speed">Playback speed</label>
             <select id="playback-speed" disabled><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option></select>
           </div>
-        </section>
+          </section>
+
+          <section class="traffic-three-card" aria-labelledby="three-heading">
+            <div class="card-heading traffic-three-heading">
+              <div><span class="eyebrow">GEOREFERENCED 3D VIEW</span><h2 id="three-heading">3D focal-aircraft traffic</h2></div>
+              <div class="traffic-three-camera">
+                <span id="three-camera-state">315° bearing · fixed pitch</span>
+                <div class="traffic-three-camera__actions">
+                  <button id="three-free-view" type="button" aria-label="Release the three-dimensional camera for free rotation">Free view</button>
+                  <button id="three-recenter" type="button" aria-label="Follow the selected aircraft in the three-dimensional view">Follow selected</button>
+                </div>
+              </div>
+            </div>
+            <div class="traffic-3d-stage">
+              <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
+              <div id="three-camera-note" class="traffic-three-note">Fixed bearing and pitch · camera follows the selected aircraft.</div>
+            </div>
+            <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; a fixed real-map fallback is shown.</div>
+            <div class="traffic-three-legend" aria-label="Three-dimensional view legend">
+              <span><i class="traffic-three-line traffic-three-line--ground"></i>Corridor ground projection</span>
+              <span><i class="traffic-three-line traffic-three-line--flight"></i><span id="flight-altitude-legend">300 m flight path</span></span>
+              <span><i class="traffic-three-line traffic-three-line--radio"></i>Selected serving link</span>
+              <span><i class="traffic-three-symbol traffic-three-symbol--selected"></i>Selected aircraft</span>
+              <span><i class="traffic-three-symbol traffic-three-symbol--traffic"></i>Surrounding traffic</span>
+            </div>
+          </section>
+        </div>
 
         <aside class="traffic-sidebar" aria-label="Policy and capacity diagnostics">
           <section class="metric-grid">
@@ -133,30 +160,6 @@
           </section>
         </aside>
 
-        <section class="traffic-three-card" aria-labelledby="three-heading">
-          <div class="card-heading traffic-three-heading">
-            <div><span class="eyebrow">GEOREFERENCED 3D VIEW</span><h2 id="three-heading">3D focal-aircraft traffic</h2></div>
-            <div class="traffic-three-camera">
-              <span id="three-camera-state">315° bearing · fixed pitch</span>
-              <div class="traffic-three-camera__actions">
-                <button id="three-free-view" type="button" aria-label="Release the three-dimensional camera for free rotation">Free view</button>
-                <button id="three-recenter" type="button" aria-label="Follow the selected aircraft in the three-dimensional view">Follow selected</button>
-              </div>
-            </div>
-          </div>
-          <div class="traffic-3d-stage">
-            <div id="traffic-3d" role="application" aria-label="Three-dimensional multi-aircraft corridor view"></div>
-            <div id="three-camera-note" class="traffic-three-note">Fixed bearing and pitch · camera follows the selected aircraft.</div>
-          </div>
-          <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; a fixed real-map fallback is shown.</div>
-          <div class="traffic-three-legend" aria-label="Three-dimensional view legend">
-            <span><i class="traffic-three-line traffic-three-line--ground"></i>Corridor ground projection</span>
-            <span><i class="traffic-three-line traffic-three-line--flight"></i><span id="flight-altitude-legend">300 m flight path</span></span>
-            <span><i class="traffic-three-line traffic-three-line--radio"></i>Selected serving link</span>
-            <span><i class="traffic-three-symbol traffic-three-symbol--selected"></i>Selected aircraft</span>
-            <span><i class="traffic-three-symbol traffic-three-symbol--traffic"></i>Surrounding traffic</span>
-          </div>
-        </section>
       </main>
 
       <footer class="traffic-footer">
