@@ -23,6 +23,7 @@ class GroupSimulatorConfig:
     level_id: str
     lane_id: str
     duration_s: float | None
+    persistence_k: int
 
     @property
     def entry_interval_s(self) -> float:
@@ -42,6 +43,9 @@ def load_group_simulator_config(path: str | Path) -> GroupSimulatorConfig:
     if not 0.0 < rho <= 1.0:
         raise ValueError("reliability_rho must lie in (0, 1]")
     duration = traffic.get("duration_s")
+    persistence_k = int(payload.get("policy", {}).get("persistence_k", 1))
+    if persistence_k < 1:
+        raise ValueError("persistence_k must be a positive integer")
     scenario_path = (path.parent / payload["scenario"]).resolve()
     if not scenario_path.exists():
         raise FileNotFoundError(f"scenario does not exist: {scenario_path}")
@@ -61,5 +65,5 @@ def load_group_simulator_config(path: str | Path) -> GroupSimulatorConfig:
         level_id=str(trajectory.get("level_id", "L300")),
         lane_id=str(trajectory.get("lane_id", "lane_0")),
         duration_s=None if duration is None else float(duration),
+        persistence_k=persistence_k,
     )
-

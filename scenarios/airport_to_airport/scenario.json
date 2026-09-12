@@ -52,7 +52,7 @@
     "served_set_size": 3
   },
   "link_quality": {
-    "sinr_threshold_db": -1.5
+    "sinr_threshold_db": -2.0
   },
   "policy": {
     "reactive_exposure_tolerance": 0.10,

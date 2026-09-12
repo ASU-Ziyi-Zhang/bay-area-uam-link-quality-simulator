@@ -50,9 +50,11 @@
           <fieldset>
             <legend>Policy mapping</legend>
             <label>SINR threshold Θ <span><input id="input-theta" type="number" min="-20" max="20" step="0.5" /> dB</span></label>
+            <label>Radio sampling <span><input id="input-radio-sampling" type="number" min="1" max="30" step="1" /> s</span></label>
             <label>Maximum local group <select id="input-group-size"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
             <label>Exposure window <span><input id="input-window" type="number" min="1" max="300" step="1" /> s</span></label>
             <label>Policy update interval <span><input id="input-policy-interval" type="number" min="1" max="30" step="1" /> s</span></label>
+            <label>Persistence k <span><input id="input-persistence" type="number" min="1" max="10" step="1" /></span></label>
             <label>Coordinated max exposure <span><input id="input-c-tolerance" type="number" min="0" max="100" step="1" /> %</span></label>
             <label>Reactive max exposure <span><input id="input-r-tolerance" type="number" min="0" max="100" step="1" /> %</span></label>
             <label>Reliability ρ <span><input id="input-reliability" type="number" min="50" max="100" step="1" /> %</span></label>
@@ -170,7 +172,7 @@
     <div id="error-panel" class="error-panel" hidden role="alert"></div>
 
     <script src="vendor/leaflet/leaflet.js"></script>
-    <script src="traffic_engine.js?v=20260827-free-view-v11"></script>
+    <script src="traffic_engine.js?v=20260911-calibrated-v1"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
             integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
             crossorigin="anonymous"></script>
@@ -191,7 +193,7 @@
         });
         document.getElementById("single-mode-link").href = `index.html?scenario=${selected}`;
         const dataScript = document.createElement("script");
-        const version = "20260827-free-view-v11";
+        const version = "20260911-calibrated-v1";
         dataScript.src = `${bundles[selected]}?v=${version}`;
         dataScript.addEventListener("load", () => {
           const appScript = document.createElement("script");

@@ -15,10 +15,13 @@
   },
   "clock": {
     "dt_motion_s": 1.0,
-    "dt_radio_s": 1.0,
-    "dt_control_s": 1.0,
+    "dt_radio_s": 2.0,
+    "dt_control_s": 5.0,
     "policy_window_s": 30.0,
     "capacity_aggregation_s": 60.0
+  },
+  "policy": {
+    "persistence_k": 3
   },
   "metadata": {
     "phase": "fixed_single_lane_single_level",

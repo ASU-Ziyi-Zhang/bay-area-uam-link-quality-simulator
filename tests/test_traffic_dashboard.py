@@ -61,11 +61,11 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "applyFollowCamera(selected)" in app
     assert '"three-camera-state", "three-camera-note"' in app
     assert "Loading traffic data" in html
-    assert "20260827-free-view-v11" in html
+    assert "20260911-calibrated-v1" in html
     assert "traffic_engine.js" in html
     for control_id in (
         "input-altitude", "input-offset", "input-speed", "input-departure",
-        "input-theta", "input-group-size", "input-window", "input-policy-interval",
+        "input-theta", "input-radio-sampling", "input-group-size", "input-window", "input-policy-interval", "input-persistence",
         "input-c-tolerance", "input-r-tolerance", "input-reliability",
     ):
         assert f'id="{control_id}"' in html
@@ -96,10 +96,11 @@ def test_airport_traffic_bundle_matches_group_run_summary(tmp_path):
     assert policies == {"UAM001": "C"}
     assert groups == {"UAM001": ["UAM001"]}
     assert len(bundle["frames"][0]["exposure_values"]) == 1
-    assert bundle["summary"]["clock"]["dt_radio_s"] == 1.0
-    assert bundle["summary"]["clock"]["dt_control_s"] == 1.0
+    assert bundle["summary"]["clock"]["dt_radio_s"] == 2.0
+    assert bundle["summary"]["clock"]["dt_control_s"] == 5.0
+    assert bundle["summary"]["policy"]["persistence_k"] == 3
     assert "capacity" in bundle["summary"]["model_config"]
-    assert bundle["frames"][1]["t"] - bundle["frames"][0]["t"] == 1.0
+    assert bundle["frames"][1]["t"] - bundle["frames"][0]["t"] == 5.0
 
 
 def test_full_traffic_bundle_reproduces_slide_policy_capacity_baseline():
@@ -156,9 +157,11 @@ const parameters = {
   lateralOffsetM: data.summary.trajectory.lateral_offset_m,
   departureIntervalS: data.summary.traffic.entry_interval_s,
   sinrThresholdDb: data.summary.policy.sinr_threshold_db,
+  radioSamplingS: data.summary.clock.dt_radio_s,
   groupSize: data.summary.policy.maximum_group_size,
   exposureWindowS: data.summary.policy.window_s,
   policyIntervalS: data.summary.clock.dt_control_s,
+  persistenceK: data.summary.policy.persistence_k,
   coordinatedTolerance: data.summary.policy.coordinated_exposure_tolerance,
   reactiveTolerance: data.summary.policy.reactive_exposure_tolerance,
   reliabilityRho: data.summary.capacity.reliability_rho,

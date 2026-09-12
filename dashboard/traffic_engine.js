@@ -74,10 +74,16 @@
 
   function validateParameters(parameters) {
     const values = Object.fromEntries(Object.entries(parameters).map(([key, value]) => [key, Number(value)]));
-    const positive = ["speedMps", "altitudeM", "departureIntervalS", "exposureWindowS", "policyIntervalS"];
+    const positive = ["speedMps", "altitudeM", "departureIntervalS", "radioSamplingS", "exposureWindowS", "policyIntervalS"];
     positive.forEach((key) => { if (!(values[key] > 0)) throw new Error(`${key} must be positive`); });
     if (!Number.isInteger(values.groupSize) || values.groupSize < 1 || values.groupSize % 2 !== 1) {
       throw new Error("Local group size must be a positive odd integer");
+    }
+    if (!Number.isInteger(values.persistenceK) || values.persistenceK < 1) {
+      throw new Error("Persistence k must be a positive integer");
+    }
+    if (values.policyIntervalS < values.radioSamplingS) {
+      throw new Error("Policy updates cannot be faster than radio sampling");
     }
     if (!(0 <= values.coordinatedTolerance && values.coordinatedTolerance <= values.reactiveTolerance && values.reactiveTolerance <= 1)) {
       throw new Error("Exposure limits must satisfy 0 ≤ C ≤ R ≤ 1");
@@ -100,7 +106,6 @@
     const route = data.route_metric;
     const corridorLengthM = Number(data.summary.corridor_length_km) * 1000;
     const durationS = Number(data.summary.simulation_duration_s);
-    const dtS = 1;
     const transitTimeS = corridorLengthM / parameters.speedMps;
     const entrantCount = Math.ceil(durationS / parameters.departureIntervalS - EPSILON);
     const entrants = Array.from({ length: entrantCount }, (_unused, index) => {
@@ -116,18 +121,37 @@
     ]));
     const histories = new Map();
     const heldPolicies = new Map();
+    const candidates = new Map();
     const frames = [];
     const policyCounts = { C: 0, R: 0, F: 0 };
     let observationCount = 0;
 
-    makeTimeGrid(durationS, dtS).forEach((timestamp) => {
+    const radioTimes = makeTimeGrid(durationS, parameters.radioSamplingS);
+    let radioIndex = 0;
+    for (let timestamp = 0; timestamp <= durationS + EPSILON; timestamp += parameters.policyIntervalS) {
+      while (radioIndex < radioTimes.length && radioTimes[radioIndex] <= timestamp + EPSILON) {
+        const radioTime = radioTimes[radioIndex];
+        const radioEntrants = entrants.filter((uam) => uam.entry <= radioTime + EPSILON && uam.exit >= radioTime - EPSILON);
+        const radioIds = radioEntrants.map((uam) => uam.id);
+        const linkOk = radioEntrants.map((uam) => {
+          const sM = Math.max(0, Math.min(corridorLengthM, parameters.speedMps * (radioTime - uam.entry)));
+          const position = interpolateRoute(route, corridorLengthM, sM, parameters.lateralOffsetM);
+          return evaluateRadio(data.stations, data.summary.radio, position, parameters.altitudeM).sinr >= parameters.sinrThresholdDb;
+        });
+        const half = Math.floor(parameters.groupSize / 2);
+        radioIds.forEach((uamId, index) => {
+          const start = Math.max(0, index - half);
+          const end = Math.min(radioIds.length, index + half + 1);
+          const support = linkOk.slice(start, end).filter(Boolean).length / (end - start);
+          const history = histories.get(uamId) || [];
+          history.push({ t: radioTime, support });
+          while (history.length && history[0].t < radioTime - parameters.exposureWindowS - EPSILON) history.shift();
+          histories.set(uamId, history);
+        });
+        radioIndex += 1;
+      }
       const activeEntrants = entrants.filter((uam) => uam.entry <= timestamp + EPSILON && uam.exit >= timestamp - EPSILON);
       const activeIds = activeEntrants.map((uam) => uam.id);
-      const linkOk = activeEntrants.map((uam) => {
-        const sM = Math.max(0, Math.min(corridorLengthM, parameters.speedMps * (timestamp - uam.entry)));
-        const position = interpolateRoute(route, corridorLengthM, sM, parameters.lateralOffsetM);
-        return evaluateRadio(data.stations, data.summary.radio, position, parameters.altitudeM).sinr >= parameters.sinrThresholdDb;
-      });
       const half = Math.floor(parameters.groupSize / 2);
       const policies = {};
       const exposure = {};
@@ -137,21 +161,24 @@
         const end = Math.min(activeIds.length, index + half + 1);
         const members = activeIds.slice(start, end);
         groups[uamId] = members;
-        const support = linkOk.slice(start, end).filter(Boolean).length / members.length;
         const history = histories.get(uamId) || [];
-        history.push({ t: timestamp, support });
-        while (history.length && history[0].t < timestamp - parameters.exposureWindowS - EPSILON) history.shift();
-        histories.set(uamId, history);
+        if (!history.length) throw new Error(`No radio observation available for ${uamId} at ${timestamp}s`);
         exposure[uamId] = 1 - history.reduce((total, row) => total + row.support, 0) / history.length;
-        const isPolicyTick = parameters.policyIntervalS <= dtS + EPSILON
-          || Math.abs(timestamp / parameters.policyIntervalS - Math.round(timestamp / parameters.policyIntervalS)) < EPSILON;
-        if (isPolicyTick || !heldPolicies.has(uamId)) {
-          heldPolicies.set(
-            uamId,
-            exposure[uamId] <= parameters.coordinatedTolerance + 1e-12
-              ? "C"
-              : exposure[uamId] <= parameters.reactiveTolerance + 1e-12 ? "R" : "F",
-          );
+        const raw = exposure[uamId] <= parameters.coordinatedTolerance + 1e-12
+          ? "C" : exposure[uamId] <= parameters.reactiveTolerance + 1e-12 ? "R" : "F";
+        if (!heldPolicies.has(uamId)) {
+          heldPolicies.set(uamId, raw);
+          candidates.set(uamId, { policy: raw, count: 0 });
+        } else if (raw === heldPolicies.get(uamId)) {
+          candidates.set(uamId, { policy: raw, count: 0 });
+        } else {
+          const previous = candidates.get(uamId);
+          const count = previous && previous.policy === raw ? previous.count + 1 : 1;
+          candidates.set(uamId, { policy: raw, count });
+          if (count >= parameters.persistenceK) {
+            heldPolicies.set(uamId, raw);
+            candidates.set(uamId, { policy: raw, count: 0 });
+          }
         }
         policies[uamId] = heldPolicies.get(uamId);
         policyCounts[policies[uamId]] += 1;
@@ -177,7 +204,7 @@
         exposure,
         groups,
       });
-    });
+    }
     const qMixRho = reliabilityFloor(frames.map((frame) => frame.q_mix), parameters.reliabilityRho);
     const offeredDemand = 3600 / parameters.departureIntervalS;
     return {

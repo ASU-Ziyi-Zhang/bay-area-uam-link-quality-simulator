@@ -118,9 +118,9 @@ rotate with aircraft heading.
 ```powershell
 python scripts\run_group_simulator.py `
   --config scenarios\airport_to_airport\group_simulator.json `
-  --output runs\airport-to-airport-group-policy-v3
+  --output runs\airport-to-airport-group-policy-calibrated
 python scripts\build_traffic_dashboard.py `
-  --run-dir runs\airport-to-airport-group-policy-v3 `
+  --run-dir runs\airport-to-airport-group-policy-calibrated `
   --scenario scenarios\airport_to_airport\scenario.json `
   --output dashboard\data\airport_to_airport_traffic.js
 python scripts\serve_dashboard.py
@@ -130,11 +130,13 @@ Open
 [http://127.0.0.1:8765/traffic.html?scenario=airport_to_airport](http://127.0.0.1:8765/traffic.html?scenario=airport_to_airport).
 Green, yellow, and red aircraft denote coordinated, reactive, and fallback
 group policy. Every active aircraft is classified; startup and corridor-edge
-groups use the available local neighbors up to a maximum of five. See
+groups use the available local neighbors up to a maximum of five. The calibrated
+default uses a -2.0 dB SINR threshold, 2 s radio sampling, 30 s exposure window,
+5 s policy updates, 5%/10% C/R exposure tolerances, and persistence k=3. See
 [the simulator definition](docs/multi_aircraft_policy.md) before interpreting
-the fractions or capacity. Motion, radio, adaptive policy, and displayed
-capacity snapshots are evaluated every second; the accepted five-second TRB
-baseline remains a separately labeled regression reference.
+the fractions or capacity. Radio observations are sampled every 2 s and policy
+snapshots are updated every 5 s; the accepted five-second TRB baseline remains
+a separately labeled regression reference.
 
 ## Verify
 

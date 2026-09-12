@@ -45,9 +45,11 @@
     lateralOffsetM,
     departureIntervalS: Number(summary.traffic.entry_interval_s),
     sinrThresholdDb: Number(summary.policy.sinr_threshold_db),
+    radioSamplingS: Number(summary.clock.dt_radio_s),
     groupSize: Number(summary.policy.maximum_group_size),
     exposureWindowS: Number(summary.policy.window_s),
     policyIntervalS: Number(summary.clock.dt_control_s),
+    persistenceK: Number(summary.policy.persistence_k || 1),
     coordinatedTolerance: Number(summary.policy.coordinated_exposure_tolerance),
     reactiveTolerance: Number(summary.policy.reactive_exposure_tolerance),
     reliabilityRho: Number(summary.capacity.reliability_rho),
@@ -72,7 +74,7 @@
     "current-counts", "link-current", "three-warning", "three-free-view", "three-recenter", "three-camera-state", "three-camera-note",
     "reliability-caption", "demand-caption", "policy-description", "flight-altitude-legend", "footer-policy-description",
     "experiment-form", "experiment-status", "run-experiment", "reset-experiment", "input-altitude", "input-offset",
-    "input-speed", "input-departure", "input-theta", "input-group-size", "input-window", "input-policy-interval",
+    "input-speed", "input-departure", "input-theta", "input-radio-sampling", "input-group-size", "input-window", "input-policy-interval", "input-persistence",
     "input-c-tolerance", "input-r-tolerance", "input-reliability",
   ];
   const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
@@ -87,9 +89,11 @@
     el["input-speed"].value = String(parameters.speedMps);
     el["input-departure"].value = String(parameters.departureIntervalS);
     el["input-theta"].value = String(parameters.sinrThresholdDb);
+    el["input-radio-sampling"].value = String(parameters.radioSamplingS);
     el["input-group-size"].value = String(parameters.groupSize);
     el["input-window"].value = String(parameters.exposureWindowS);
     el["input-policy-interval"].value = String(parameters.policyIntervalS);
+    el["input-persistence"].value = String(parameters.persistenceK);
     el["input-c-tolerance"].value = String(100 * parameters.coordinatedTolerance);
     el["input-r-tolerance"].value = String(100 * parameters.reactiveTolerance);
     el["input-reliability"].value = String(100 * parameters.reliabilityRho);
@@ -102,9 +106,11 @@
       speedMps: Number(el["input-speed"].value),
       departureIntervalS: Number(el["input-departure"].value),
       sinrThresholdDb: Number(el["input-theta"].value),
+      radioSamplingS: Number(el["input-radio-sampling"].value),
       groupSize: Number(el["input-group-size"].value),
       exposureWindowS: Number(el["input-window"].value),
       policyIntervalS: Number(el["input-policy-interval"].value),
+      persistenceK: Number(el["input-persistence"].value),
       coordinatedTolerance: Number(el["input-c-tolerance"].value) / 100,
       reactiveTolerance: Number(el["input-r-tolerance"].value) / 100,
       reliabilityRho: Number(el["input-reliability"].value) / 100,
@@ -127,7 +133,7 @@
     el["demand-status"].textContent = results.demandSupported ? "Yes" : "No";
     el["demand-status"].className = results.demandSupported ? "supported" : "unsupported";
     const half = Math.floor(parameters.groupSize / 2);
-    el["policy-description"].textContent = `Fractions use all active-aircraft time observations. Each aircraft uses up to ${half} ahead and ${half} behind (maximum group ${parameters.groupSize}), updated every ${parameters.policyIntervalS.toFixed(0)} s.`;
+    el["policy-description"].textContent = `Fractions use all active-aircraft policy observations. Radio is sampled every ${parameters.radioSamplingS.toFixed(0)} s; each aircraft uses up to ${half} ahead and ${half} behind (maximum group ${parameters.groupSize}), updated every ${parameters.policyIntervalS.toFixed(0)} s with k=${parameters.persistenceK}.`;
     el["flight-altitude-legend"].textContent = `${parameters.altitudeM.toFixed(0)} m flight path`;
     el["footer-policy-description"].textContent = `Individual radio · overlapping maximum-${parameters.groupSize}-UAM group policy · deterministic planning capacity`;
   }
@@ -560,7 +566,7 @@
   function applyExperiment(parameters, statusLabel) {
     setPlaying(false);
     setExperimentBusy(true);
-    el["experiment-status"].textContent = "Running deterministic one-second simulation…";
+    el["experiment-status"].textContent = "Running deterministic calibrated-clock simulation…";
     window.setTimeout(() => {
       try {
         const simulation = engine.simulate(data, parameters);
@@ -583,7 +589,7 @@
         el["time-slider"].value = "0";
         el["total-time"].textContent = `/ ${formatTime(frames.at(-1).t)}`;
         updateFrame(0);
-        el["experiment-status"].textContent = `${statusLabel} · ${frames.length.toLocaleString()} one-second snapshots`;
+        el["experiment-status"].textContent = `${statusLabel} · ${frames.length.toLocaleString()} policy snapshots`;
       } catch (error) {
         el["experiment-status"].textContent = `Input error: ${error.message}`;
       } finally {

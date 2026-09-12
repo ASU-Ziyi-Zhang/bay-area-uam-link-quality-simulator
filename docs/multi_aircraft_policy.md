@@ -63,7 +63,11 @@ in the animation.
 | Entry interval | 32 s |
 | Maximum local group | 5 aircraft |
 | Policy history | up to 30 s |
-| Motion/radio/adaptive policy step | 1 s |
+| SINR threshold | -2.0 dB |
+| Radio sampling | 2 s |
+| Policy update | 5 s |
+| C/R exposure tolerances | 5% / 10% bad observations |
+| Persistence | k=3 |
 | Legacy TRB reference step | 5 s |
 
 All model and policy parameters are stored in each scenario's
@@ -72,25 +76,25 @@ All model and policy parameters are stored in each scenario's
 The dashboard preserves that frozen baseline and also provides a deterministic
 experiment panel. `Departure interval` is the traffic input and offered demand
 is the derived quantity `3600 / interval`. Altitude, lateral offset, speed,
-SINR threshold, maximum local-group size, exposure window, policy-update
-interval, C/R exposure limits, and reliability level can be changed. Motion,
-radio evaluation, and output sampling remain at one second; when a policy
-interval above one second is selected, the most recently calculated C/R/F
-policy is held between policy updates.
+SINR threshold, radio sampling interval, maximum local-group size, exposure
+window, policy-update interval, persistence k, C/R exposure limits, and
+reliability level can be changed. Each policy tick uses all radio observations
+available through that time; a new policy must recur for k consecutive policy
+assessments before it is committed.
 
 ## Reproduction
 
 ```powershell
 python scripts\run_group_simulator.py `
   --config scenarios\airport_to_airport\group_simulator.json `
-  --output runs\airport-to-airport-group-policy-v3
+  --output runs\airport-to-airport-group-policy-calibrated
 
 python scripts\run_group_simulator.py `
   --config scenarios\sf_sj_full\group_simulator.json `
   --output runs\sf-sj-full-group-policy-v3
 
 python scripts\build_traffic_dashboard.py `
-  --run-dir runs\airport-to-airport-group-policy-v3 `
+  --run-dir runs\airport-to-airport-group-policy-calibrated `
   --scenario scenarios\airport_to_airport\scenario.json `
   --output dashboard\data\airport_to_airport_traffic.js
 
@@ -109,15 +113,14 @@ directory.
 
 | Definition | Scenario | C | R | F | Q0.95 (UAM/h) |
 |---|---|---:|---:|---:|---:|
-| Dynamic one-second local group, all active observations | Airport access | 32.57% | 33.71% | 33.72% | 71.322 |
+| Calibrated local group, all active policy observations | Airport access | 68.77% | 28.40% | 2.83% | 105.572 |
 | Dynamic one-second local group, all active observations | Full SF-SJ | 45.81% | 32.90% | 21.28% | 82.411 |
 | Original centered-five TRB regression | Full SF-SJ | 36.57% | 35.82% | 27.61% | 72.470 |
 
 These are planning-model outputs, not measured or certified capacities.
-The one-second run changes the dynamic estimates because each 30 s exposure
-window contains up to 31 observations instead of seven. It is therefore a
-model-resolution revision, not merely smoother animation. The separately
-computed five-second TRB row is unchanged.
+The calibrated airport-access row uses 2 s radio sampling, 5 s policy updates,
+and k=3 persistence. The separately computed five-second TRB row remains a
+labeled regression comparison.
 
 ## Dashboard interpretation
 

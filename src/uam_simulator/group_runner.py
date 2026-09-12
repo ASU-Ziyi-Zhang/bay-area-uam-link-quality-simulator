@@ -85,6 +85,9 @@ def _policy_records(
     window_s: float,
     coordinated_tolerance: float,
     reactive_tolerance: float,
+    policy_times: np.ndarray | None = None,
+    policy_active: np.ndarray | None = None,
+    persistence_k: int = 1,
 ) -> tuple[np.ndarray, np.ndarray, list[dict[str, object]]]:
     """Assign every active aircraft a policy from its available local group.
 
@@ -134,13 +137,45 @@ def _policy_records(
             else:
                 policy[focal_index, time_index] = POLICY_F
 
+    if policy_times is None:
+        policy_times = t_obs
+    policy_times = np.asarray(policy_times, dtype=float)
+    radio_indices = np.searchsorted(t_obs, policy_times + 1e-12, side="right") - 1
+    policy = policy[:, radio_indices]
+    active = active[:, radio_indices] if policy_active is None else np.asarray(policy_active, dtype=bool)
+    exposure = exposure[:, radio_indices]
+
+    stable = policy.copy()
+    for focal_index in range(stable.shape[0]):
+        state: int | None = None
+        candidate: int | None = None
+        count = 0
+        for time_index in range(stable.shape[1]):
+            if not active[focal_index, time_index]:
+                state = candidate = None
+                count = 0
+                continue
+            raw = int(policy[focal_index, time_index])
+            if state is None:
+                state = raw
+            elif raw == state:
+                candidate, count = state, 0
+            elif raw == candidate:
+                count += 1
+            else:
+                candidate, count = raw, 1
+            if state != raw and count >= persistence_k:
+                state, candidate, count = raw, raw, 0
+            stable[focal_index, time_index] = state
+
     rows: list[dict[str, object]] = []
-    for time_index, timestamp in enumerate(t_obs):
-        for focal_index in np.flatnonzero(active[:, time_index]):
-            member_indices = groups[focal_index][time_index]
-            if member_indices is None:
-                raise RuntimeError("active aircraft has no local group")
-            code = int(policy[focal_index, time_index])
+    for time_index, timestamp in enumerate(policy_times):
+        active_indices = np.flatnonzero(active[:, time_index])
+        for order_index, focal_index in enumerate(active_indices):
+            member_indices = active_indices[
+                max(0, order_index - half) : order_index + half + 1
+            ].tolist()
+            code = int(stable[focal_index, time_index])
             rows.append(
                 {
                     "timestamp_s": float(timestamp),
@@ -157,7 +192,7 @@ def _policy_records(
             )
     if not rows:
         raise RuntimeError("no active-aircraft policy observations")
-    return policy, active, rows
+    return stable, active, rows
 
 
 def run_group_simulation(
@@ -172,13 +207,8 @@ def run_group_simulation(
     scenario = load_scenario(cfg.simulation.scenario_path)
     if not np.isclose(cfg.speed_mps, scenario.speed_mps, atol=1e-9, rtol=0.0):
         raise ValueError("group simulator and scenario speed must match")
-    if not np.isclose(
-        cfg.simulation.clock.dt_control_s,
-        cfg.simulation.clock.dt_radio_s,
-        atol=1e-9,
-        rtol=0.0,
-    ):
-        raise ValueError("adaptive policy and radio clocks must match")
+    if cfg.simulation.clock.dt_control_s < cfg.simulation.clock.dt_radio_s:
+        raise ValueError("policy updates cannot be faster than radio sampling")
     if cfg.simulation.clock.dt_motion_s > cfg.simulation.clock.dt_radio_s:
         raise ValueError("motion clock cannot be coarser than the radio clock")
 
@@ -197,6 +227,21 @@ def run_group_simulation(
     )
     radio = compute_link_state(trajectory, scenario.base_stations, scenario.radio)
     link_quality = evaluate_link_quality(radio, scenario.link_quality)
+    last_policy_tick = np.floor(
+        (duration_s + 1e-12) / cfg.simulation.clock.dt_control_s
+    ) * cfg.simulation.clock.dt_control_s
+    policy_times = np.arange(
+        0.0,
+        last_policy_tick + cfg.simulation.clock.dt_control_s / 2.0,
+        cfg.simulation.clock.dt_control_s,
+    )
+    policy_trajectory = ConstantSpeedTrajectory(cfg.speed_mps).realize(
+        scenario.corridor,
+        policy_times,
+        entry_time_s,
+        np.full(entry_time_s.shape, cfg.altitude_m),
+        np.full(entry_time_s.shape, cfg.lateral_offset_m),
+    )
     # Preserve the accepted TRB regression at the scenario's legacy sampling
     # interval.  The adaptive stream may use a finer radio/policy clock without
     # silently changing that reference definition.
@@ -228,11 +273,14 @@ def run_group_simulation(
         scenario.policy.window_s,
         scenario.policy.coordinated_exposure_tolerance,
         scenario.policy.reactive_exposure_tolerance,
+        policy_times,
+        policy_trajectory.active,
+        cfg.persistence_k,
     )
     capacity = snapshot_capacity(
         adaptive_policy,
         adaptive_valid,
-        time_s,
+        policy_times,
         scenario.capacity,
     )
 
@@ -250,16 +298,12 @@ def run_group_simulation(
         }
         for index, uam_id in enumerate(uam_ids)
     ]
-    time_index = {
-        round(float(timestamp), 9): index for index, timestamp in enumerate(time_s)
-    }
     capacity_rows = []
     for index, timestamp_s in enumerate(capacity["t"]):
-        source_index = time_index[round(float(timestamp_s), 9)]
         capacity_rows.append(
             {
                 "timestamp_s": float(timestamp_s),
-                "active_uam_count": int(trajectory.active[:, source_index].sum()),
+                "active_uam_count": int(adaptive_valid[:, index].sum()),
                 "classified_group_count": int(capacity["n_group"][index]),
                 "n_C": int(capacity["n_C"][index]),
                 "n_R": int(capacity["n_R"][index]),
@@ -347,6 +391,10 @@ def run_group_simulation(
             ),
             "reactive_exposure_tolerance": (
                 scenario.policy.reactive_exposure_tolerance
+            ),
+            "persistence_k": cfg.persistence_k,
+            "minimum_confirmation_delay_s": (
+                (cfg.persistence_k - 1) * cfg.simulation.clock.dt_control_s
             ),
             "observation_count": n_policy,
             "counts": policy_counts,
@@ -455,7 +503,7 @@ def run_group_simulation(
             "no_lane_or_level_change": True,
             "focal_group_mapping_declared": True,
             "all_active_aircraft_classified": bool(
-                n_policy == int(trajectory.active.sum())
+                n_policy == int(adaptive_valid.sum())
             ),
             "simulation_starts_at_zero": bool(capacity["t"][0] == 0.0),
             "adaptive_step_matches_declared_clock": bool(
@@ -492,7 +540,8 @@ multi-lane geometry or dynamic switching.
 - Entry interval: {cfg.entry_interval_s:.3f} s.
 - Speed/altitude/offset: {cfg.speed_mps:.1f} m/s / {cfg.altitude_m:.1f} m / {cfg.lateral_offset_m:.1f} m.
 - Local group/window: up to {scenario.policy.group_size} aircraft / {scenario.policy.window_s:.1f} s.
-- Motion/radio/adaptive-policy step: {cfg.simulation.clock.dt_radio_s:.1f} s.
+- Radio sampling / policy update: {cfg.simulation.clock.dt_radio_s:.1f} s / {cfg.simulation.clock.dt_control_s:.1f} s.
+- Persistence: k={cfg.persistence_k} ({(cfg.persistence_k - 1) * cfg.simulation.clock.dt_control_s:.1f} s minimum confirmation after the first candidate assessment).
 - Legacy TRB reference step: {scenario.time_step_s:.1f} s.
 - Startup: begins at 0 s; each active aircraft is classified from its available neighbors and history.
 
