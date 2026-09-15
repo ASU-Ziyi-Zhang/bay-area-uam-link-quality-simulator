@@ -6,13 +6,15 @@ corridors. The repository packages four connected layers:
 1. replaceable corridor scenario packs;
 2. documented physical macro-site locations selected for each route;
 3. deterministic RSRP/SINR link-quality analysis;
-4. interactive single-UAM link-quality and multi-UAM group-policy simulators.
+4. interactive single-UAM link-quality and multi-UAM group-policy simulators;
+5. multi-UAM motion control: policy-dependent longitudinal spacing, lane
+   changes, motion limits and corridor capacity experiments (new in 0.2.0).
 
-The current release is a communication-planning baseline. It includes a
+The release is a communication-planning research toolkit. It includes a
 deterministic reproduction of the TRB five-aircraft C/R/F policy-to-capacity
-chain, but does **not** claim measured airborne coverage, verified operator
-interoperability, operational conflict resolution, or certified corridor
-capacity.
+chain and the motion-control studies built on it, but does **not** claim
+measured airborne coverage, verified operator interoperability, certified
+separation, or certified corridor capacity. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Interactive dashboard
 
@@ -69,8 +71,9 @@ scripts/       run, dashboard, and verification entry points
 dashboard/     interactive real-map and fixed-bearing 3D playback
 results/       frozen reference results used for comparison
 tests/         standalone tests with no external TRB dependency
+research/      protocols, study configs, confirmed results and result tables (raw runs ignored)
 runs/          local generated runs (ignored by Git)
-docs/          architecture, assumptions, and reproducibility notes
+docs/          architecture, methods, assumptions, and reproducibility notes
 ```
 
 ## Install
@@ -137,6 +140,25 @@ default uses a -2.0 dB SINR threshold, 2 s radio sampling, 30 s exposure window,
 the fractions or capacity. Radio observations are sampled every 2 s and policy
 snapshots are updated every 5 s; the accepted five-second TRB baseline remains
 a separately labeled regression reference.
+
+## Motion control and corridor experiments
+
+Version 0.2.0 adds how aircraft respond when their communication policy
+changes. The spacing target is S = d0 + τ_p v + b v² with d0 = 152.4 m (the NMAC
+distance) and τ_C / τ_R / τ_F = 15 / 30 / 60 s, so at 50 m/s C, R and F require
+1320, 2070 and 3570 m.
+
+| Study | Question | Result | Method |
+|---|---|---|---|
+| Longitudinal control (R0036) | ACC or AKS when the spacing target jumps? | AKS settles all six C/R/F transitions 5–14× sooner (C → F: 221 s against 1201 s) | [motion_control.md](docs/motion_control.md) |
+| Lane change (R0063) | Five lane-change profiles, change or stay? | the saving follows when the aircraft crosses the lane midline, not the curve family; the quintic is kept | [motion_control.md](docs/motion_control.md) |
+| Motion limits | Which limits must every manoeuvre meet? | coupled longitudinal/lane-change envelope, route-turn limit, NMAC (500 ft / 100 ft) counted in every run | [motion_control.md](docs/motion_control.md) |
+| Calibration (R0064 vs R0062) | Which classifier settings suit the Bay Area coverage? | Θ −2.0 dB, 2 s sampling, 90 s window, k = 3: on one lane F falls from 42% to 0.7% and the 95% planning rate rises from 69 to 108 UAM/h | [bay_area_calibration.md](docs/bay_area_calibration.md) |
+| 3 × 3 corridor (R0062) | Stay at the centre or move among nearby positions? | C time 62.7% → 73.8%; 95% planning rate +3.8% for the same demand | [corridor_experiment.md](docs/corridor_experiment.md) |
+
+Every study has a protocol, a configuration and an independent verifier;
+[research/README.md](research/README.md) lists them with the commands to rerun.
+Raw run archives are not part of the package.
 
 ## Verify
 

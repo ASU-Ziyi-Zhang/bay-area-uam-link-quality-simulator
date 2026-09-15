@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_single_stream_capacity_3x3",
+  "protocol": "research/dynamic-transitions/bay-area-single-stream-capacity-protocol.md",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300.0,
+    "cruise_mps": 50.0,
+    "dt_s": 0.5,
+    "forecast_dt_s": 1.0,
+    "radio_s": 5.0,
+    "policy_s": 5.0,
+    "decision_s": 5.0,
+    "persistence_k": 1,
+    "window_s": 30.0,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.1,
+    "neighbors_each_side": 2,
+    "group_radius_m": null,
+    "group_mode": "lane_order",
+    "d0_m": 152.4,
+    "tau_c_s": 15.0,
+    "tau_r_s": 30.0,
+    "tau_f_s": 60.0,
+    "buffer_s2_per_m": 0.167,
+    "k_speed_per_s": 0.2,
+    "k_gap_per_s2": 0.005,
+    "k_relative_per_s": 0.4,
+    "acceleration_limit_mps2": 1.5,
+    "deceleration_limit_mps2": 2.0,
+    "speed_min_mps": 30.0,
+    "speed_max_mps": 80.0,
+    "control_period_s": 0.5,
+    "horizontal_separation_m": 152.4,
+    "vertical_separation_m": 30.48,
+    "maximum_time_s": 7200.0,
+    "admission_retry_s": 0.5
+  },
+  "envelope": {
+    "longitudinal_accel_max_mps2": 1.5,
+    "longitudinal_decel_max_mps2": 2.0,
+    "lateral_accel_max_mps2": 0.981,
+    "route_normal_accel_max_mps2": 4.575,
+    "lateral_speed_max_mps": 8.0,
+    "vertical_accel_max_mps2": 0.2,
+    "coupling_mode": "maneuver_only"
+  },
+  "traffic": {
+    "global_entry_count": 93,
+    "global_headway_s": 32.0,
+    "entry_flow_index": 4,
+    "assignment": "all_requests_enter_center_grid_point",
+    "candidate_topology": "grid_8_connected",
+    "flow_points": [
+      {
+        "offset_m": -300.0,
+        "altitude_m": 200.0
+      },
+      {
+        "offset_m": -300.0,
+        "altitude_m": 300.0
+      },
+      {
+        "offset_m": -300.0,
+        "altitude_m": 400.0
+      },
+      {
+        "offset_m": 0.0,
+        "altitude_m": 200.0
+      },
+      {
+        "offset_m": 0.0,
+        "altitude_m": 300.0
+      },
+      {
+        "offset_m": 0.0,
+        "altitude_m": 400.0
+      },
+      {
+        "offset_m": 300.0,
+        "altitude_m": 200.0
+      },
+      {
+        "offset_m": 300.0,
+        "altitude_m": 300.0
+      },
+      {
+        "offset_m": 300.0,
+        "altitude_m": 400.0
+      }
+    ],
+    "horizon_s": 7200.0
+  },
+  "lane_change": {
+    "prediction_s": 90.0,
+    "candidate_recheck_s": 30.0,
+    "duration_factors": [
+      1.0
+    ],
+    "ego_policy_gain_margin_s": 1.0,
+    "affected_aircraft_worsening_tolerance_s": 0.0,
+    "maximum_new_starts_per_decision": 1
+  },
+  "capacity": {
+    "snapshot_interval_s": 5.0,
+    "reliability_rho": 0.95,
+    "aggregation": "one_origin_stream_no_empty_grid_addition"
+  },
+  "cases": [
+    {
+      "id": "fixed_centerline",
+      "lane_change_allowed": false
+    }
+  ],
+  "notes": [
+    "Before-calibration reference for the single-lane case: the TRB classifier settings (threshold -1.5 dB, 5 s radio sampling, 30 s window, k = 1, lane-order five-aircraft group, 5%/10% exposure).",
+    "Everything else (route, radio field, 32 s demand, spacing law, controller, envelope, dispatch) is the R0062 configuration; compare with R0062 fixed_centerline.",
+    "Horizon extended from 4800 s to 7200 s so a slower stream can finish; this does not change any state before 4800 s.",
+    "Policy target spacings are not listed; they follow from d0, the three headways and the cruise speed."
+  ]
+}

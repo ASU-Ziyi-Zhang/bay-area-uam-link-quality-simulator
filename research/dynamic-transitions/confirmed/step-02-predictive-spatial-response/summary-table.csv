@@ -1,0 +1,3 @@
+control,completed_maneuvers,"state_sequence_(d,h)_m",fallback_time_s,fallback_share,change_from_no_lane_change
+No lane change,0,"(0,300)",280,28.289%,Reference
+60+60 controller,2,"(0,300) -> (-100,300) -> (+200,300)",230,23.244%,"-50 s (-17.9%); -5.045 percentage points"

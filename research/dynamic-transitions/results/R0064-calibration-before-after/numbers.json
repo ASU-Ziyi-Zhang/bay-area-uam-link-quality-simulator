@@ -1,0 +1,56 @@
+{
+  "TRB settings": {
+    "run": "R0064",
+    "settings": {
+      "threshold_db": -1.5,
+      "radio_s": 5.0,
+      "window_s": 30.0,
+      "persistence_k": 1,
+      "group_mode": "lane_order",
+      "policy_s": 5.0
+    },
+    "completed": 93,
+    "scheduled": 93,
+    "policy_shares": {
+      "C": 0.38768250023224715,
+      "R": 0.18945477186143553,
+      "F": 0.4228627279063173
+    },
+    "planning_rate_mean_uam_h": 75.94028862218819,
+    "planning_rate_q95_uam_h": 69.29265882775643,
+    "policy_switches_per_flight": 27.698924731182796,
+    "aircraft_held_at_entry": 85,
+    "longest_entry_hold_s": 701.0,
+    "last_exit_min": 84.64166666666667,
+    "sampled_nmac": false
+  },
+  "Calibrated": {
+    "run": "R0062",
+    "settings": {
+      "threshold_db": -2.0,
+      "radio_s": 2.0,
+      "window_s": 90.0,
+      "persistence_k": 3,
+      "group_mode": "neighbourhood",
+      "policy_s": 5.0
+    },
+    "completed": 93,
+    "scheduled": 93,
+    "policy_shares": {
+      "C": 0.6272390392978187,
+      "R": 0.36575785382892584,
+      "F": 0.007003106873255502
+    },
+    "planning_rate_mean_uam_h": 112.1909795081888,
+    "planning_rate_q95_uam_h": 107.69012167488053,
+    "policy_switches_per_flight": 6.602150537634409,
+    "aircraft_held_at_entry": 54,
+    "longest_entry_hold_s": 107.5,
+    "last_exit_min": 68.275,
+    "sampled_nmac": false
+  },
+  "compared_window_s": [
+    990.0,
+    2944.0
+  ]
+}

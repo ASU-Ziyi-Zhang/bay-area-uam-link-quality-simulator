@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_singleton_spatial_response",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 1,
+    "policy_s": 5,
+    "decision_s": 20,
+    "horizon_s": 240,
+    "window_s": 30,
+    "cooldown_s": 30,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "lateral_speed_limit_mps": 8,
+    "lateral_accel_limit_mps2": 0.3,
+    "vertical_speed_limit_mps": 3,
+    "vertical_accel_limit_mps2": 0.2,
+    "min_maneuver_s": 30,
+    "center_control_step_m": 500,
+    "spatial_sample_m": 50
+  },
+  "planning": {"minimum_radius_m": 976, "candidate_spacing_m": 100, "duration_search_step_s": 5},
+  "offsets_m": [-900, -800, -700, -600, -500, -400, -300, -200, -100, 0, 100, 200, 300, 400, 500, 600, 700, 800, 900],
+  "heights_m": [100, 200, 300, 400, 500],
+  "cases": [
+    {"id": "fixed", "mode": "none"},
+    {"id": "lateral", "mode": "lateral"},
+    {"id": "vertical", "mode": "vertical"},
+    {"id": "joint", "mode": "joint"},
+    {"id": "joint_motion_refined", "mode": "joint", "parameters": {"dt_s": 0.25}},
+    {"id": "joint_forecast_refined", "mode": "joint", "parameters": {"forecast_dt_s": 0.5}}
+  ],
+  "notes": [
+    "Source/target displacement is Euclidean in (d,h); not energy or comfort.",
+    "3 m/s and 0.2 m/s^2 symmetric vertical limits are inherited exploratory assumptions.",
+    "Heights >300 m and horizontal radio links >4 km are propagation extrapolations.",
+    "Direct diagonal candidates are allowed but not forced; 100+100 m components give 141.42 m displacement.",
+    "Only singleton corridor communication/motion is analyzed; no traffic, terminals, ACC or capacity."
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "study": "policy_spacing_closed_loop_mechanisms",
+  "geometry": "local_straight",
+  "protection_status": "exploratory_not_operational",
+  "offsets_m": [-250, 250],
+  "heights_m": [300, 600],
+  "parameters": {
+    "dt_s": 0.5,
+    "policy_s": 5,
+    "decision_s": 20,
+    "horizon_s": 240,
+    "duration_s": 1500,
+    "connector_s": 400,
+    "entry_m": 10000,
+    "exit_m": 30000,
+    "destination_m": 40000,
+    "horizontal_separation_m": 200,
+    "vertical_separation_m": 100
+  },
+  "radio": {
+    "frequency_ghz": 5,
+    "eirp_dbm": 46,
+    "receiver_gain_db": 0,
+    "noise_dbm": -99,
+    "resource_elements": 300,
+    "served_set_size": 3
+  },
+  "base_stations": [
+    {"site_id": "fixture01", "x_m": 8000, "y_m": 600, "height_m": 30},
+    {"site_id": "fixture02", "x_m": 12000, "y_m": 600, "height_m": 30},
+    {"site_id": "fixture03", "x_m": 12000, "y_m": -900, "height_m": 30},
+    {"site_id": "fixture04", "x_m": 16000, "y_m": 600, "height_m": 30},
+    {"site_id": "fixture05", "x_m": 16000, "y_m": -900, "height_m": 30},
+    {"site_id": "fixture06", "x_m": 20000, "y_m": 600, "height_m": 30},
+    {"site_id": "fixture07", "x_m": 20000, "y_m": -900, "height_m": 30},
+    {"site_id": "fixture08", "x_m": 24000, "y_m": 600, "height_m": 30},
+    {"site_id": "fixture09", "x_m": 24000, "y_m": -900, "height_m": 30},
+    {"site_id": "fixture10", "x_m": 28000, "y_m": 600, "height_m": 30},
+    {"site_id": "fixture11", "x_m": 28000, "y_m": -900, "height_m": 30},
+    {"site_id": "fixture12", "x_m": 32000, "y_m": 600, "height_m": 30}
+  ],
+  "cases": [
+    {
+      "id": "policy_cluster",
+      "parameters": {"duration_s": 240},
+      "initial": [
+        {"aircraft_id": "UAM001", "s_m": 15000, "v_mps": 50, "cell": [0,0]},
+        {"aircraft_id": "UAM002", "s_m": 13500, "v_mps": 50, "cell": [0,0]},
+        {"aircraft_id": "UAM003", "s_m": 12000, "v_mps": 50, "cell": [0,0]}
+      ]
+    },
+    {
+      "id": "virtual_full_mission",
+      "parameters": {"decision_s": 60},
+      "requests": [
+        {"aircraft_id": "UAM001", "time_s": 0, "cell": [0,0]},
+        {"aircraft_id": "UAM002", "time_s": 120, "cell": [1,0]},
+        {"aircraft_id": "UAM003", "time_s": 240, "cell": [0,1]}
+      ]
+    },
+    {
+      "id": "cluster_refinement",
+      "parameters": {"duration_s": 240, "dt_s": 0.25},
+      "modes": ["acc"],
+      "transitions": [true],
+      "initial": [
+        {"aircraft_id": "UAM001", "s_m": 15000, "v_mps": 50, "cell": [0,0]},
+        {"aircraft_id": "UAM002", "s_m": 13500, "v_mps": 50, "cell": [0,0]},
+        {"aircraft_id": "UAM003", "s_m": 12000, "v_mps": 50, "cell": [0,0]}
+      ]
+    }
+  ],
+  "notes": [
+    "Illustrative BS coordinates only; received power and SINR use the existing radio kernel.",
+    "Not Bay Area geometry, not calibrated flight performance, not an operational separation standard.",
+    "The 200/100 m pairwise ellipsoid is retained explicitly for software mechanism checks only.",
+    "Four-way controls isolate fixed cruise versus ACC and transitions off versus on.",
+    "No pad resources, bandwidth utilization, wake or emergency controller are modeled.",
+    "Policy statistics exclude connector diagnostics and use actual variable-size groups/history."
+  ]
+}

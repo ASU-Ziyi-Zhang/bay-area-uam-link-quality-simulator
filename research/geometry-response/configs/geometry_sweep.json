@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "scenarios": ["../../../scenarios/sf_sj_full/scenario.json", "../../../scenarios/airport_to_airport/scenario.json"],
+  "offsets_m": [-1000, -750, -500, -250, 0, 250, 500, 750, 1000],
+  "altitudes_m": [150, 300, 450, 600, 750, 900, 1050, 1200, 1350, 1500],
+  "evaluation": {
+    "demand_uam_h": 112.5,
+    "dt_s": 5.0,
+    "policy_definition": "full_group",
+    "rho": 0.95,
+    "profile_step_m": 50.0
+  },
+  "plot_slices": {"height_at_offset_m": 0, "offset_at_altitude_m": 300},
+  "notes": [
+    "One independent stream at each position; per-stream demand stays fixed. These are response samples, not 90 simultaneously opened flight streams.",
+    "Use the full SF-SJ scenario for comparison with slide 9 of the 2026-08-18 deck; the airport-access scenario is retained separately.",
+    "Height above 300 m and served-link horizontal distance beyond 4 km extrapolate the radio model range documented in docs/assumptions.md.",
+    "Raw route-relative fixed offsets, not shortest paths, optimized shapes, endpoint-connected routes or curvature-certified flight lanes."
+  ]
+}

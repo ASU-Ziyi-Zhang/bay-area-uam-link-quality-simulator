@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_minimum_change",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 1,
+    "policy_s": 5,
+    "decision_s": 20,
+    "horizon_s": 240,
+    "window_s": 30,
+    "cooldown_s": 30,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "minimum_exposure_benefit": 0.02,
+    "lateral_speed_limit_mps": 8,
+    "lateral_accel_limit_mps2": 0.3,
+    "min_maneuver_s": 30,
+    "center_control_step_m": 500,
+    "spatial_sample_m": 50
+  },
+  "planning": {
+    "minimum_radius_m": 976,
+    "candidate_spacing_m": 100,
+    "duration_search_step_s": 5
+  },
+  "candidate_spacing_m": 100,
+  "envelopes_m": [500, 900],
+  "initial_offset_m": 0,
+  "case_matrix": [
+    {"id": "static_plus_0", "controller": "none", "envelope_m": 0},
+    {"id": "gain_500", "controller": "gain_priority", "envelope_m": 500},
+    {"id": "minimal_500", "controller": "minimum_change", "envelope_m": 500},
+    {"id": "minimal_900", "controller": "minimum_change", "envelope_m": 900},
+    {"id": "motion_refinement_900", "controller": "minimum_change", "envelope_m": 900,
+     "parameters": {"dt_s": 0.25}},
+    {"id": "forecast_refinement_900", "controller": "minimum_change", "envelope_m": 900,
+     "parameters": {"forecast_dt_s": 0.5}}
+  ],
+  "notes": [
+    "976 m is a provisional geometric benchmark from the reference curve, not calibrated flight performance or the separate 8 km constraint.",
+    "Actual degradation triggers a search for the smallest 100 m-grid displacement restoring C earlier than staying.",
+    "A 30 s stable C window after completion is required; candidate durations use the analytic minimum plus 5 s increments.",
+    "Curvature is bounded conservatively for the entire maneuver and fixed-target continuation to the endpoint.",
+    "No mid-maneuver reset/replanning, jerk certification, additional stations, capacity analysis or terminal connection is introduced.",
+    "The legacy minimum_exposure_benefit parameter applies only to gain_priority, not the minimum-change recovery gate."
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "scenarios": ["../scenarios/airport_to_airport/scenario.json", "../scenarios/sf_sj_full/scenario.json"],
+  "reliability_rho": 0.95,
+  "lanes": {
+    "estimators": [
+      {"id": "dashboard_1s", "policy_definition": "all_active", "dt_s": 1.0},
+      {"id": "paper_5s", "policy_definition": "full_group", "dt_s": 5.0}
+    ],
+    "demand_modes": ["fixed_total", "fixed_per_stream"],
+    "demand_values_uam_h": [45.0, 112.5, 180.0],
+    "layouts": [
+      {"id": "1x1", "offsets_m": [0.0], "altitudes_m": [300.0]},
+      {"id": "2x1", "offsets_m": [-250.0, 250.0], "altitudes_m": [300.0]},
+      {"id": "1x2", "offsets_m": [0.0], "altitudes_m": [300.0, 600.0]},
+      {"id": "2x2", "offsets_m": [-250.0, 250.0], "altitudes_m": [300.0, 600.0]}
+    ]
+  },
+  "offsets": {
+    "demand_uam_h": 112.5,
+    "altitude_m": 300.0,
+    "objective_policy_definition": "full_group",
+    "objective_dt_s": 1.0,
+    "fixed_offset_values_m": [-1000.0, -500.0, 0.0, 500.0, 1000.0],
+    "control_count": 6,
+    "minimum_radius_m": 8000.0,
+    "maximum_deviation_m": 2000.0,
+    "maximum_length_ratio": 1.1,
+    "max_offset_m": 2000.0,
+    "seed_offsets_m": [-1000.0, 0.0, 1000.0],
+    "steps_m": [1000.0, 500.0, 250.0],
+    "passes_per_step": 2,
+    "max_evaluations": 100,
+    "arc_step_m": 10.0,
+    "validation_arc_step_m": 5.0
+  },
+  "assumptions": [
+    "Exploratory lane spacing, level altitudes, demand grid and offset envelope, not certified separation rules.",
+    "Fixed independent streams with simultaneous first entries, equal demand split and same-lane/same-level groups; no switching, merging or shared terminal bottleneck.",
+    "Reuse the scenario downlink radio model; no traffic-dependent BS resource loading or new aircraft-generated interference is introduced.",
+    "Capacities are conditional planning estimates; trajectories do not enforce the policy-dependent spacing.",
+    "Offset search fixes original endpoints and uses a common post-warmup scoring window for every candidate.",
+    "The paper estimator and dashboard estimator are distinct and explicitly labeled; real-corridor runs are deterministic, not the paper stochastic geometry ensemble."
+  ]
+}

@@ -8,6 +8,8 @@ build/
 *.egg-info/
 runs/*
 !runs/.gitkeep
+research/**/runs/*
+!research/**/runs/.gitkeep
 .DS_Store
 Thumbs.db
 .playwright-cli/

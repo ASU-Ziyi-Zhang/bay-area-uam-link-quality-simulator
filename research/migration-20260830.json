@@ -1,0 +1,1476 @@
+{
+  "schema_version": 1,
+  "migration_date": "2026-08-30",
+  "records": [
+    {
+      "old_path": "runs/geometry-response-20260829-v1",
+      "new_path": "research/geometry-response/runs/R0001",
+      "original_created_utc": "2026-08-30T06:46:11.223661+00:00",
+      "code_drift_before_migration": [],
+      "files": [
+        {
+          "path": "airport_to_airport/locations.csv",
+          "sha256": "d844ad9b1bd2513fbd8d4528e5663eff39ce8b25efe7e6781f17fd3f82bb63c4"
+        },
+        {
+          "path": "airport_to_airport/locations.json",
+          "sha256": "663e766f8db0f2fc7f2390d6a05ae30cb66334c64ff1aa4aa2d2c311ff6e1021"
+        },
+        {
+          "path": "airport_to_airport/plot_slices.json",
+          "sha256": "2726839ee6149bc7f6dba7efeca6d2a9c1e6fd1cac6540e2b372aa147ec9119c"
+        },
+        {
+          "path": "airport_to_airport/traces.npz",
+          "sha256": "3f5d6fb2a2da70fd63254fbaf624a21b3ee9f055781e02507a1b7f7efba490da"
+        },
+        {
+          "path": "manifest.json",
+          "sha256": "71a0aafb5ce46f5ba1c0b509ae748fab2466c5cb3cc81da63ec2bec496c9b648"
+        },
+        {
+          "path": "resolved_config.json",
+          "sha256": "889d62174937b805a762bc315b49bc6465b793309fd9411a2bd68563c50b0caa"
+        },
+        {
+          "path": "sf_sj_full/locations.csv",
+          "sha256": "509f14bcf50f60ea26d6f465b10fbf0cf7a0b4c0045ce9a79330d6cc7d9097f0"
+        },
+        {
+          "path": "sf_sj_full/locations.json",
+          "sha256": "882a09f532a35bb2ffb81c8cd21d2acae88323048ae67df581c257ac8c183eaa"
+        },
+        {
+          "path": "sf_sj_full/plot_slices.json",
+          "sha256": "9779c3c87bd467177df1dcbe83e9da0b0ffb48b857a0559f404d42d0cac5e688"
+        },
+        {
+          "path": "sf_sj_full/traces.npz",
+          "sha256": "a4e508ba09d0ff62c24058c8aae7a276d445239d3b0a5579828c6fd9c1f04e08"
+        }
+      ]
+    },
+    {
+      "old_path": "runs/itl-baselines-20260829-v1",
+      "new_path": "research/_archive/itl-baselines/runs/R0001",
+      "original_created_utc": "2026-08-30T06:13:38.231270+00:00",
+      "code_drift_before_migration": [
+        "src/uam_simulator/baseline_core.py",
+        "src/uam_simulator/baseline_studies.py",
+        "src/uam_simulator/path_design.py"
+      ],
+      "files": [
+        {
+          "path": "airport_to_airport/lanes/conditions.csv",
+          "sha256": "a83713a6f21a3972d9360b7ab13e2637074d39013ab10679e5c687740961ef9c"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "9bc1fefe99e365c9a3bb3b764e11ac204587db6dcd0f8efc4015d36719b9e674"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "df295430504d181b3533e6e1a848c8e70e876ce10830b95545df5b9b03abfe77"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "56db92b70be7ef78d3dff7b3e3f9bb98eec8f4374d0b56dc94f575f94fbee006"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "31e1eeb841815a33738fd35a756091cb3f61cfc3e343bf3171d9528d577fb206"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_1x1.npz",
+          "sha256": "15372aa96c2190878be8256649d0bc395bc98be35453dab6de13c00256633b12"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_1x2.npz",
+          "sha256": "62fd3fbf6fc1debd55090680b7df9890d36b2f321eb4aa52c545062a2da0752f"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_2x1.npz",
+          "sha256": "5863fd8163d22871b6192c7834369495483027fb03c1843455499cc562c8a6d9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_2x2.npz",
+          "sha256": "a7df82f785b104f0d4a6ee3d4a8dd458969b99dd0ff4e6337068db2077ef760d"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_1x1.npz",
+          "sha256": "9c7682c8cfe5cfa24808dadfe856c95f28c1a999d849a09913a4d1f69551cc31"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_1x2.npz",
+          "sha256": "16f2306297fc6d302b9d04a4f286593a19c215c269b887a89579ac9b1cab6221"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_2x1.npz",
+          "sha256": "470670139bd2bd8083140089449e1baafb043cea27445897cc9ba09a7c03cbe9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_2x2.npz",
+          "sha256": "c511dfa3b0e2be67f97bdfe54ea183eb0502a5220c971cef9000364191104a4a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_1x1.npz",
+          "sha256": "9bc1fefe99e365c9a3bb3b764e11ac204587db6dcd0f8efc4015d36719b9e674"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_1x2.npz",
+          "sha256": "3784de01f340d7c795a2e7bc60868bd558065d6d44fbd016037833a76c1ecad9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_2x1.npz",
+          "sha256": "4bebdbd73e0213bee1bfd1842d40395a0315ac65604b8616c817212485abd4c2"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_2x2.npz",
+          "sha256": "4b1cc2cd14cac390219ca9e9331f6ffff4bf06001c09818ae77caec5180412f0"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_1x1.npz",
+          "sha256": "15372aa96c2190878be8256649d0bc395bc98be35453dab6de13c00256633b12"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_1x2.npz",
+          "sha256": "4d2f2dcdb881afea002a444cc451a8a31bbb5846488002c291f5dba0475c15ab"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_2x1.npz",
+          "sha256": "775bc084bd168250106470f7a3f75eaa0fb49b5c50950a74cc2bfbd7f4dc9e21"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_2x2.npz",
+          "sha256": "c511dfa3b0e2be67f97bdfe54ea183eb0502a5220c971cef9000364191104a4a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_1x1.npz",
+          "sha256": "9c7682c8cfe5cfa24808dadfe856c95f28c1a999d849a09913a4d1f69551cc31"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_1x2.npz",
+          "sha256": "06198b124eebd45ae23ed68ceaddc608032a4c132a3fcc651c8cb7a2255e3e6a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_2x1.npz",
+          "sha256": "5979ab6109bfafa5f6f269f4903c9173f5ca30d216b05a826f47e24bf22a7977"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_2x2.npz",
+          "sha256": "deab229b924acda7a1b50f9dba4417a1106214bf7412f916076d0fccd15ad92c"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "307667f78091e1b4c554c700e6cb69ed60cf20293cb65431eb6d933996789383"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "d29bb4e030c792a6a623a4cc0fd057b4b0b516d03b38460ee7a8f4f7bd3cbb79"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "32b96630e92a72c03b281c81d1bdefabe76d8e9b5262416f755fd5e4961ef462"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "6ab0b9cfc88b346752c2b07b489e21db0e0cd0c9d7bc230de69c8cecd90513df"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_1x1.npz",
+          "sha256": "d44af4b26d34168f7abafbf0eab74bedcd109283424e7f7a9a5a0285ce4c8265"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_1x2.npz",
+          "sha256": "9d130eb6ca0929a1c89f11538ca2a474f76cd80249ed24a99b5097532931a8fb"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_2x1.npz",
+          "sha256": "b50fa5e9df3518021b7ced267ae927dfc79889ae2ac76533098ad04bf6a8c721"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_2x2.npz",
+          "sha256": "951656b62a40418a14d74f96a0f624cfcce44c657e0ab711f4c0cd4270455d7d"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_1x1.npz",
+          "sha256": "c12ce12c1522a19f27caf008cf8a58672ce599c6d56df59fc77a9d204a4aff27"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_1x2.npz",
+          "sha256": "36adabb95b6c0c5ced10d7e08032c825d6be4b1550659d91d429263836f8fb52"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_2x1.npz",
+          "sha256": "ac4672f34a2025c16ffe2f358557fdc7165ca97d41ef386a78ed61057ca57812"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_2x2.npz",
+          "sha256": "b3fecfa1d78f214c9128cc81c21c17f4faad4565e5b3d88e9e3363e93c147343"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_1x1.npz",
+          "sha256": "307667f78091e1b4c554c700e6cb69ed60cf20293cb65431eb6d933996789383"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_1x2.npz",
+          "sha256": "bfa4e673bf90e222e882d607eb8da52b3b83f7a9f6350bc55b02bef551af061d"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_2x1.npz",
+          "sha256": "86e3b694d23de8eb43a595a68d0f6e73f4cf111440c2f4a92a85fc4d886282bb"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_2x2.npz",
+          "sha256": "cd6824ed910085e78b5e9c3fa38fac3eb8bbc54cd2f4e027b778ce0db7797163"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_1x1.npz",
+          "sha256": "d44af4b26d34168f7abafbf0eab74bedcd109283424e7f7a9a5a0285ce4c8265"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_1x2.npz",
+          "sha256": "c3d65312f7d008678a5931d4f0c71a191e5effc97f28e535e0a8438b211dbc64"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_2x1.npz",
+          "sha256": "154ffbbf4746da2e1367f45cb41e59acbf5c4e303a6cf1ec33e601bb023a505c"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_2x2.npz",
+          "sha256": "b3fecfa1d78f214c9128cc81c21c17f4faad4565e5b3d88e9e3363e93c147343"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_1x1.npz",
+          "sha256": "c12ce12c1522a19f27caf008cf8a58672ce599c6d56df59fc77a9d204a4aff27"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_1x2.npz",
+          "sha256": "e402a16d8931f6843c193edb12e7059ded7227117bec905ca09764bb4358a6be"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_2x1.npz",
+          "sha256": "381abc188a63182ff3200d9f2dad082dd6583c473c7c55391918aea1e36592d5"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_2x2.npz",
+          "sha256": "f2a5c886548ea82a16d04acafc406b86463a02f94c776f26ea8d4e0a8cc354ce"
+        },
+        {
+          "path": "airport_to_airport/lanes/streams.csv",
+          "sha256": "539a026c1dcda603dd63007907583b89611260980a97909bfc326ca88132bec7"
+        },
+        {
+          "path": "airport_to_airport/lanes/summary.json",
+          "sha256": "d44f32501dbd49d3a512edb390b1a1e598a9e2840276435169f27206cfe980cf"
+        },
+        {
+          "path": "airport_to_airport/offsets/candidates.csv",
+          "sha256": "1dd8aa60b8673486358fc76c08ea9875868a75af9a0db54b62d8cf0db4b7cf9f"
+        },
+        {
+          "path": "airport_to_airport/offsets/comparison_capacity.npz",
+          "sha256": "03f9c63ec7ef302a0531209a91524ae578c4a0de9442ac4e35c3dc2e3f1d573c"
+        },
+        {
+          "path": "airport_to_airport/offsets/legacy_fixed_offset_scan.csv",
+          "sha256": "c64eb12fdb67a27bfbea24e0a07b457842d3ce0e127fd069e4b03991276c77ea"
+        },
+        {
+          "path": "airport_to_airport/offsets/selected_path.geojson",
+          "sha256": "eea59c09ce07d3732274529f4381af7786aae23f549f4da4b418f10e8e33bee7"
+        },
+        {
+          "path": "airport_to_airport/offsets/selected_path_controls.csv",
+          "sha256": "327616e37c7f75a5ab4dc40bae24141647c6c111613d29299bcee82bb84a87a2"
+        },
+        {
+          "path": "airport_to_airport/offsets/summary.json",
+          "sha256": "62205868d9bcff95dcf241c9714226c9d92a756487d56c326012d415928dea2f"
+        },
+        {
+          "path": "manifest.json",
+          "sha256": "674bd2852ae25cf03d8be1652eede8b489604e9fa894c4822ada28841dd59367"
+        },
+        {
+          "path": "resolved_config.json",
+          "sha256": "0be9a597244261d4722f4a6d922da6cbed8bbad2e854766a4e55f6112caf9fa8"
+        },
+        {
+          "path": "sf_sj_full/lanes/conditions.csv",
+          "sha256": "64796aea489a47a2c70a5f996786b51d1f3d66512375d6eaffc51bc2eeab3ae3"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "2b2cd239d31d59bdd9eb53c9f802a9c1cf66333f48b5adcdbc96e580a51a4f0d"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "a81e8cee2d5e5e6accb1d6afa57f4696fcadf1fa742e79e49660e08908e17741"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "0bc707d2a403a0f1941c004ab619aa09ce9f08c968bffc56f54a065822f8f4a3"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "64b6df79f194d75f629a090eae9af1a240b09073f4ab2054b02037741eaf3e0a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_1x1.npz",
+          "sha256": "b40acf057ef20d2560c25da825858b8da9ef32ee1c7ca8d7a2b29af16777f195"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_1x2.npz",
+          "sha256": "9bc6d0a9cacd61f13bf3aea5b7dd899b054a7710c0c4edf50f295269decfdbf5"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_2x1.npz",
+          "sha256": "ea4992826822dd704147108b5da15b525737a9f968a8c96f222f5cbe5349df1a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_2x2.npz",
+          "sha256": "cb08871c7215b19271c8291293446efde679c1abdbd3c059680c515ea4ee2591"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_1x1.npz",
+          "sha256": "58d414f47b4997564a5aa435ae68a3e6182a05603b8aeaef52ad428fe010b5bb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_1x2.npz",
+          "sha256": "610c1cef0a794236f657fe87b2425d4441c37f91d172bb0efca95e22384ca6fb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_2x1.npz",
+          "sha256": "c79f72181d7d2343b29e22983fd054cdd3c82c47fe7f5f3646ca25905f7b1abd"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_2x2.npz",
+          "sha256": "582b90e426cd743a8cf671b0243acf9f51c576f59978170ad030a0945980d638"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_1x1.npz",
+          "sha256": "2b2cd239d31d59bdd9eb53c9f802a9c1cf66333f48b5adcdbc96e580a51a4f0d"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_1x2.npz",
+          "sha256": "3442d14152ce94ad61abaa7f194d55a64f8a52550e35841d7c9db074fef220e1"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_2x1.npz",
+          "sha256": "a1514e55d116d2306bd49f7a5eb0fa5f37d09de4f807db71bcc2935016d99f6f"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_2x2.npz",
+          "sha256": "d2c4d2ba7fbe4d7f8dcd6a24aabefa40541bb1c0a84649925f26fe981e765f3a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_1x1.npz",
+          "sha256": "b40acf057ef20d2560c25da825858b8da9ef32ee1c7ca8d7a2b29af16777f195"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_1x2.npz",
+          "sha256": "878f14628518d02ac6e6388206af67bf21c4089fc610d6752abdbae367d88f04"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_2x1.npz",
+          "sha256": "87d42dc3b3982f1d450cdf6ba565ec8fbf6e2073525287d0e784da16ee8eb312"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_2x2.npz",
+          "sha256": "582b90e426cd743a8cf671b0243acf9f51c576f59978170ad030a0945980d638"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_1x1.npz",
+          "sha256": "58d414f47b4997564a5aa435ae68a3e6182a05603b8aeaef52ad428fe010b5bb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_1x2.npz",
+          "sha256": "dc0fdbbd1fd8580fc50060338ec2325572239a0855c592f18da4702868221858"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_2x1.npz",
+          "sha256": "6c35480d6dbe6bb71cc87597920234bd3958f0e7c5a5af0489b05ef4d38a457f"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_2x2.npz",
+          "sha256": "e2b89a9a56da579d4f83911955ec0f1f75942d92d4f8b500fb420c1c18846ded"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "32b6e22864215c78ececdc28abbe8a88764a1b07e6be5e66bd5ed039a1471b09"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "c8d194c26c7a656feb96ccf73031fe554d4c869c7a97295451f5d7b98eebe803"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "f3b2cb51bb9b6992ca23aad7f49663c2fcaf0dd2caaa778be9fbbe243c25c0e8"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "fac76819ee70c7f5df0e732ed248006f9bdcbf4d1a05e5cef17e7368d7de1569"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_1x1.npz",
+          "sha256": "39049979ade8b4a37f5ac553f62ef8443de930f4faa305fb2fdaa678fefb4531"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_1x2.npz",
+          "sha256": "99fa0e87afbee659348d708d5ad283a98cfaea4b1121b938e20e92d4b7bdf04f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_2x1.npz",
+          "sha256": "6b60b5bc97a34084e4db4f974a2dd9fce7c577fb68f38f351051df8c45f8948d"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_2x2.npz",
+          "sha256": "046fdb88b49b407a37585050cc40cb0fe0df6b9889ae348d96fa10625b617ccf"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_1x1.npz",
+          "sha256": "96d21608f09a7645ab0a2ad2ab7b361bbcb0ccf33890972433f754470ee0b59b"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_1x2.npz",
+          "sha256": "3297954da854954ac07785ed1ea47c32d555cce9e91718ab19488a054b623107"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_2x1.npz",
+          "sha256": "8af83abd865db5c3b257c71db628a118b222805541b098bba27c5153f2c92b94"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_2x2.npz",
+          "sha256": "c8826cfab84fd9c83f0c15c234d1f57de054617e6977aeb761a0dfc24ff9bc6e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_1x1.npz",
+          "sha256": "32b6e22864215c78ececdc28abbe8a88764a1b07e6be5e66bd5ed039a1471b09"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_1x2.npz",
+          "sha256": "dfb139ce17639f5ee4f4dc3b3846b5578eeb24468b69f442e6dfb5bb45d73c43"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_2x1.npz",
+          "sha256": "42f7bf5054a8fc87d96e2d7e284df3371bef57b3e0e054d64763f597a5761352"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_2x2.npz",
+          "sha256": "ffba3ad4b0ed8e587855b65a2d91db6e434d9b5f82875d40f3df87752230520f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_1x1.npz",
+          "sha256": "39049979ade8b4a37f5ac553f62ef8443de930f4faa305fb2fdaa678fefb4531"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_1x2.npz",
+          "sha256": "4b9e444491aa2b34ea7753978c801fb306ae883503abfba716cf71707ee9962e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_2x1.npz",
+          "sha256": "7bd8fd21723b3aef9e358433cefa9155d1db998c6478d0f1060d0c19fce45c4f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_2x2.npz",
+          "sha256": "c8826cfab84fd9c83f0c15c234d1f57de054617e6977aeb761a0dfc24ff9bc6e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_1x1.npz",
+          "sha256": "96d21608f09a7645ab0a2ad2ab7b361bbcb0ccf33890972433f754470ee0b59b"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_1x2.npz",
+          "sha256": "cb1cacee86c5a79b710813f56ddb69207f104356a435a6260b31b451310812f7"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_2x1.npz",
+          "sha256": "8171db79f64a4a904a4106e2ee7c432877d8be00c9d39c08be380fd336bdf4fb"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_2x2.npz",
+          "sha256": "27beb532700dc3bcaad828f53b9d2628c64419f444589deea3b120d299051471"
+        },
+        {
+          "path": "sf_sj_full/lanes/streams.csv",
+          "sha256": "e153b683986b6e2aadde6e28c13f8e32cabf439abfa2741df06c493b0bd68d9e"
+        },
+        {
+          "path": "sf_sj_full/lanes/summary.json",
+          "sha256": "3b05e88ddb2a411a2464c57fc134f54217921ed5f949b862b7406f4f8528f150"
+        },
+        {
+          "path": "sf_sj_full/offsets/candidates.csv",
+          "sha256": "b630b987d9d6816c2e4a4812c80e6afedf815ea38de4efbd6fdca466eaa1ba4c"
+        },
+        {
+          "path": "sf_sj_full/offsets/comparison_capacity.npz",
+          "sha256": "c8200583e18aefd7d1c3a0a59dd9bd3e10539b4362315574f7c788d1d13a59c3"
+        },
+        {
+          "path": "sf_sj_full/offsets/legacy_fixed_offset_scan.csv",
+          "sha256": "d89284b9c287af4508051015ab29f4c5f932062b6b5941351a4c71e7bcb8f1e7"
+        },
+        {
+          "path": "sf_sj_full/offsets/selected_path.geojson",
+          "sha256": "138e07efabd108ec26fdc9147b496bb5c48099097f3558cd9d5fa96061421b32"
+        },
+        {
+          "path": "sf_sj_full/offsets/selected_path_controls.csv",
+          "sha256": "9b2c369ca992d04e48793bc4edae263baf89b300e8de240988c588d2820b15e3"
+        },
+        {
+          "path": "sf_sj_full/offsets/summary.json",
+          "sha256": "ba21ef0240943d0ce0e5609f237e4e0fb166c7e91d38b142f4646b87a1491855"
+        }
+      ]
+    },
+    {
+      "old_path": "runs/itl-baselines-20260829-v2",
+      "new_path": "research/_archive/itl-baselines/runs/R0002",
+      "original_created_utc": "2026-08-30T06:19:31.479164+00:00",
+      "code_drift_before_migration": [
+        "src/uam_simulator/path_design.py"
+      ],
+      "files": [
+        {
+          "path": "airport_to_airport/lanes/conditions.csv",
+          "sha256": "c5f3d8d68519b9740ca60f5bf2863c1c3cc1d75726cc35f663f200663184b575"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "9bc1fefe99e365c9a3bb3b764e11ac204587db6dcd0f8efc4015d36719b9e674"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "df295430504d181b3533e6e1a848c8e70e876ce10830b95545df5b9b03abfe77"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "56db92b70be7ef78d3dff7b3e3f9bb98eec8f4374d0b56dc94f575f94fbee006"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "31e1eeb841815a33738fd35a756091cb3f61cfc3e343bf3171d9528d577fb206"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_1x1.npz",
+          "sha256": "15372aa96c2190878be8256649d0bc395bc98be35453dab6de13c00256633b12"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_1x2.npz",
+          "sha256": "62fd3fbf6fc1debd55090680b7df9890d36b2f321eb4aa52c545062a2da0752f"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_2x1.npz",
+          "sha256": "5863fd8163d22871b6192c7834369495483027fb03c1843455499cc562c8a6d9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_2x2.npz",
+          "sha256": "a7df82f785b104f0d4a6ee3d4a8dd458969b99dd0ff4e6337068db2077ef760d"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_1x1.npz",
+          "sha256": "9c7682c8cfe5cfa24808dadfe856c95f28c1a999d849a09913a4d1f69551cc31"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_1x2.npz",
+          "sha256": "16f2306297fc6d302b9d04a4f286593a19c215c269b887a89579ac9b1cab6221"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_2x1.npz",
+          "sha256": "470670139bd2bd8083140089449e1baafb043cea27445897cc9ba09a7c03cbe9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_2x2.npz",
+          "sha256": "c511dfa3b0e2be67f97bdfe54ea183eb0502a5220c971cef9000364191104a4a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_1x1.npz",
+          "sha256": "9bc1fefe99e365c9a3bb3b764e11ac204587db6dcd0f8efc4015d36719b9e674"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_1x2.npz",
+          "sha256": "3784de01f340d7c795a2e7bc60868bd558065d6d44fbd016037833a76c1ecad9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_2x1.npz",
+          "sha256": "4bebdbd73e0213bee1bfd1842d40395a0315ac65604b8616c817212485abd4c2"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_2x2.npz",
+          "sha256": "4b1cc2cd14cac390219ca9e9331f6ffff4bf06001c09818ae77caec5180412f0"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_1x1.npz",
+          "sha256": "15372aa96c2190878be8256649d0bc395bc98be35453dab6de13c00256633b12"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_1x2.npz",
+          "sha256": "4d2f2dcdb881afea002a444cc451a8a31bbb5846488002c291f5dba0475c15ab"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_2x1.npz",
+          "sha256": "775bc084bd168250106470f7a3f75eaa0fb49b5c50950a74cc2bfbd7f4dc9e21"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_2x2.npz",
+          "sha256": "c511dfa3b0e2be67f97bdfe54ea183eb0502a5220c971cef9000364191104a4a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_1x1.npz",
+          "sha256": "9c7682c8cfe5cfa24808dadfe856c95f28c1a999d849a09913a4d1f69551cc31"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_1x2.npz",
+          "sha256": "06198b124eebd45ae23ed68ceaddc608032a4c132a3fcc651c8cb7a2255e3e6a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_2x1.npz",
+          "sha256": "5979ab6109bfafa5f6f269f4903c9173f5ca30d216b05a826f47e24bf22a7977"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_2x2.npz",
+          "sha256": "deab229b924acda7a1b50f9dba4417a1106214bf7412f916076d0fccd15ad92c"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "307667f78091e1b4c554c700e6cb69ed60cf20293cb65431eb6d933996789383"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "d29bb4e030c792a6a623a4cc0fd057b4b0b516d03b38460ee7a8f4f7bd3cbb79"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "32b96630e92a72c03b281c81d1bdefabe76d8e9b5262416f755fd5e4961ef462"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "6ab0b9cfc88b346752c2b07b489e21db0e0cd0c9d7bc230de69c8cecd90513df"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_1x1.npz",
+          "sha256": "d44af4b26d34168f7abafbf0eab74bedcd109283424e7f7a9a5a0285ce4c8265"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_1x2.npz",
+          "sha256": "9d130eb6ca0929a1c89f11538ca2a474f76cd80249ed24a99b5097532931a8fb"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_2x1.npz",
+          "sha256": "b50fa5e9df3518021b7ced267ae927dfc79889ae2ac76533098ad04bf6a8c721"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_2x2.npz",
+          "sha256": "951656b62a40418a14d74f96a0f624cfcce44c657e0ab711f4c0cd4270455d7d"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_1x1.npz",
+          "sha256": "c12ce12c1522a19f27caf008cf8a58672ce599c6d56df59fc77a9d204a4aff27"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_1x2.npz",
+          "sha256": "36adabb95b6c0c5ced10d7e08032c825d6be4b1550659d91d429263836f8fb52"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_2x1.npz",
+          "sha256": "ac4672f34a2025c16ffe2f358557fdc7165ca97d41ef386a78ed61057ca57812"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_2x2.npz",
+          "sha256": "b3fecfa1d78f214c9128cc81c21c17f4faad4565e5b3d88e9e3363e93c147343"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_1x1.npz",
+          "sha256": "307667f78091e1b4c554c700e6cb69ed60cf20293cb65431eb6d933996789383"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_1x2.npz",
+          "sha256": "bfa4e673bf90e222e882d607eb8da52b3b83f7a9f6350bc55b02bef551af061d"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_2x1.npz",
+          "sha256": "86e3b694d23de8eb43a595a68d0f6e73f4cf111440c2f4a92a85fc4d886282bb"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_2x2.npz",
+          "sha256": "cd6824ed910085e78b5e9c3fa38fac3eb8bbc54cd2f4e027b778ce0db7797163"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_1x1.npz",
+          "sha256": "d44af4b26d34168f7abafbf0eab74bedcd109283424e7f7a9a5a0285ce4c8265"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_1x2.npz",
+          "sha256": "c3d65312f7d008678a5931d4f0c71a191e5effc97f28e535e0a8438b211dbc64"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_2x1.npz",
+          "sha256": "154ffbbf4746da2e1367f45cb41e59acbf5c4e303a6cf1ec33e601bb023a505c"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_2x2.npz",
+          "sha256": "b3fecfa1d78f214c9128cc81c21c17f4faad4565e5b3d88e9e3363e93c147343"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_1x1.npz",
+          "sha256": "c12ce12c1522a19f27caf008cf8a58672ce599c6d56df59fc77a9d204a4aff27"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_1x2.npz",
+          "sha256": "e402a16d8931f6843c193edb12e7059ded7227117bec905ca09764bb4358a6be"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_2x1.npz",
+          "sha256": "381abc188a63182ff3200d9f2dad082dd6583c473c7c55391918aea1e36592d5"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_2x2.npz",
+          "sha256": "f2a5c886548ea82a16d04acafc406b86463a02f94c776f26ea8d4e0a8cc354ce"
+        },
+        {
+          "path": "airport_to_airport/lanes/streams.csv",
+          "sha256": "fdcbe903d77fc9766fa262e8ea686da07f73cecaef514c3ba450d1e4db3ddd24"
+        },
+        {
+          "path": "airport_to_airport/lanes/summary.json",
+          "sha256": "be6a8ad0aca59c7e0423347e46a64c3cc18508a6b9ea7b0baecf27d0b5fef537"
+        },
+        {
+          "path": "airport_to_airport/offsets/candidates.csv",
+          "sha256": "1dd8aa60b8673486358fc76c08ea9875868a75af9a0db54b62d8cf0db4b7cf9f"
+        },
+        {
+          "path": "airport_to_airport/offsets/comparison_capacity.npz",
+          "sha256": "03f9c63ec7ef302a0531209a91524ae578c4a0de9442ac4e35c3dc2e3f1d573c"
+        },
+        {
+          "path": "airport_to_airport/offsets/legacy_fixed_offset_scan.csv",
+          "sha256": "6027509a6ade203c7309e461337cf721c01fd3cebb1b59c90ce97a8fccd84d76"
+        },
+        {
+          "path": "airport_to_airport/offsets/selected_path.geojson",
+          "sha256": "eea59c09ce07d3732274529f4381af7786aae23f549f4da4b418f10e8e33bee7"
+        },
+        {
+          "path": "airport_to_airport/offsets/selected_path_controls.csv",
+          "sha256": "327616e37c7f75a5ab4dc40bae24141647c6c111613d29299bcee82bb84a87a2"
+        },
+        {
+          "path": "airport_to_airport/offsets/summary.json",
+          "sha256": "688be20e286650e5e63e546d3ca4017cc14cdabe54b4cfa52ecfe4c0126d6daf"
+        },
+        {
+          "path": "manifest.json",
+          "sha256": "d2c9341970ab5c4078ffc1dddd72a37617e72165d9bcf4edd2de20d109a1e7af"
+        },
+        {
+          "path": "resolved_config.json",
+          "sha256": "0be9a597244261d4722f4a6d922da6cbed8bbad2e854766a4e55f6112caf9fa8"
+        },
+        {
+          "path": "sf_sj_full/lanes/conditions.csv",
+          "sha256": "8abf6154dead8321c289c9d8e9dad1381d2bf4dbfd6a5ff26b9d884ccc379aed"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "2b2cd239d31d59bdd9eb53c9f802a9c1cf66333f48b5adcdbc96e580a51a4f0d"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "a81e8cee2d5e5e6accb1d6afa57f4696fcadf1fa742e79e49660e08908e17741"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "0bc707d2a403a0f1941c004ab619aa09ce9f08c968bffc56f54a065822f8f4a3"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "64b6df79f194d75f629a090eae9af1a240b09073f4ab2054b02037741eaf3e0a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_1x1.npz",
+          "sha256": "b40acf057ef20d2560c25da825858b8da9ef32ee1c7ca8d7a2b29af16777f195"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_1x2.npz",
+          "sha256": "9bc6d0a9cacd61f13bf3aea5b7dd899b054a7710c0c4edf50f295269decfdbf5"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_2x1.npz",
+          "sha256": "ea4992826822dd704147108b5da15b525737a9f968a8c96f222f5cbe5349df1a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_2x2.npz",
+          "sha256": "cb08871c7215b19271c8291293446efde679c1abdbd3c059680c515ea4ee2591"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_1x1.npz",
+          "sha256": "58d414f47b4997564a5aa435ae68a3e6182a05603b8aeaef52ad428fe010b5bb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_1x2.npz",
+          "sha256": "610c1cef0a794236f657fe87b2425d4441c37f91d172bb0efca95e22384ca6fb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_2x1.npz",
+          "sha256": "c79f72181d7d2343b29e22983fd054cdd3c82c47fe7f5f3646ca25905f7b1abd"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_2x2.npz",
+          "sha256": "582b90e426cd743a8cf671b0243acf9f51c576f59978170ad030a0945980d638"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_1x1.npz",
+          "sha256": "2b2cd239d31d59bdd9eb53c9f802a9c1cf66333f48b5adcdbc96e580a51a4f0d"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_1x2.npz",
+          "sha256": "3442d14152ce94ad61abaa7f194d55a64f8a52550e35841d7c9db074fef220e1"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_2x1.npz",
+          "sha256": "a1514e55d116d2306bd49f7a5eb0fa5f37d09de4f807db71bcc2935016d99f6f"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_2x2.npz",
+          "sha256": "d2c4d2ba7fbe4d7f8dcd6a24aabefa40541bb1c0a84649925f26fe981e765f3a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_1x1.npz",
+          "sha256": "b40acf057ef20d2560c25da825858b8da9ef32ee1c7ca8d7a2b29af16777f195"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_1x2.npz",
+          "sha256": "878f14628518d02ac6e6388206af67bf21c4089fc610d6752abdbae367d88f04"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_2x1.npz",
+          "sha256": "87d42dc3b3982f1d450cdf6ba565ec8fbf6e2073525287d0e784da16ee8eb312"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_2x2.npz",
+          "sha256": "582b90e426cd743a8cf671b0243acf9f51c576f59978170ad030a0945980d638"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_1x1.npz",
+          "sha256": "58d414f47b4997564a5aa435ae68a3e6182a05603b8aeaef52ad428fe010b5bb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_1x2.npz",
+          "sha256": "dc0fdbbd1fd8580fc50060338ec2325572239a0855c592f18da4702868221858"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_2x1.npz",
+          "sha256": "6c35480d6dbe6bb71cc87597920234bd3958f0e7c5a5af0489b05ef4d38a457f"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_2x2.npz",
+          "sha256": "e2b89a9a56da579d4f83911955ec0f1f75942d92d4f8b500fb420c1c18846ded"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "32b6e22864215c78ececdc28abbe8a88764a1b07e6be5e66bd5ed039a1471b09"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "c8d194c26c7a656feb96ccf73031fe554d4c869c7a97295451f5d7b98eebe803"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "f3b2cb51bb9b6992ca23aad7f49663c2fcaf0dd2caaa778be9fbbe243c25c0e8"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "fac76819ee70c7f5df0e732ed248006f9bdcbf4d1a05e5cef17e7368d7de1569"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_1x1.npz",
+          "sha256": "39049979ade8b4a37f5ac553f62ef8443de930f4faa305fb2fdaa678fefb4531"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_1x2.npz",
+          "sha256": "99fa0e87afbee659348d708d5ad283a98cfaea4b1121b938e20e92d4b7bdf04f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_2x1.npz",
+          "sha256": "6b60b5bc97a34084e4db4f974a2dd9fce7c577fb68f38f351051df8c45f8948d"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_2x2.npz",
+          "sha256": "046fdb88b49b407a37585050cc40cb0fe0df6b9889ae348d96fa10625b617ccf"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_1x1.npz",
+          "sha256": "96d21608f09a7645ab0a2ad2ab7b361bbcb0ccf33890972433f754470ee0b59b"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_1x2.npz",
+          "sha256": "3297954da854954ac07785ed1ea47c32d555cce9e91718ab19488a054b623107"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_2x1.npz",
+          "sha256": "8af83abd865db5c3b257c71db628a118b222805541b098bba27c5153f2c92b94"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_2x2.npz",
+          "sha256": "c8826cfab84fd9c83f0c15c234d1f57de054617e6977aeb761a0dfc24ff9bc6e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_1x1.npz",
+          "sha256": "32b6e22864215c78ececdc28abbe8a88764a1b07e6be5e66bd5ed039a1471b09"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_1x2.npz",
+          "sha256": "dfb139ce17639f5ee4f4dc3b3846b5578eeb24468b69f442e6dfb5bb45d73c43"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_2x1.npz",
+          "sha256": "42f7bf5054a8fc87d96e2d7e284df3371bef57b3e0e054d64763f597a5761352"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_2x2.npz",
+          "sha256": "ffba3ad4b0ed8e587855b65a2d91db6e434d9b5f82875d40f3df87752230520f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_1x1.npz",
+          "sha256": "39049979ade8b4a37f5ac553f62ef8443de930f4faa305fb2fdaa678fefb4531"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_1x2.npz",
+          "sha256": "4b9e444491aa2b34ea7753978c801fb306ae883503abfba716cf71707ee9962e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_2x1.npz",
+          "sha256": "7bd8fd21723b3aef9e358433cefa9155d1db998c6478d0f1060d0c19fce45c4f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_2x2.npz",
+          "sha256": "c8826cfab84fd9c83f0c15c234d1f57de054617e6977aeb761a0dfc24ff9bc6e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_1x1.npz",
+          "sha256": "96d21608f09a7645ab0a2ad2ab7b361bbcb0ccf33890972433f754470ee0b59b"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_1x2.npz",
+          "sha256": "cb1cacee86c5a79b710813f56ddb69207f104356a435a6260b31b451310812f7"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_2x1.npz",
+          "sha256": "8171db79f64a4a904a4106e2ee7c432877d8be00c9d39c08be380fd336bdf4fb"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_2x2.npz",
+          "sha256": "27beb532700dc3bcaad828f53b9d2628c64419f444589deea3b120d299051471"
+        },
+        {
+          "path": "sf_sj_full/lanes/streams.csv",
+          "sha256": "30cfd1b587812810aad78b3a4ac9dbca677f5e4d7f5e196e17ab3cbdae8199d7"
+        },
+        {
+          "path": "sf_sj_full/lanes/summary.json",
+          "sha256": "8efe955ba171089700a473054ef1d073cd3b276b4730a93ec343de1d76d32db5"
+        },
+        {
+          "path": "sf_sj_full/offsets/candidates.csv",
+          "sha256": "b630b987d9d6816c2e4a4812c80e6afedf815ea38de4efbd6fdca466eaa1ba4c"
+        },
+        {
+          "path": "sf_sj_full/offsets/comparison_capacity.npz",
+          "sha256": "c8200583e18aefd7d1c3a0a59dd9bd3e10539b4362315574f7c788d1d13a59c3"
+        },
+        {
+          "path": "sf_sj_full/offsets/legacy_fixed_offset_scan.csv",
+          "sha256": "64fb0f18b1d3b4c1ea9815a58d0e8fa0bc7fe28956ed859f16b11369964e22c6"
+        },
+        {
+          "path": "sf_sj_full/offsets/selected_path.geojson",
+          "sha256": "138e07efabd108ec26fdc9147b496bb5c48099097f3558cd9d5fa96061421b32"
+        },
+        {
+          "path": "sf_sj_full/offsets/selected_path_controls.csv",
+          "sha256": "9b2c369ca992d04e48793bc4edae263baf89b300e8de240988c588d2820b15e3"
+        },
+        {
+          "path": "sf_sj_full/offsets/summary.json",
+          "sha256": "915cd617c8be52df48a9d117f4837aad7e3245e2e523db4f6bcdce2fbd1d8ea5"
+        }
+      ]
+    },
+    {
+      "old_path": "runs/itl-baselines-20260829-v3",
+      "new_path": "research/_archive/itl-baselines/runs/R0003",
+      "original_created_utc": "2026-08-30T06:22:29.651013+00:00",
+      "code_drift_before_migration": [],
+      "files": [
+        {
+          "path": "airport_to_airport/lanes/conditions.csv",
+          "sha256": "c5f3d8d68519b9740ca60f5bf2863c1c3cc1d75726cc35f663f200663184b575"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "9bc1fefe99e365c9a3bb3b764e11ac204587db6dcd0f8efc4015d36719b9e674"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "df295430504d181b3533e6e1a848c8e70e876ce10830b95545df5b9b03abfe77"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "56db92b70be7ef78d3dff7b3e3f9bb98eec8f4374d0b56dc94f575f94fbee006"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "31e1eeb841815a33738fd35a756091cb3f61cfc3e343bf3171d9528d577fb206"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_1x1.npz",
+          "sha256": "15372aa96c2190878be8256649d0bc395bc98be35453dab6de13c00256633b12"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_1x2.npz",
+          "sha256": "62fd3fbf6fc1debd55090680b7df9890d36b2f321eb4aa52c545062a2da0752f"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_2x1.npz",
+          "sha256": "5863fd8163d22871b6192c7834369495483027fb03c1843455499cc562c8a6d9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_180_2x2.npz",
+          "sha256": "a7df82f785b104f0d4a6ee3d4a8dd458969b99dd0ff4e6337068db2077ef760d"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_1x1.npz",
+          "sha256": "9c7682c8cfe5cfa24808dadfe856c95f28c1a999d849a09913a4d1f69551cc31"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_1x2.npz",
+          "sha256": "16f2306297fc6d302b9d04a4f286593a19c215c269b887a89579ac9b1cab6221"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_2x1.npz",
+          "sha256": "470670139bd2bd8083140089449e1baafb043cea27445897cc9ba09a7c03cbe9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_per_stream_45_2x2.npz",
+          "sha256": "c511dfa3b0e2be67f97bdfe54ea183eb0502a5220c971cef9000364191104a4a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_1x1.npz",
+          "sha256": "9bc1fefe99e365c9a3bb3b764e11ac204587db6dcd0f8efc4015d36719b9e674"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_1x2.npz",
+          "sha256": "3784de01f340d7c795a2e7bc60868bd558065d6d44fbd016037833a76c1ecad9"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_2x1.npz",
+          "sha256": "4bebdbd73e0213bee1bfd1842d40395a0315ac65604b8616c817212485abd4c2"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_112.5_2x2.npz",
+          "sha256": "4b1cc2cd14cac390219ca9e9331f6ffff4bf06001c09818ae77caec5180412f0"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_1x1.npz",
+          "sha256": "15372aa96c2190878be8256649d0bc395bc98be35453dab6de13c00256633b12"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_1x2.npz",
+          "sha256": "4d2f2dcdb881afea002a444cc451a8a31bbb5846488002c291f5dba0475c15ab"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_2x1.npz",
+          "sha256": "775bc084bd168250106470f7a3f75eaa0fb49b5c50950a74cc2bfbd7f4dc9e21"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_180_2x2.npz",
+          "sha256": "c511dfa3b0e2be67f97bdfe54ea183eb0502a5220c971cef9000364191104a4a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_1x1.npz",
+          "sha256": "9c7682c8cfe5cfa24808dadfe856c95f28c1a999d849a09913a4d1f69551cc31"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_1x2.npz",
+          "sha256": "06198b124eebd45ae23ed68ceaddc608032a4c132a3fcc651c8cb7a2255e3e6a"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_2x1.npz",
+          "sha256": "5979ab6109bfafa5f6f269f4903c9173f5ca30d216b05a826f47e24bf22a7977"
+        },
+        {
+          "path": "airport_to_airport/lanes/dashboard_1s_fixed_total_45_2x2.npz",
+          "sha256": "deab229b924acda7a1b50f9dba4417a1106214bf7412f916076d0fccd15ad92c"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "307667f78091e1b4c554c700e6cb69ed60cf20293cb65431eb6d933996789383"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "d29bb4e030c792a6a623a4cc0fd057b4b0b516d03b38460ee7a8f4f7bd3cbb79"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "32b96630e92a72c03b281c81d1bdefabe76d8e9b5262416f755fd5e4961ef462"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "6ab0b9cfc88b346752c2b07b489e21db0e0cd0c9d7bc230de69c8cecd90513df"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_1x1.npz",
+          "sha256": "d44af4b26d34168f7abafbf0eab74bedcd109283424e7f7a9a5a0285ce4c8265"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_1x2.npz",
+          "sha256": "9d130eb6ca0929a1c89f11538ca2a474f76cd80249ed24a99b5097532931a8fb"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_2x1.npz",
+          "sha256": "b50fa5e9df3518021b7ced267ae927dfc79889ae2ac76533098ad04bf6a8c721"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_180_2x2.npz",
+          "sha256": "951656b62a40418a14d74f96a0f624cfcce44c657e0ab711f4c0cd4270455d7d"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_1x1.npz",
+          "sha256": "c12ce12c1522a19f27caf008cf8a58672ce599c6d56df59fc77a9d204a4aff27"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_1x2.npz",
+          "sha256": "36adabb95b6c0c5ced10d7e08032c825d6be4b1550659d91d429263836f8fb52"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_2x1.npz",
+          "sha256": "ac4672f34a2025c16ffe2f358557fdc7165ca97d41ef386a78ed61057ca57812"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_per_stream_45_2x2.npz",
+          "sha256": "b3fecfa1d78f214c9128cc81c21c17f4faad4565e5b3d88e9e3363e93c147343"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_1x1.npz",
+          "sha256": "307667f78091e1b4c554c700e6cb69ed60cf20293cb65431eb6d933996789383"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_1x2.npz",
+          "sha256": "bfa4e673bf90e222e882d607eb8da52b3b83f7a9f6350bc55b02bef551af061d"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_2x1.npz",
+          "sha256": "86e3b694d23de8eb43a595a68d0f6e73f4cf111440c2f4a92a85fc4d886282bb"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_112.5_2x2.npz",
+          "sha256": "cd6824ed910085e78b5e9c3fa38fac3eb8bbc54cd2f4e027b778ce0db7797163"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_1x1.npz",
+          "sha256": "d44af4b26d34168f7abafbf0eab74bedcd109283424e7f7a9a5a0285ce4c8265"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_1x2.npz",
+          "sha256": "c3d65312f7d008678a5931d4f0c71a191e5effc97f28e535e0a8438b211dbc64"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_2x1.npz",
+          "sha256": "154ffbbf4746da2e1367f45cb41e59acbf5c4e303a6cf1ec33e601bb023a505c"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_180_2x2.npz",
+          "sha256": "b3fecfa1d78f214c9128cc81c21c17f4faad4565e5b3d88e9e3363e93c147343"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_1x1.npz",
+          "sha256": "c12ce12c1522a19f27caf008cf8a58672ce599c6d56df59fc77a9d204a4aff27"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_1x2.npz",
+          "sha256": "e402a16d8931f6843c193edb12e7059ded7227117bec905ca09764bb4358a6be"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_2x1.npz",
+          "sha256": "381abc188a63182ff3200d9f2dad082dd6583c473c7c55391918aea1e36592d5"
+        },
+        {
+          "path": "airport_to_airport/lanes/paper_5s_fixed_total_45_2x2.npz",
+          "sha256": "f2a5c886548ea82a16d04acafc406b86463a02f94c776f26ea8d4e0a8cc354ce"
+        },
+        {
+          "path": "airport_to_airport/lanes/streams.csv",
+          "sha256": "fdcbe903d77fc9766fa262e8ea686da07f73cecaef514c3ba450d1e4db3ddd24"
+        },
+        {
+          "path": "airport_to_airport/lanes/summary.json",
+          "sha256": "be6a8ad0aca59c7e0423347e46a64c3cc18508a6b9ea7b0baecf27d0b5fef537"
+        },
+        {
+          "path": "airport_to_airport/offsets/candidates.csv",
+          "sha256": "0d0d33bb25b93ff84392f06da3d88c4c28ebb3b5e7e85113231f874ec8ad8548"
+        },
+        {
+          "path": "airport_to_airport/offsets/comparison_capacity.npz",
+          "sha256": "03f9c63ec7ef302a0531209a91524ae578c4a0de9442ac4e35c3dc2e3f1d573c"
+        },
+        {
+          "path": "airport_to_airport/offsets/legacy_fixed_offset_scan.csv",
+          "sha256": "6027509a6ade203c7309e461337cf721c01fd3cebb1b59c90ce97a8fccd84d76"
+        },
+        {
+          "path": "airport_to_airport/offsets/selected_path.geojson",
+          "sha256": "eea59c09ce07d3732274529f4381af7786aae23f549f4da4b418f10e8e33bee7"
+        },
+        {
+          "path": "airport_to_airport/offsets/selected_path_controls.csv",
+          "sha256": "327616e37c7f75a5ab4dc40bae24141647c6c111613d29299bcee82bb84a87a2"
+        },
+        {
+          "path": "airport_to_airport/offsets/summary.json",
+          "sha256": "794980a034bd0c59fd60520f832285c403729b44c6a1ab9adfcb437252ac5c29"
+        },
+        {
+          "path": "manifest.json",
+          "sha256": "05fb523d37424c83a1bd32d8ed99bd5f7aa15efd0fc0547c337056ff2bb986f7"
+        },
+        {
+          "path": "resolved_config.json",
+          "sha256": "0be9a597244261d4722f4a6d922da6cbed8bbad2e854766a4e55f6112caf9fa8"
+        },
+        {
+          "path": "sf_sj_full/lanes/conditions.csv",
+          "sha256": "8abf6154dead8321c289c9d8e9dad1381d2bf4dbfd6a5ff26b9d884ccc379aed"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "2b2cd239d31d59bdd9eb53c9f802a9c1cf66333f48b5adcdbc96e580a51a4f0d"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "a81e8cee2d5e5e6accb1d6afa57f4696fcadf1fa742e79e49660e08908e17741"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "0bc707d2a403a0f1941c004ab619aa09ce9f08c968bffc56f54a065822f8f4a3"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "64b6df79f194d75f629a090eae9af1a240b09073f4ab2054b02037741eaf3e0a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_1x1.npz",
+          "sha256": "b40acf057ef20d2560c25da825858b8da9ef32ee1c7ca8d7a2b29af16777f195"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_1x2.npz",
+          "sha256": "9bc6d0a9cacd61f13bf3aea5b7dd899b054a7710c0c4edf50f295269decfdbf5"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_2x1.npz",
+          "sha256": "ea4992826822dd704147108b5da15b525737a9f968a8c96f222f5cbe5349df1a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_180_2x2.npz",
+          "sha256": "cb08871c7215b19271c8291293446efde679c1abdbd3c059680c515ea4ee2591"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_1x1.npz",
+          "sha256": "58d414f47b4997564a5aa435ae68a3e6182a05603b8aeaef52ad428fe010b5bb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_1x2.npz",
+          "sha256": "610c1cef0a794236f657fe87b2425d4441c37f91d172bb0efca95e22384ca6fb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_2x1.npz",
+          "sha256": "c79f72181d7d2343b29e22983fd054cdd3c82c47fe7f5f3646ca25905f7b1abd"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_per_stream_45_2x2.npz",
+          "sha256": "582b90e426cd743a8cf671b0243acf9f51c576f59978170ad030a0945980d638"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_1x1.npz",
+          "sha256": "2b2cd239d31d59bdd9eb53c9f802a9c1cf66333f48b5adcdbc96e580a51a4f0d"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_1x2.npz",
+          "sha256": "3442d14152ce94ad61abaa7f194d55a64f8a52550e35841d7c9db074fef220e1"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_2x1.npz",
+          "sha256": "a1514e55d116d2306bd49f7a5eb0fa5f37d09de4f807db71bcc2935016d99f6f"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_112.5_2x2.npz",
+          "sha256": "d2c4d2ba7fbe4d7f8dcd6a24aabefa40541bb1c0a84649925f26fe981e765f3a"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_1x1.npz",
+          "sha256": "b40acf057ef20d2560c25da825858b8da9ef32ee1c7ca8d7a2b29af16777f195"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_1x2.npz",
+          "sha256": "878f14628518d02ac6e6388206af67bf21c4089fc610d6752abdbae367d88f04"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_2x1.npz",
+          "sha256": "87d42dc3b3982f1d450cdf6ba565ec8fbf6e2073525287d0e784da16ee8eb312"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_180_2x2.npz",
+          "sha256": "582b90e426cd743a8cf671b0243acf9f51c576f59978170ad030a0945980d638"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_1x1.npz",
+          "sha256": "58d414f47b4997564a5aa435ae68a3e6182a05603b8aeaef52ad428fe010b5bb"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_1x2.npz",
+          "sha256": "dc0fdbbd1fd8580fc50060338ec2325572239a0855c592f18da4702868221858"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_2x1.npz",
+          "sha256": "6c35480d6dbe6bb71cc87597920234bd3958f0e7c5a5af0489b05ef4d38a457f"
+        },
+        {
+          "path": "sf_sj_full/lanes/dashboard_1s_fixed_total_45_2x2.npz",
+          "sha256": "e2b89a9a56da579d4f83911955ec0f1f75942d92d4f8b500fb420c1c18846ded"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_1x1.npz",
+          "sha256": "32b6e22864215c78ececdc28abbe8a88764a1b07e6be5e66bd5ed039a1471b09"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_1x2.npz",
+          "sha256": "c8d194c26c7a656feb96ccf73031fe554d4c869c7a97295451f5d7b98eebe803"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_2x1.npz",
+          "sha256": "f3b2cb51bb9b6992ca23aad7f49663c2fcaf0dd2caaa778be9fbbe243c25c0e8"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_112.5_2x2.npz",
+          "sha256": "fac76819ee70c7f5df0e732ed248006f9bdcbf4d1a05e5cef17e7368d7de1569"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_1x1.npz",
+          "sha256": "39049979ade8b4a37f5ac553f62ef8443de930f4faa305fb2fdaa678fefb4531"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_1x2.npz",
+          "sha256": "99fa0e87afbee659348d708d5ad283a98cfaea4b1121b938e20e92d4b7bdf04f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_2x1.npz",
+          "sha256": "6b60b5bc97a34084e4db4f974a2dd9fce7c577fb68f38f351051df8c45f8948d"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_180_2x2.npz",
+          "sha256": "046fdb88b49b407a37585050cc40cb0fe0df6b9889ae348d96fa10625b617ccf"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_1x1.npz",
+          "sha256": "96d21608f09a7645ab0a2ad2ab7b361bbcb0ccf33890972433f754470ee0b59b"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_1x2.npz",
+          "sha256": "3297954da854954ac07785ed1ea47c32d555cce9e91718ab19488a054b623107"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_2x1.npz",
+          "sha256": "8af83abd865db5c3b257c71db628a118b222805541b098bba27c5153f2c92b94"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_per_stream_45_2x2.npz",
+          "sha256": "c8826cfab84fd9c83f0c15c234d1f57de054617e6977aeb761a0dfc24ff9bc6e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_1x1.npz",
+          "sha256": "32b6e22864215c78ececdc28abbe8a88764a1b07e6be5e66bd5ed039a1471b09"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_1x2.npz",
+          "sha256": "dfb139ce17639f5ee4f4dc3b3846b5578eeb24468b69f442e6dfb5bb45d73c43"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_2x1.npz",
+          "sha256": "42f7bf5054a8fc87d96e2d7e284df3371bef57b3e0e054d64763f597a5761352"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_112.5_2x2.npz",
+          "sha256": "ffba3ad4b0ed8e587855b65a2d91db6e434d9b5f82875d40f3df87752230520f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_1x1.npz",
+          "sha256": "39049979ade8b4a37f5ac553f62ef8443de930f4faa305fb2fdaa678fefb4531"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_1x2.npz",
+          "sha256": "4b9e444491aa2b34ea7753978c801fb306ae883503abfba716cf71707ee9962e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_2x1.npz",
+          "sha256": "7bd8fd21723b3aef9e358433cefa9155d1db998c6478d0f1060d0c19fce45c4f"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_180_2x2.npz",
+          "sha256": "c8826cfab84fd9c83f0c15c234d1f57de054617e6977aeb761a0dfc24ff9bc6e"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_1x1.npz",
+          "sha256": "96d21608f09a7645ab0a2ad2ab7b361bbcb0ccf33890972433f754470ee0b59b"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_1x2.npz",
+          "sha256": "cb1cacee86c5a79b710813f56ddb69207f104356a435a6260b31b451310812f7"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_2x1.npz",
+          "sha256": "8171db79f64a4a904a4106e2ee7c432877d8be00c9d39c08be380fd336bdf4fb"
+        },
+        {
+          "path": "sf_sj_full/lanes/paper_5s_fixed_total_45_2x2.npz",
+          "sha256": "27beb532700dc3bcaad828f53b9d2628c64419f444589deea3b120d299051471"
+        },
+        {
+          "path": "sf_sj_full/lanes/streams.csv",
+          "sha256": "30cfd1b587812810aad78b3a4ac9dbca677f5e4d7f5e196e17ab3cbdae8199d7"
+        },
+        {
+          "path": "sf_sj_full/lanes/summary.json",
+          "sha256": "8efe955ba171089700a473054ef1d073cd3b276b4730a93ec343de1d76d32db5"
+        },
+        {
+          "path": "sf_sj_full/offsets/candidates.csv",
+          "sha256": "3f954c56f2d1df1975c204559c845c0edb9b4f9d95232a344153ec2336ff8838"
+        },
+        {
+          "path": "sf_sj_full/offsets/comparison_capacity.npz",
+          "sha256": "c8200583e18aefd7d1c3a0a59dd9bd3e10539b4362315574f7c788d1d13a59c3"
+        },
+        {
+          "path": "sf_sj_full/offsets/legacy_fixed_offset_scan.csv",
+          "sha256": "64fb0f18b1d3b4c1ea9815a58d0e8fa0bc7fe28956ed859f16b11369964e22c6"
+        },
+        {
+          "path": "sf_sj_full/offsets/selected_path.geojson",
+          "sha256": "138e07efabd108ec26fdc9147b496bb5c48099097f3558cd9d5fa96061421b32"
+        },
+        {
+          "path": "sf_sj_full/offsets/selected_path_controls.csv",
+          "sha256": "9b2c369ca992d04e48793bc4edae263baf89b300e8de240988c588d2820b15e3"
+        },
+        {
+          "path": "sf_sj_full/offsets/summary.json",
+          "sha256": "51524c63ec5c15eba8e21241d658601be34dc321c895969f2a19c392e1888fb7"
+        }
+      ]
+    }
+  ]
+}

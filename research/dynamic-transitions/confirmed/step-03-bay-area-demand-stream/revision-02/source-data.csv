@@ -1,0 +1,23 @@
+window,metric,value
+30 s,policy_C_share,0.7255224076751216
+30 s,policy_R_share,0.20679458535944276
+30 s,policy_F_share,0.06768300696543567
+30 s,operational_switches,10.311827956989248
+30 s,raw_switches,23.182795698924732
+30 s,speed_reversals,35.086021505376344
+30 s,timing_compatible,0.2319915254237288
+30 s,settled,0.019067796610169493
+30 s,mean_entry_delay_s,47.34021523655372
+30 s,maximum_entry_delay_s,125.5
+30 s,minimum_separation_m,1218.0441468068461
+90 s,policy_C_share,0.6645792063390632
+90 s,policy_R_share,0.3271135535816985
+90 s,policy_F_share,0.00830724007923829
+90 s,operational_switches,6.021505376344086
+90 s,raw_switches,11.720430107526882
+90 s,speed_reversals,49.376344086021504
+90 s,timing_compatible,0.483695652173913
+90 s,settled,0.059782608695652176
+90 s,mean_entry_delay_s,28.114882231726405
+90 s,maximum_entry_delay_s,94.5
+90 s,minimum_separation_m,1222.8632125738256

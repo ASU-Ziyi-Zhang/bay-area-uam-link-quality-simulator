@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_singleton_lateral_response",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 1,
+    "policy_s": 5,
+    "decision_s": 20,
+    "horizon_s": 240,
+    "window_s": 30,
+    "cooldown_s": 30,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "minimum_exposure_benefit": 0.02,
+    "lateral_speed_limit_mps": 8,
+    "lateral_accel_limit_mps2": 0.3,
+    "min_maneuver_s": 30,
+    "center_control_step_m": 500,
+    "spatial_sample_m": 50
+  },
+  "candidate_spacing_m": 100,
+  "envelopes_m": [100, 200, 300, 400, 500],
+  "initial_offset_m": 0,
+  "refinements": [
+    {"id": "motion_refinement_500", "envelope_m": 500, "parameters": {"dt_s": 0.25}},
+    {"id": "forecast_refinement_500", "envelope_m": 500, "parameters": {"forecast_dt_s": 0.5}}
+  ],
+  "notes": [
+    "One isolated aircraft per run, constant altitude 300 m. No traffic interaction or capacity calculation.",
+    "Use the existing airport-access proxy route and 12 retained documented BS sites, not measured airborne link performance.",
+    "Initial offset zero for every adaptive envelope; compare against the same zero-offset no-change flight.",
+    "All grid points in the allowed envelope may be selected directly; intermediate positions are traversed continuously and are evaluated by the radio kernel.",
+    "Speed is the physical component along the smooth reference tangent. Total speed increases slightly during lateral motion.",
+    "Centerline is interpolated by a natural cubic at <=500 m control spacing; no path optimization or 8 km radius constraint is imposed.",
+    "Offset-coordinate velocity and acceleration limits are not a full-aircraft turning-performance envelope. Cartesian turning acceleration is reported separately.",
+    "Perfect static radio-map forecast, no future discretionary moves. Original C/R/F spacing-priority heuristic and exposure benefit gate retained.",
+    "Available-history exposure uses a singleton group; C/R/F time shares are not five-aircraft group policy or capacity.",
+    "Every static offset is an independent flight, not simultaneous traffic or a shared-terminal assignment.",
+    "Corridor only. No origin-to-lane connector, takeoff/landing, terrain, bandwidth load, antenna pattern, wind, energy model or emergency avoidance in this stage.",
+    "Radio distance extrapolation beyond 4 km and finite known-site inventory are explicitly reported; no calibrated aviation-safety claim."
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_multi_uam_acc_lane_change",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 1.0,
+    "policy_s": 5.0,
+    "decision_s": 5.0,
+    "horizon_s": 180.0,
+    "window_s": 30.0,
+    "cooldown_s": 60.0,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "minimum_exposure_benefit": 0.02,
+    "lateral_speed_limit_mps": 8.0,
+    "lateral_accel_limit_mps2": 0.3,
+    "vertical_speed_limit_mps": 3.0,
+    "vertical_accel_limit_mps2": 0.2,
+    "min_maneuver_s": 30.0,
+    "center_control_step_m": 500.0,
+    "spatial_sample_m": 50.0,
+    "predictive_enabled": true,
+    "reaction_latency_s": 0.0,
+    "predictive_completion_before_f": false,
+    "predictive_rollout_s": 60.0,
+    "predictive_evaluation_s": 60.0,
+    "policy_cost_r": 1.0,
+    "policy_cost_f": 2.0,
+    "predictive_endpoint_upgrade": true,
+    "neighbors_each_side": 2,
+    "d0_m": 200.0,
+    "tau_c_s": 15.0,
+    "tau_r_s": 30.0,
+    "tau_f_s": 60.0,
+    "buffer_s2_per_m": 0.167,
+    "k_speed_per_s": 0.2,
+    "k_gap_per_s2": 0.005,
+    "k_relative_per_s": 0.4,
+    "acceleration_limit_mps2": 1.5,
+    "deceleration_limit_mps2": 2.0,
+    "horizontal_separation_m": 200.0,
+    "vertical_separation_m": 100.0,
+    "maximum_time_s": 7200.0,
+    "admission_retry_s": 0.5
+  },
+  "traffic": {
+    "flow_coordinates_m": [
+      [-300, 200], [0, 200], [300, 200],
+      [-300, 300], [0, 300], [300, 300],
+      [-300, 400], [0, 400], [300, 400]
+    ],
+    "global_entry_count": 150,
+    "global_headway_s": 32.0,
+    "generation_interval_s": 4800.0,
+    "assignment": "cyclic_one_request_per_global_headway"
+  },
+  "cases": [
+    {"id": "acc_no_change", "transitions": false},
+    {"id": "acc_safe_rolling", "transitions": true}
+  ],
+  "notes": [
+    "TRB-reference total demand is 112.5 UAM/h, giving a deterministic 32 s global headway and 150 requests over the half-open 4800 s generation interval.",
+    "One request is assigned cyclically across nine flows at each release clock; total demand is not multiplied by nine.",
+    "The 3x3 lattice is a new discretization using R0020 lateral coordinates and Step-02 altitude levels, not a TRB-defined nine-flow geometry.",
+    "All R0020 policy, ACC, rolling-decision, continuous-motion, safety and nominal-recovery rules remain frozen.",
+    "Capacity, utilization, radio load and throughput are not estimated."
+  ]
+}

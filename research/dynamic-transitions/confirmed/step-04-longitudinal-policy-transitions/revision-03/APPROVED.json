@@ -1,0 +1,94 @@
+{
+  "status": "updated_per_user_request",
+  "revision": "03",
+  "date": "2026-09-10",
+  "authorization": "User explicitly requested restoring ACC recovery acceleration, rerunning the comparison, regenerating figures and updating Confirmed.",
+  "approval_scope": "Authorized method correction and Confirmed update; not a separate post-run user endorsement of all numerical results.",
+  "run": "R0033",
+  "supersedes": "R0032 controller comparison in the parent folder; original files preserved",
+  "config": "configs/two_uam_longitudinal_recovery.json",
+  "protocol": "two-uam-longitudinal-protocol.md amendments A6-A7",
+  "independent_validation": {
+    "status": "passed",
+    "traces": 72,
+    "failed_checks": 0,
+    "refinement_comparisons": 48,
+    "refinement_failed": 0,
+    "unit_tests_passed": 255
+  },
+  "headline_findings": [
+    "Both methods reach all six nominal policy equilibria within the same tolerances.",
+    "The corrected ACC accelerates during established-pair closing and does not pursue an unbound sufficient-gap leader.",
+    "With unchanged gains, AKS settles sooner; this is not a universal controller ranking.",
+    "R0032 permanent-opening-shortfall interpretation is withdrawn."
+  ],
+  "excluded": [
+    "calibrated flight capability",
+    "complete radio fallback traversal",
+    "automatic geographic relationship management",
+    "multi-aircraft/string stability",
+    "capacity gain",
+    "universal AKS correctness"
+  ],
+  "sources": [
+    {
+      "path": "runs/R0033/manifest.json",
+      "sha256": "d432202fc0da4378f0241e2d6e1368e133beb162efeed2b274c7ebf2cb633972"
+    },
+    {
+      "path": "validation-R0033.json",
+      "sha256": "77e8811af58d92e78ac542eda516323f718f7ab6f4c66a947b3dd7ac6dc43e7c"
+    },
+    {
+      "path": "reports/R0033.md",
+      "sha256": "5a339cf435bd22c4419f1a49bf071a21fea4374e89f0d830dcecebb9fa3230f7"
+    },
+    {
+      "path": "figures/R0033/revision-02/manifest.json",
+      "sha256": "14182a63abf123b8561857c50a636132f942083c1aa31bf1f162f986d3b2a285"
+    }
+  ],
+  "confirmed_files": [
+    {
+      "path": "README.md",
+      "sha256": "5f2e4978a7ebb7493775b2be526a8deb2fab9a8065c1eecc93e6ef3dac758596"
+    },
+    {
+      "path": "figures/01-policy-degradation-C-to-F.png",
+      "sha256": "2e1e5f6b8a9f7c5575b156ba8f55cda4312067db91061b3f1557b91005240c50"
+    },
+    {
+      "path": "figures/01-policy-degradation-C-to-F.svg",
+      "sha256": "7e5e172af5cc9bbd8a7de48df13275fa456604ff1a614dd7326fc1519a62a1f8"
+    },
+    {
+      "path": "figures/02-policy-upgrade-F-to-C.png",
+      "sha256": "f4c99bbbcc48e5eae4b9f6dc000be7e959f9cb46222c3519e611177f8f1922ed"
+    },
+    {
+      "path": "figures/02-policy-upgrade-F-to-C.svg",
+      "sha256": "18b82ee8792d1129a302a095f553434ae71616b16db851fc448fe2ecdf37f891"
+    },
+    {
+      "path": "results-table.csv",
+      "sha256": "346fc9cbbf4e81ca7db9fa42f0e62bfc44a3527dcef53b0523a4428aa12c875f"
+    },
+    {
+      "path": "results-table.md",
+      "sha256": "0d037ef7522f769ed0c5e94375a30da81a20b0f826d800281f4d5cbd17b8937a"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "77e8811af58d92e78ac542eda516323f718f7ab6f4c66a947b3dd7ac6dc43e7c"
+    }
+  ],
+  "figure_revision": "R0033/revision-03",
+  "revision_history": [
+    {
+      "revision": "R0033/revision-03",
+      "date": "2026-09-10",
+      "change": "Presentation only; no run, validation or number changed. Restored the project figure template and reordered the panels to acceleration, speed, gap so each panel is the integral of the one above it. Replaced the full T+1500 s x window, which compressed every curve into the left tenth of the frame, with a window set from the dynamics plus an inset carrying the whole observation and both settling markers.",
+      "requested_by": "user"
+    }
+  ]
+}

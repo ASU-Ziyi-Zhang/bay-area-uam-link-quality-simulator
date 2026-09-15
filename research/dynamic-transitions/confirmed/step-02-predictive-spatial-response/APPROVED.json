@@ -1,0 +1,72 @@
+{
+  "status": "approved_final",
+  "approval_date": "2026-08-31",
+  "approved_by": "user",
+  "approval_scope": "One corridor-and-candidate-plane presentation figure plus a tabular no-change versus two-maneuver outcome summary; the second outcome chart is excluded",
+  "run": "R0016",
+  "figure_revision": "toyota-briefing/revision-04",
+  "cases": [
+    "fixed_reference",
+    "rolling_60plus60_joint"
+  ],
+  "accepted_maneuvers": 2,
+  "offset_height_sequence_m": [
+    [
+      0,
+      300
+    ],
+    [
+      -100,
+      300
+    ],
+    [
+      200,
+      300
+    ]
+  ],
+  "fallback_time_s": {
+    "fixed_reference": 280,
+    "rolling_60plus60_joint": 230,
+    "absolute_reduction": 50,
+    "relative_reduction": 0.17857142857142858
+  },
+  "fallback_share": {
+    "fixed_reference": 0.2828928522432824,
+    "rolling_60plus60_joint": 0.23244087551772963,
+    "percentage_point_reduction": 0.05045197672555276
+  },
+  "preservation_rule": "Do not overwrite this confirmed item. Any later figure, table, method, or interpretation change must use a new confirmed revision or item.",
+  "sources": [
+    {
+      "path": "figures/R0016/toyota-briefing/revision-04/manifest.json",
+      "sha256": "99f7ca447922bf2c57133d7b1673c80df1264d3ae9dac0b18f9c7a6ad47c15e4"
+    },
+    {
+      "path": "validation-R0016.json",
+      "sha256": "27f479a980e283b6de21b33304e13d01c225285f0ac2be7490d301b2ac33f0d5"
+    }
+  ],
+  "confirmed_files": [
+    {
+      "path": "figures/01-corridor-and-candidate-plane.png",
+      "sha256": "a71fa813de7136e9b85a6dd1f941b5e0568f1f7413d73a3022a5c5d20e67928a"
+    },
+    {
+      "path": "figures/01-corridor-and-candidate-plane.svg",
+      "sha256": "48712fc21da64565e9ea8471ed547c9d7f203713eacac598d995b3379d01df3c"
+    },
+    {
+      "path": "summary-table.md",
+      "sha256": "bac340b4f07e44b104c61dce5382dfce19a6aadd7d66fcbe9fe62b3e19d18d54"
+    },
+    {
+      "path": "summary-table.csv",
+      "sha256": "b7f4bf8cd38e0152ccd4f7a16d393fc2ec56fbb83bcede5307d169676f3d6b02"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "4b56644f6c8eb9ca03a40989ae337f6c31a3e7445385219c35fe0834113d8ba4"
+    }
+  ],
+  "release_note": "v0.2.0: absolute run path in validation.json made repository-relative; its hash updated, content otherwise unchanged."
+}

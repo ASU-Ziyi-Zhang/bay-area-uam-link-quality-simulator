@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_motion_envelope_single_uam",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "protocol": "../motion-envelope-protocol.md",
+  "status": "authorised_2026-09-09",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 5.0,
+    "policy_s": 5.0,
+    "decision_s": 5.0,
+    "horizon_s": 180.0,
+    "window_s": 30.0,
+    "cooldown_s": 5.0,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.1,
+    "minimum_exposure_benefit": 0.02,
+    "lateral_speed_limit_mps": 8.0,
+    "lateral_accel_limit_mps2": 0.3,
+    "vertical_speed_limit_mps": 3.0,
+    "vertical_accel_limit_mps2": 0.2,
+    "min_maneuver_s": 30.0,
+    "center_control_step_m": 500.0,
+    "spatial_sample_m": 50.0,
+    "predictive_enabled": true,
+    "reaction_latency_s": 0.0,
+    "predictive_completion_before_f": false,
+    "predictive_rollout_s": 60.0,
+    "predictive_evaluation_s": 60.0,
+    "policy_cost_r": 1.0,
+    "policy_cost_f": 2.0,
+    "predictive_endpoint_upgrade": true
+  },
+  "planning": {
+    "minimum_radius_m": 976.0,
+    "candidate_spacing_m": 100.0,
+    "duration_search_step_s": 20.0
+  },
+  "envelope_defaults": {
+    "longitudinal_accel_max_mps2": 1.5,
+    "longitudinal_decel_max_mps2": 2.0,
+    "route_normal_accel_max_mps2": 4.575,
+    "vertical_accel_max_mps2": 0.2,
+    "coupling_mode": "maneuver_only",
+    "lateral_jerk_max_mps3": null,
+    "lateral_speed_max_mps": null,
+    "min_maneuver_s": null,
+    "duration_refinement_tolerance_s": 0.05,
+    "envelope_sample_step_s": 1.0,
+    "envelope_min_samples": 51
+  },
+  "offsets_m": [
+    -900,
+    -800,
+    -700,
+    -600,
+    -500,
+    -400,
+    -300,
+    -200,
+    -100,
+    0,
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    700,
+    800,
+    900
+  ],
+  "heights_m": [
+    300
+  ],
+  "cases": [
+    {
+      "id": "C0_archived",
+      "mode": "lateral",
+      "envelope": null,
+      "purpose": "reproduction gate against R0017; must match record for record",
+      "parameters": {
+        "lateral_accel_limit_mps2": 0.3
+      }
+    },
+    {
+      "id": "C1_mirror",
+      "mode": "lateral",
+      "envelope": {
+        "lateral_accel_max_mps2": 0.3,
+        "coupling_mode": "maneuver_only"
+      },
+      "purpose": "does the new code path reproduce C0 when it mirrors the config limit",
+      "parameters": {
+        "lateral_accel_limit_mps2": 0.3
+      }
+    },
+    {
+      "id": "C2_01g",
+      "mode": "lateral",
+      "envelope": {
+        "lateral_accel_max_mps2": 0.981,
+        "coupling_mode": "maneuver_only"
+      },
+      "purpose": "advised nominal case",
+      "parameters": {
+        "lateral_accel_limit_mps2": 0.981
+      }
+    },
+    {
+      "id": "C3_02g",
+      "mode": "lateral",
+      "envelope": {
+        "lateral_accel_max_mps2": 1.962,
+        "coupling_mode": "maneuver_only"
+      },
+      "purpose": "advised higher case",
+      "parameters": {
+        "lateral_accel_limit_mps2": 1.962
+      }
+    },
+    {
+      "id": "C4_01g_total",
+      "mode": "lateral",
+      "envelope": {
+        "lateral_accel_max_mps2": 0.981,
+        "coupling_mode": "total"
+      },
+      "purpose": "sensitivity on whether 0.1 g binds the total normal acceleration",
+      "parameters": {
+        "lateral_accel_limit_mps2": 0.981
+      }
+    },
+    {
+      "id": "C5_01g_jerk",
+      "mode": "lateral",
+      "envelope": {
+        "lateral_accel_max_mps2": 0.981,
+        "coupling_mode": "maneuver_only",
+        "lateral_jerk_max_mps3": 0.5
+      },
+      "purpose": "jerk bound at the EN 13803 line value",
+      "parameters": {
+        "lateral_accel_limit_mps2": 0.981
+      }
+    }
+  ],
+  "provenance": {
+    "lateral_accel_max_mps2": "advised 2026-09-01: 0.1 g nominal, 0.2 g higher case; raised while comparing lane-change path families, so read as a limit on the maneuver component",
+    "route_normal_accel_max_mps2": "placeholder: 9.81*tan(25 deg); normal-operations bank limit for transport aircraft, not an eVTOL figure",
+    "lateral_jerk_max_mps3": "EN 13803 line design value 0.5 m/s^3 (0.35 on high-speed lines); an automated-vehicle study reports a 50% lateral-jerk comfort threshold of 0.6 m/s^3",
+    "lateral_speed_limit_mps": "unsourced: workspace review lists 8 m/s as an old exploratory component value; held fixed in every case",
+    "min_maneuver_s": "unsourced: numerical floor rather than a physical limit; held fixed in every case",
+    "longitudinal_accel_max_mps2": "placeholder: simulator default; never exercised in Stage 01 because a_lon = 0",
+    "longitudinal_decel_max_mps2": "placeholder: simulator default; never exercised in Stage 01 because a_lon = 0"
+  },
+  "acceptance": [
+    "C0 must reproduce R0017 record for record: two lateral moves, fallback time 280 s to 230 s, identical accepted decision times and targets.",
+    "C1 must reproduce C0 in completed moves, policy time shares and accepted targets; maneuver durations may differ by at most 0.05 s.",
+    "Every limit that governs executed motion is declared once: each case's parameters block carries the same lateral acceleration limit as its envelope, so an independent verifier reading the archive cannot find two contradictory values for one quantity.",
+    "Every case reports the maximum route bank angle; exceeding the declared allowance must be flagged.",
+    "Every envelope rejection records which condition rejected it.",
+    "If C0 or C1 fails, R0022 is void and the number is retired.",
+    "The run must pass scripts/verify_spatial_study.py BEFORE it is registered. Registration follows validation, not the run.",
+    "The corrected run must reproduce the withdrawn R0022 numbers exactly. The config fix changes only a declaration, not a code path, so any numeric difference indicates a misunderstanding of which limit governs and must stop the run."
+  ],
+  "notes": [
+    "Step 01 only: one aircraft, fixed 300 m altitude, lateral actions. No traffic, ACC, separation screening or capacity.",
+    "a_lon = 0 throughout, so the longitudinal half of the coupled envelope is never exercised; its first real test needs a scenario with ACC.",
+    "Route turning and maneuver acceleration are limited separately: the route term is a steady coordinated turn checked against a bank-angle allowance, the maneuver term is what 0.1 g bounds.",
+    "The coupling ellipse is an assumption; the automotive friction circle comes from tyre-road contact and does not establish a shared eVTOL budget.",
+    "The envelope check samples the maneuver at a fixed time step and is not a continuous-time proof.",
+    "The duration search returns a feasible duration, not a proven minimum; feasibility is not monotone in duration.",
+    "Bank angle is a reporting convention derived from acceleration, not a simulated attitude state."
+  ],
+  "supersedes": {
+    "run": "R0022",
+    "reason": "config declared lateral_accel_limit_mps2 twice with contradictory values; verify_spatial_study.py raised 'component limits exceeded'"
+  }
+}
