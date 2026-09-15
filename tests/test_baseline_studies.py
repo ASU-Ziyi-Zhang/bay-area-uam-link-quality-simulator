@@ -11,6 +11,8 @@ from uam_simulator.baseline_studies import layout_streams, run_baseline_studies
 from uam_simulator.path_design import SmoothPath, offset_path, path_constraints, search_offsets
 
 ROOT = Path(__file__).resolve().parents[1]
+# 95%-reliable all-active planning rate of the frozen 0.1.0 sf_sj_full bundle (scenario settings, 1 s clock, k = 1)
+FROZEN_SF_SJ_ALL_ACTIVE_Q = 82.41129339946586
 
 
 @pytest.mark.parametrize("name,definition,dt", [
@@ -18,14 +20,21 @@ ROOT = Path(__file__).resolve().parents[1]
     ("airport_to_airport", "full_group", 5.0),
     ("sf_sj_full", "full_group", 5.0),
 ])
-def test_single_stream_exactly_reproduces_committed_baselines(name, definition, dt):
+def test_single_stream_exactly_reproduces_committed_baselines(name, definition, dt, tmp_path):
     text = (ROOT / f"dashboard/data/{name}_traffic.js").read_text()
     bundle = json.loads(text.removeprefix("window.UAM_TRAFFIC_DATA = ").strip().removesuffix(";"))
     scenario = load_scenario(ROOT / f"scenarios/{name}/scenario.json")
     result = evaluate_stream(scenario, FixedStream("lane_0", "L300", 0, 300, 112.5),
                              dt_s=dt, policy_definition=definition)
     if definition == "all_active":
-        reference = bundle["summary"]
+        # The published sf_sj_full bundle now uses the calibrated stream settings. This case keeps
+        # the frozen all-active reference of the 0.1.0 bundle (scenario settings, 1 s clock, k = 1),
+        # which evaluate_stream reproduces exactly. The current group runner at those settings
+        # differs by 47 of 178652 observations; that pre-existing difference is tracked separately.
+        reference = {"policy": {"shares": {"C": 0.4581476837650852, "R": 0.3290363388039317,
+                                           "F": 0.21281597743098313},
+                                "observation_count": 178652},
+                     "capacity": {"q_mix_rho_uam_h": FROZEN_SF_SJ_ALL_ACTIVE_Q}}
         assert result.summary["shares"] == reference["policy"]["shares"]
         assert result.summary["observation_count"] == reference["policy"]["observation_count"]
         q = reference["capacity"]["q_mix_rho_uam_h"]

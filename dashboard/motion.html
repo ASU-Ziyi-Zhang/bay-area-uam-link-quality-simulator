@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Multi-aircraft UAM motion control: longitudinal spacing and lane changes within a 3 × 3 lateral/altitude grid" />
+    <title>Bay Area UAM Motion Control</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet"
+          href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css"
+          integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
+          crossorigin="anonymous" />
+    <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
+    <link rel="stylesheet" href="motion.css?v=20260914-motion-v2" />
+  </head>
+  <body>
+    <div class="traffic-dashboard motion-dashboard">
+      <header class="traffic-header">
+        <div>
+          <span class="eyebrow">MOTION CONTROL · SINGLE ENTRY STREAM · 3 × 3 LATERAL / ALTITUDE GRID</span>
+          <h1 id="motion-title">Multi-UAM Motion Control</h1>
+          <p id="motion-subtitle">Link quality → group policy → spacing target → longitudinal control and lane changes → planning capacity</p>
+        </div>
+        <div class="traffic-header__controls">
+          <label for="case-select"><span>Case</span>
+            <select id="case-select">
+              <option value="fixed_centerline">Stay at centre</option>
+              <option value="spatial_grid">Move within 3 × 3</option>
+            </select>
+          </label>
+          <nav class="mode-nav" aria-label="Simulator mode">
+            <a href="index.html?scenario=airport_to_airport">Single UAM</a>
+            <a href="traffic.html?scenario=airport_to_airport">Multi-UAM policy</a>
+            <a class="mode-nav__active" aria-current="page" href="motion.html">Motion control</a>
+          </nav>
+        </div>
+      </header>
+
+      <section class="motion-settings" aria-labelledby="settings-heading">
+        <div class="experiment-controls__heading">
+          <div><span class="eyebrow">CALIBRATED SETTINGS</span><h2 id="settings-heading">Policy, spacing and motion limits</h2></div>
+          <span id="run-note" role="status">Loading run…</span>
+        </div>
+        <dl id="settings-list" class="motion-settings__list"></dl>
+      </section>
+
+      <main class="traffic-main">
+        <div class="traffic-visuals">
+          <section class="traffic-map-card" aria-labelledby="map-heading">
+            <div class="card-heading">
+              <div><span class="eyebrow">LIVE TRAFFIC</span><h2 id="map-heading">Corridor traffic</h2></div>
+              <div class="policy-legend" aria-label="Aircraft symbols">
+                <span><i class="policy-dot policy-dot--c"></i>Coordinated</span>
+                <span><i class="policy-dot policy-dot--r"></i>Reactive</span>
+                <span><i class="policy-dot policy-dot--f"></i>Fallback</span>
+                <span><i class="motion-legend-ac">3</i>altitude (×100 m)</span>
+                <span><i class="motion-legend-ac motion-legend-ac--moving"></i>changing lane</span>
+              </div>
+            </div>
+            <div id="motion-map" role="application" aria-label="Multi-aircraft corridor map with lateral lanes"></div>
+            <div class="playback" aria-label="Simulation playback controls">
+              <button id="reset-button" type="button" aria-label="Reset simulation" disabled>↺</button>
+              <button id="play-button" class="playback__primary" type="button" aria-label="Loading simulation data" disabled>…</button>
+              <strong id="current-time">00:00</strong>
+              <label class="sr-only" for="time-slider">Simulation timeline</label>
+              <input id="time-slider" type="range" min="0" max="1" value="0" step="1" disabled />
+              <span id="total-time" role="status" aria-live="polite">Loading motion data…</span>
+              <label class="sr-only" for="playback-speed">Playback speed</label>
+              <select id="playback-speed" disabled><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option><option value="100">100×</option></select>
+            </div>
+          </section>
+
+          <section class="traffic-three-card" aria-labelledby="three-heading">
+            <div class="card-heading traffic-three-heading">
+              <div><span class="eyebrow">GEOREFERENCED 3D VIEW</span><h2 id="three-heading">Aircraft at their flown altitude</h2></div>
+              <div class="traffic-three-camera">
+                <span id="three-camera-state">315° bearing · fixed pitch</span>
+                <div class="traffic-three-camera__actions">
+                  <button id="three-free-view" type="button">Free view</button>
+                  <button id="three-recenter" type="button">Follow selected</button>
+                </div>
+              </div>
+            </div>
+            <div class="traffic-3d-stage">
+              <div id="motion-3d" role="application" aria-label="Three-dimensional corridor with nine flight lanes"></div>
+              <div id="three-camera-note" class="traffic-three-note">Camera follows the selected aircraft.</div>
+            </div>
+            <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; the map, cross-section and charts still work.</div>
+            <div class="traffic-three-legend">
+              <span><i class="traffic-three-line motion-lane--200"></i>200 m lanes</span>
+              <span><i class="traffic-three-line motion-lane--300"></i>300 m lanes</span>
+              <span><i class="traffic-three-line motion-lane--400"></i>400 m lanes</span>
+              <span><i class="traffic-three-line traffic-three-line--radio"></i>Selected serving link</span>
+            </div>
+          </section>
+
+          <section class="capacity-card" aria-labelledby="capacity-heading">
+            <div class="card-heading"><div><span class="eyebrow">CAPACITY TRACE</span><h2 id="capacity-heading">Planning rate: stay against move</h2></div><span id="current-counts">—</span></div>
+            <canvas id="capacity-chart" aria-label="Planning rate over time for both cases"></canvas>
+          </section>
+        </div>
+
+        <aside class="traffic-sidebar" aria-label="Motion diagnostics">
+          <section class="metric-grid">
+            <article><span>Aircraft in corridor</span><strong id="active-count">—</strong><small id="entry-note">one request every 32 s</small></article>
+            <article><span>Current planning rate</span><strong id="current-capacity">—</strong><small>UAM/h · policy-weighted spacing</small></article>
+            <article><span>Compared window</span><strong id="window-capacity">—</strong><small id="window-caption">mean / 95% reliable, UAM/h</small></article>
+            <article><span>Lane changes</span><strong id="lane-changes">—</strong><small id="lane-change-caption">started so far / total</small></article>
+          </section>
+
+          <section class="policy-card" aria-labelledby="grid-heading">
+            <div class="card-heading"><div><span class="eyebrow">CROSS-SECTION</span><h2 id="grid-heading">Where the aircraft fly</h2></div><span id="grid-note">—</span></div>
+            <canvas id="grid-chart" aria-label="Aircraft count in each lateral and altitude cell"></canvas>
+            <p>Looking along the corridor: count of aircraft in each cell, coloured by their policy. The ring marks the selected aircraft at its flown offset and altitude.</p>
+          </section>
+
+          <section class="selected-card" aria-labelledby="selected-heading">
+            <div class="card-heading"><div><span class="eyebrow">SELECTED AIRCRAFT</span><h2 id="selected-heading">Aircraft detail</h2></div><strong id="selected-uam">—</strong></div>
+            <dl>
+              <div><dt>Group policy</dt><dd id="selected-policy">—</dd></div>
+              <div><dt>Position in grid</dt><dd id="selected-cell">—</dd></div>
+              <div><dt>Speed</dt><dd id="selected-speed">—</dd></div>
+              <div><dt>Controller</dt><dd id="selected-controller">—</dd></div>
+              <div><dt>Gap to leader</dt><dd id="selected-gap">—</dd></div>
+              <div><dt>Spacing target</dt><dd id="selected-target">—</dd></div>
+              <div><dt>SINR</dt><dd id="selected-sinr">—</dd></div>
+              <div><dt>Progress</dt><dd id="selected-progress">—</dd></div>
+              <div class="selected-wide"><dt>Lane change</dt><dd id="selected-move">—</dd></div>
+            </dl>
+          </section>
+
+          <section class="link-card" aria-labelledby="aircraft-heading">
+            <div class="card-heading"><div><span class="eyebrow">LONGITUDINAL CONTROL</span><h2 id="aircraft-heading">Selected aircraft: speed and spacing</h2></div><span id="aircraft-note">—</span></div>
+            <canvas id="aircraft-chart" aria-label="Selected aircraft speed, gap and spacing target over time"></canvas>
+          </section>
+
+          <section class="policy-card" aria-labelledby="compare-heading">
+            <div class="card-heading"><div><span class="eyebrow">RESULT</span><h2 id="compare-heading">Stay against move</h2></div><span id="compare-window">—</span></div>
+            <div class="motion-table-wrap"><table id="compare-table" class="motion-table"></table></div>
+            <p id="compare-note">Same demand, calibrated policy and controller in both cases. Grid cells are alternative positions for one stream, not extra lanes.</p>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="traffic-footer">
+        <span id="footer-run">Precomputed from a verified run</span>
+        <span>AKS/ACC longitudinal control · quintic lane changes to adjacent cells · NMAC counted every step</span>
+      </footer>
+    </div>
+    <div id="error-panel" class="error-panel" hidden role="alert"></div>
+
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="traffic_engine.js?v=20260914-calibrated-v2"></script>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"
+            integrity="sha384-MtxSMxgh0b7MGLXcS6y6IIGswlJjxnL5AVLwKXJOGuglBgO67kbbcChbAF630juz"
+            crossorigin="anonymous"></script>
+    <script>
+      (() => {
+        const version = "20260914-motion-v2";
+        const dataScript = document.createElement("script");
+        dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
+        dataScript.addEventListener("load", () => {
+          const appScript = document.createElement("script");
+          appScript.src = `motion_app.js?v=${version}`;
+          document.body.appendChild(appScript);
+        });
+        dataScript.addEventListener("error", () => {
+          const panel = document.getElementById("error-panel");
+          panel.hidden = false;
+          panel.textContent = "Motion data could not be loaded. Confirm that the dashboard server is running, then refresh the page.";
+          document.getElementById("total-time").textContent = "Motion data unavailable";
+        });
+        document.body.appendChild(dataScript);
+      })();
+    </script>
+  </body>
+</html>

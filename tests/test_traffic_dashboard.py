@@ -61,7 +61,8 @@ def test_traffic_page_declares_policy_colors_and_mode_links():
     assert "applyFollowCamera(selected)" in app
     assert '"three-camera-state", "three-camera-note"' in app
     assert "Loading traffic data" in html
-    assert "20260911-calibrated-v1" in html
+    assert "20260914-calibrated-v2" in html
+    assert 'href="motion.html"' in html and 'href="motion.html"' in single_html
     assert "traffic_engine.js" in html
     for control_id in (
         "input-altitude", "input-offset", "input-speed", "input-departure",

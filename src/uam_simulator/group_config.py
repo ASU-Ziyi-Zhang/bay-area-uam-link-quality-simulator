@@ -24,6 +24,11 @@ class GroupSimulatorConfig:
     lane_id: str
     duration_s: float | None
     persistence_k: int
+    # Optional stream settings; when omitted the scenario pack values are used.
+    # The TRB reference regression always keeps the scenario pack values.
+    window_s: float | None = None
+    sinr_threshold_db: float | None = None
+    standstill_distance_m: float | None = None
 
     @property
     def entry_interval_s(self) -> float:
@@ -46,6 +51,13 @@ def load_group_simulator_config(path: str | Path) -> GroupSimulatorConfig:
     persistence_k = int(payload.get("policy", {}).get("persistence_k", 1))
     if persistence_k < 1:
         raise ValueError("persistence_k must be a positive integer")
+    window = payload.get("policy", {}).get("window_s")
+    threshold = payload.get("link_quality", {}).get("sinr_threshold_db")
+    standstill = payload.get("capacity", {}).get("standstill_distance_m")
+    if window is not None and float(window) <= 0.0:
+        raise ValueError("policy window_s must be positive")
+    if standstill is not None and float(standstill) < 0.0:
+        raise ValueError("standstill_distance_m cannot be negative")
     scenario_path = (path.parent / payload["scenario"]).resolve()
     if not scenario_path.exists():
         raise FileNotFoundError(f"scenario does not exist: {scenario_path}")
@@ -66,4 +78,7 @@ def load_group_simulator_config(path: str | Path) -> GroupSimulatorConfig:
         lane_id=str(trajectory.get("lane_id", "lane_0")),
         duration_s=None if duration is None else float(duration),
         persistence_k=persistence_k,
+        window_s=None if window is None else float(window),
+        sinr_threshold_db=None if threshold is None else float(threshold),
+        standstill_distance_m=None if standstill is None else float(standstill),
     )

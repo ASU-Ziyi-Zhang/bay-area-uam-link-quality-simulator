@@ -1,0 +1,34 @@
+.motion-settings { margin: 14px 14px 0; padding: 14px 16px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 5px 18px rgb(23 54 74 / 5%); }
+.motion-settings__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 0; }
+.motion-settings__list div { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+.motion-settings__list dt { color: var(--muted); font-size: .64rem; font-weight: 750; text-transform: uppercase; letter-spacing: .03em; }
+.motion-settings__list dd { margin: 3px 0 0; font-size: .82rem; font-weight: 750; }
+
+#motion-map { height: min(56vh, 600px); min-height: 420px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+#motion-3d { height: 420px; border-top: 1px solid var(--line); }
+#capacity-chart { height: 190px; }
+#grid-chart { display: block; width: 100%; height: 240px; border-top: 1px solid var(--line); }
+#aircraft-chart { display: block; width: 100%; height: 230px; }
+
+.motion-ac { width: 20px; height: 20px; display: grid; place-items: center; border: 2px solid white; border-radius: 50%; color: white; font-size: 10px; font-weight: 800; box-shadow: 0 2px 5px rgb(0 0 0 / 30%); }
+.motion-ac--moving { box-shadow: 0 0 0 3px #17364a, 0 2px 5px rgb(0 0 0 / 30%); }
+.motion-ac--selected { width: 28px; height: 28px; font-size: 12px; outline: 3px solid rgb(23 54 74 / 40%); }
+.motion-legend-ac { display: inline-grid; place-items: center; width: 15px; height: 15px; border: 2px solid white; border-radius: 50%; background: var(--muted); color: white; font-size: 8px; font-style: normal; font-weight: 800; box-shadow: 0 0 0 1px rgb(23 54 74 / 20%); }
+.motion-legend-ac--moving { background: white; box-shadow: 0 0 0 2px var(--ink); }
+
+.motion-lane--200 { border-color: #8fb9d6; }
+.motion-lane--300 { border-color: var(--teal); }
+.motion-lane--400 { border-color: #17364a; }
+
+.motion-table-wrap { overflow-x: auto; padding: 0 10px; }
+.motion-table { width: 100%; border-collapse: collapse; font-size: .68rem; table-layout: fixed; }
+.motion-table th, .motion-table td { padding: 5px 4px; border-bottom: 1px solid var(--line); text-align: right; overflow-wrap: anywhere; }
+.motion-table th:first-child, .motion-table td:first-child { width: 38%; }
+.motion-table th:first-child, .motion-table td:first-child { text-align: left; color: var(--muted); font-weight: 650; }
+.motion-table thead th { color: var(--ink); font-weight: 800; }
+.motion-table .motion-table__current { background: rgb(22 140 133 / 9%); color: var(--ink); font-weight: 800; }
+
+@media (max-width: 620px) {
+  #motion-map { min-height: 380px; }
+  .motion-settings { margin: 8px 8px 0; padding: 12px; }
+}

@@ -22,6 +22,7 @@ A hosted build is published from `dashboard/` on every push to `main`:
 
 - [Single-UAM link-quality dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/)
 - [Multi-UAM policy dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/traffic.html?scenario=airport_to_airport)
+- [Motion-control dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/motion.html): one entry stream with longitudinal spacing control, staying at the centre or changing lane within a 3 × 3 lateral/altitude grid
 
 The header scenario selector switches between:
 
@@ -134,12 +135,33 @@ Open
 Green, yellow, and red aircraft denote coordinated, reactive, and fallback
 group policy. Every active aircraft is classified; startup and corridor-edge
 groups use the available local neighbors up to a maximum of five. The calibrated
-default uses a -2.0 dB SINR threshold, 2 s radio sampling, 30 s exposure window,
-5 s policy updates, 5%/10% C/R exposure tolerances, and persistence k=3. See
+default uses a -2.0 dB SINR threshold, 2 s radio sampling, 90 s exposure window,
+5 s policy updates, 5%/10% C/R exposure tolerances, persistence k=3 and a
+152.4 m spacing constant (the Bay Area calibration). See
 [the simulator definition](docs/multi_aircraft_policy.md) before interpreting
 the fractions or capacity. Radio observations are sampled every 2 s and policy
 snapshots are updated every 5 s; the accepted five-second TRB baseline remains
 a separately labeled regression reference.
+
+## Run the motion-control dashboard
+
+The page replays both cases of the corridor experiment from a verified run
+archive. To rebuild its data from a run of
+`research/dynamic-transitions/configs/bay_area_single_stream_capacity_3x3_neighbourhood.json`:
+
+```powershell
+python scripts\build_motion_dashboard.py `
+  --run research\dynamic-transitions\runs\<ID> `
+  --scenario scenarios\airport_to_airport\scenario.json `
+  --output dashboard\data\airport_to_airport_motion.js
+python scripts\serve_dashboard.py
+```
+
+Open [http://127.0.0.1:8765/motion.html](http://127.0.0.1:8765/motion.html).
+Switch between **Stay at centre** and **Move within 3 × 3**; select an aircraft to
+follow its policy, controller (cruise, AKS reference tracking or ACC feedback),
+gap against its spacing target, lane change and serving link. The cross-section
+shows how many aircraft fly in each lateral/altitude cell.
 
 ## Motion control and corridor experiments
 

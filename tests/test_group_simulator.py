@@ -47,9 +47,16 @@ def test_real_airport_group_run_emits_policy_shares_and_capacity(tmp_path):
     assert summary["clock"]["dt_control_s"] == 5.0
     assert summary["policy"]["persistence_k"] == 3
     assert summary["policy"]["minimum_confirmation_delay_s"] == 10.0
-    assert np.isclose(summary["policy"]["shares"]["C"], 0.6876659112981548)
-    assert np.isclose(summary["policy"]["shares"]["R"], 0.2840401424409194)
-    assert np.isclose(summary["policy"]["shares"]["F"], 0.028293946260925865)
+    # Bay Area calibrated stream settings (docs/bay_area_calibration.md)
+    assert summary["policy"]["window_s"] == 90.0
+    assert summary["policy"]["sinr_threshold_db"] == -2.0
+    assert summary["stream_model"]["capacity"]["standstill_distance_m"] == 152.4
+    assert np.isclose(summary["policy"]["shares"]["C"], 0.6651343476853351)
+    assert np.isclose(summary["policy"]["shares"]["R"], 0.31725477500809324)
+    assert np.isclose(summary["policy"]["shares"]["F"], 0.017610877306571706)
+    # the TRB reference regression keeps the scenario pack settings
+    assert summary["trb_reference_regression"]["window_s"] == 30.0
+    assert summary["trb_reference_regression"]["capacity"]["standstill_distance_m"] == 200.0
     assert summary["trb_reference_regression"]["sampling_interval_s"] == 5.0
     assert (tmp_path / "run" / "entrants.csv").exists()
     assert (tmp_path / "run" / "group_policy_trace.csv").exists()

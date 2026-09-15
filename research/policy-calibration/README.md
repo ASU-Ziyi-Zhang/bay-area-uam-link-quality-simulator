@@ -39,9 +39,12 @@ sweep that fixed 90 s is in
 | `results/iid_noise_seed_summary.csv` | measurement-error stress test |
 | `results/resolved_config.json` | resolved screening configuration |
 | `figures/` | overview, integer budget, noise stress and policy timelines (`captions.md`) |
-| `deliverables/TEMA/report.md` | technical note with the staged analysis and figures |
+| `run.py`, `plot.py` | screening run and figures |
+| `deliverables/TEMA/report.md`, `plot_report.py` | technical note with the staged analysis and figures |
 
-The screening results were produced with the companion C/R/F classifier package
-of the TRB study, which is not part of this repository; the tables and figures
-are kept as evidence. The closed-loop studies that use the selected settings run
-entirely from this repository.
+Reproduce from the repository root (uses `src/capacity_policy`):
+
+```sh
+python research/policy-calibration/run.py --output research/policy-calibration/results-new
+python research/policy-calibration/plot.py
+```

@@ -36,8 +36,23 @@ unchanged.
 - Tests for all new modules (337 tests pass; 7 skip when local raw run archives
   are absent).
 
+- **Motion-control dashboard** (`dashboard/motion.html`, `motion_app.js`,
+  `motion.css`, built by `scripts/build_motion_dashboard.py` from verified run
+  R0062): stay at the centre against moving within the 3 × 3 grid, with map, 3D
+  view at flown altitude, cross-section of cell occupancy, per-aircraft speed,
+  gap and spacing target, controller mode, lane-change progress, planning-rate
+  trace and the stay/move comparison.
+
 ### Changed
 
+- **Multi-UAM policy dashboard uses the calibrated settings**: SINR threshold
+  −2.0 dB, 2 s sampling, 5 s updates, 90 s window, k = 3 and d0 = 152.4 m, for
+  both scenario packs. `group_simulator.json` gained optional `policy.window_s`,
+  `link_quality.sinr_threshold_db` and `capacity.standstill_distance_m`; the
+  `trb_reference_regression` block keeps the scenario pack settings, so the TRB
+  reproduction (sf_sj_full C/R/F 36.57/35.82/27.61%, Q0.95 72.47 UAM/h) is
+  unchanged. Airport corridor now C/R/F 66.5/31.7/1.8%, Q0.95 108.9 UAM/h.
+- Navigation links between the three dashboard pages.
 - `scripts/verify_bay_area_single_stream_capacity.py` checks the cases a
   configuration declares, so single-case reference archives can be verified.
   Checks and thresholds are unchanged.
@@ -45,6 +60,4 @@ unchanged.
 
 ### Not included
 
-Raw run archives, working reports and superseded one-off briefing scripts. The
-open-loop calibration tables were produced with the companion TRB classifier
-package, which is not part of this repository.
+Raw run archives, working reports and superseded one-off briefing scripts.
