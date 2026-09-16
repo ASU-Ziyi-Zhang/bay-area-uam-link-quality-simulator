@@ -1,0 +1,26 @@
+{
+  "status": "approved_final",
+  "approval_date": "2026-08-31",
+  "approved_by": "user",
+  "approval_scope": "Figure presentation: all-station overview with linked maneuver detail",
+  "revision": "revision-02",
+  "run": "R0009",
+  "case": "minimal_900",
+  "accepted_maneuvers": 1,
+  "offset_sequence_m": [0, 100],
+  "preservation_rule": "Do not overwrite this revision. Any subsequent figure change must use a new revision directory.",
+  "files": [
+    {
+      "path": "revision-02/manifest.json",
+      "sha256": "ff8778ddac0686a387f6cbc789556b5ceb4627970dcf305e06bbdfa84bc6247e"
+    },
+    {
+      "path": "revision-02/01-radio-context.png",
+      "sha256": "8d538f88a108aeba3d04511dbfd8433277d8bb0f4aa1bfea53d94c14cccfab67"
+    },
+    {
+      "path": "revision-02/01-radio-context.svg",
+      "sha256": "ad90baabd74df527b3cbc9fd6959d6e2b9597336e76042f496b6406075d81c76"
+    }
+  ]
+}

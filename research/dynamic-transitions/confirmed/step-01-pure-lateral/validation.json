@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "run": "research/dynamic-transitions/runs/R0009",
+  "conditions": 6,
+  "independent_radio_policy_records": 1189,
+  "motion_intervals": 13870,
+  "maximum_displacement_velocity_residual_mps": 0.021967130955916944,
+  "velocity_residual_note": "Endpoint trapezoidal average is a diagnostic, not integration error; independent midpoint integration is the acceptance check.",
+  "maximum_independent_midpoint_progress_residual_m": 7.268119588843547e-06,
+  "maximum_archived_geometry_position_residual_m": 0.0,
+  "verifier_sha256": "91870d03a951f8da2a65802fd028edb38cffa683ef13ab2ad07a63b4a2ab095e",
+  "verified_output_hashes": 35,
+  "archived_source_hashes": 34,
+  "archived_input_hashes": 4,
+  "note": "Numerical kinematic, formula and provenance checks; not flight-performance, safety or capacity certification."
+}

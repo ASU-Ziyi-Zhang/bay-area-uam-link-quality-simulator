@@ -127,7 +127,7 @@ def main() -> None:
             "display": scenario.get("display", {}),
             "radio": scenario["radio"],
             "model_config": {
-                "capacity": scenario["capacity"],
+                "capacity": summary.get("stream_model", {}).get("capacity", scenario["capacity"]),
             },
         },
         "route": route,

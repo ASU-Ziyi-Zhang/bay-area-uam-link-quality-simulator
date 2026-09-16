@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "run": "research/dynamic-transitions/runs/R0016",
+  "run_manifest_sha256": "84a90fc7c9540f9dc6e8ca914708d69c9075f3069ea8be11dd6aed485d88155c",
+  "checks": "archive hashes, independent XYZ/derivatives/progress/radio/exposure, mode/target/selection logs, realized stable C",
+  "limitations": "recorded conservative bounds checked; forecast optimality not independently re-solved; no certified flight envelope",
+  "cases": [
+    {
+      "case": "fixed_reference",
+      "observations": 198,
+      "motion_intervals": 1980,
+      "moves": 0,
+      "position_error_m": 0.0,
+      "progress_error_m": 5.076472007203847e-07,
+      "sinr_error_db": 4.440892098500626e-15,
+      "sampled_max_curvature_per_m": 0.0009993010415669458
+    },
+    {
+      "case": "rolling_60plus0_joint",
+      "observations": 199,
+      "motion_intervals": 1982,
+      "moves": 1,
+      "position_error_m": 0.0,
+      "progress_error_m": 1.0343253961764276e-05,
+      "sinr_error_db": 4.440892098500626e-15,
+      "sampled_max_curvature_per_m": 0.0009993010415669458
+    },
+    {
+      "case": "rolling_60plus60_joint",
+      "observations": 198,
+      "motion_intervals": 1981,
+      "moves": 2,
+      "position_error_m": 0.0,
+      "progress_error_m": 1.6962883819360286e-05,
+      "sinr_error_db": 5.329070518200751e-15,
+      "sampled_max_curvature_per_m": 0.0009993010415669458
+    }
+  ]
+}

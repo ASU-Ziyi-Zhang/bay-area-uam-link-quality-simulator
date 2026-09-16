@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "study": "two_uam_longitudinal_mechanisms",
+  "parameters": {
+    "vehicle": {
+      "cruise_mps": 50,
+      "speed_min_mps": 30.0,
+      "speed_max_mps": 80.0,
+      "acceleration_limit_mps2": 1.5,
+      "deceleration_limit_mps2": 2,
+      "reference_jerk_limit_mps3": null
+    },
+    "spacing": {
+      "d0_m": 200,
+      "tau_c_s": 15,
+      "tau_r_s": 30,
+      "tau_f_s": 60,
+      "buffer_s2_per_m": 0.167
+    },
+    "controller": {
+      "k_speed_per_s": 0.2,
+      "k_gap_per_s2": 0.005,
+      "k_relative_per_s": 0.4,
+      "tracking_speed_gain_per_s": 0.4
+    }
+  },
+  "numerics": {
+    "steps_s": [
+      0.125,
+      0.0625,
+      0.03125
+    ],
+    "post_action_observation_s": 120,
+    "refinement_reason": "R0024 coarse dt=0.5/0.25 failed the prespecified saved-trace acceleration quadrature gate near saturation exits. All acceptance limits remain unchanged.",
+    "policy_matrix_reason": "R0032 completes the six ordered policy pairs (C-R, C-F, R-F and their reverses). R0031 covered only C-F and F-C, which cannot show whether the direction asymmetry is a property of the transition size or of the direction itself. Acceptance limits unchanged."
+  },
+  "cases": [
+    {
+      "id": "oversized_gap_hold",
+      "initial_gap_m": 4500,
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "expected_request": "hold"
+    },
+    {
+      "id": "open_c_to_f",
+      "initial_gap_policy": "C",
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "expected_request": "planned"
+    },
+    {
+      "id": "close_f_to_c",
+      "initial_gap_policy": "F",
+      "target_policy": "C",
+      "objective": "exact_target",
+      "expected_request": "planned"
+    },
+    {
+      "id": "open_c_to_r",
+      "initial_gap_policy": "C",
+      "target_policy": "R",
+      "objective": "minimum_spacing",
+      "expected_request": "planned",
+      "description": "Smallest opening step in the policy set: 750 m."
+    },
+    {
+      "id": "open_r_to_f",
+      "initial_gap_policy": "R",
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "expected_request": "planned",
+      "description": "Middle opening step: 1500 m."
+    },
+    {
+      "id": "close_r_to_c",
+      "initial_gap_policy": "R",
+      "target_policy": "C",
+      "objective": "exact_target",
+      "expected_request": "planned",
+      "description": "Smallest closing step: 750 m. The baseline issues no command in this direction."
+    },
+    {
+      "id": "close_f_to_r",
+      "initial_gap_policy": "F",
+      "target_policy": "R",
+      "objective": "exact_target",
+      "expected_request": "planned",
+      "description": "Middle closing step: 1500 m."
+    },
+    {
+      "id": "close_without_headroom",
+      "initial_gap_policy": "F",
+      "target_policy": "C",
+      "objective": "exact_target",
+      "vehicle_overrides": {
+        "speed_max_mps": 50
+      },
+      "expected_request": "infeasible"
+    },
+    {
+      "id": "leader_brakes_from_large_gap",
+      "initial_gap_m": 4500,
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "leader_braking": {
+        "start_s": 20,
+        "end_speed_mps": 30,
+        "deceleration_mps2": 1
+      },
+      "expected_request": "hold"
+    },
+    {
+      "id": "leader_brakes_during_opening",
+      "initial_gap_policy": "C",
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "leader_braking": {
+        "start_s": 20,
+        "end_speed_mps": 30,
+        "deceleration_mps2": 1
+      },
+      "expected_request": "planned"
+    },
+    {
+      "id": "open_with_legacy_zero_floor",
+      "initial_gap_policy": "C",
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "vehicle_overrides": {
+        "speed_min_mps": 0.0
+      },
+      "expected_request": "planned",
+      "description": "Retired mathematical floor of zero, kept as the contrast to the wing-borne floor now used as the nominal. A zero floor lets the aircraft hover mid-corridor, which is a flight-mode change rather than a slow-down, so it is not an operational option."
+    },
+    {
+      "id": "open_with_reference_jerk",
+      "initial_gap_policy": "C",
+      "target_policy": "F",
+      "objective": "minimum_spacing",
+      "vehicle_overrides": {
+        "reference_jerk_limit_mps3": 0.05
+      },
+      "expected_request": "planned"
+    }
+  ],
+  "acceptance": {
+    "terminal_gap_error_m": 1,
+    "terminal_speed_error_mps": 0.05,
+    "projection_mps": 1e-05,
+    "refinement_endpoint_gap_m": 0.1,
+    "refinement_gap_curve_m": 0.2,
+    "quadrature_error_m": 0.3,
+    "acceleration_fd_error_mps2": 0.05,
+    "exploratory_gap_floor_m": 200
+  },
+  "provenance": {
+    "vehicle_bounds": "synthetic mechanism assumptions; zero floor is legacy mathematical case; 30 m/s floor and 80 m/s cap are sourced separately below, not calibrated",
+    "spacing": "TRB nominal hypotheses",
+    "controller": "existing ACC gains; tracker speed gain equals 0.4 for this declared test",
+    "leader_observation": "perfect continuous current state including acceleration; no sensing latency",
+    "jerk": "reference trajectory only; feedback/fallback jerk not constrained",
+    "scope": "draft, straight route, no radio, no lateral movement, no capacity",
+    "speed_min_mps": "1.2 x Vstall for a low-wing-loading eVTOL: the preferred design band gives Vstall <= 50 kt = 25.7 m/s, so 1.2 Vstall = 30.9 m/s. Below this the aircraft is no longer wing-borne, which is a flight-mode change rather than a slow-down. The previous value of 0 silently permitted hovering mid-corridor.",
+    "speed_max_mps": "80 m/s = 156 kt, below the 170 kt maximum cruise reported for the Joby S4. Declared separately from cruise_mps: the model previously used cruise as both set speed and hard cap, so a gap could only open, never close."
+  }
+}

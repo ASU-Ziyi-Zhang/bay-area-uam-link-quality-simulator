@@ -1,0 +1,41 @@
+{
+  "status": "approved_parameter_and_sequence",
+  "revision": "01",
+  "date": "2026-09-12",
+  "authorization": "User fixed the Bay Area assessment window at 90 s and directed the sequence: one-lane longitudinal demand stream, same-altitude three-lane lane changing, then multi-lane/multi-height control.",
+  "approval_scope": "Configuration and staged execution order only; later numerical results require completed runs and independent validation.",
+  "fixed_policy": {
+    "threshold_db": -2.0,
+    "radio_sampling_s": 2.0,
+    "assessment_window_s": 90.0,
+    "policy_update_s": 5.0,
+    "coordinated_bad_exposure": 0.05,
+    "reactive_bad_exposure": 0.1,
+    "persistence_k": 3
+  },
+  "traffic_definition": "Requested arrival interval plus fixed demand horizon; realized request count is derived and is not the experiment label.",
+  "ordered_stages": [
+    "one lane at 300 m with longitudinal control only",
+    "three lateral lanes at 300 m: matched stay versus lane-change-enabled",
+    "multiple lanes and heights, first fixed levels and then vertical/joint transitions"
+  ],
+  "preservation_rule": "Do not overwrite this revision. Verified run results receive a new revision.",
+  "sources": [
+    {
+      "path": "bay-area-90s-staged-protocol.md",
+      "sha256": "196201ea89e1111a0565f3415a840ff393e1367d61143c6f712aeba28a2987b4"
+    },
+    {
+      "path": "configs/bay_area_longitudinal_90s_demand.json",
+      "sha256": "ac4015cbc645989905825e481edea9c6adba8e00730047b1182b49c1a5c12359"
+    },
+    {
+      "path": "reports/R0041-R0047-window-sweep.md",
+      "sha256": "b894066b356ab152ce4d692f8ad7bb8433561deebac0bf078e442150839d1ca5"
+    },
+    {
+      "path": "reports/R0041-R0047-window-sweep.csv",
+      "sha256": "60b43ab9727a93d532bff155858f454d2edffe64e8288dcb29660e7b26ac7d18"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+part,field,stay_cost,allow_cost,change_start_s,chosen,gain,bad_stay,bad_allow
+B2,sharp,573.0,387.0,0.0,"shape=bezier3,delay=0,factor=1",207.04000000000053,131,9
+C2,real_L700_g0.05,106.0,106.0,,,,13,13
+C2,real_L700_g0.16,100.0,94.0,0.0,"shape=quintic,delay=0,factor=1",6.0,13,10
+C2,real_L1650_g0.05,171.0,165.0,0.0,"shape=bezier3,delay=0,factor=1",6.0,33,30
+C2,real_L1650_g0.16,161.0,140.0,0.0,"shape=bezier3,delay=0,factor=1",21.0,33,23

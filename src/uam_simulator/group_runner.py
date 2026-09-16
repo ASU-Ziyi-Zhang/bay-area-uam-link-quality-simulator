@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -205,6 +205,15 @@ def run_group_simulation(
     cfg: GroupSimulatorConfig = load_group_simulator_config(config_path)
     project_root = Path(__file__).resolve().parents[2]
     scenario = load_scenario(cfg.simulation.scenario_path)
+    stream_link_quality = (
+        scenario.link_quality if cfg.sinr_threshold_db is None
+        else replace(scenario.link_quality, sinr_threshold_db=cfg.sinr_threshold_db)
+    )
+    stream_window_s = scenario.policy.window_s if cfg.window_s is None else cfg.window_s
+    stream_capacity = (
+        scenario.capacity if cfg.standstill_distance_m is None
+        else replace(scenario.capacity, standstill_distance_m=cfg.standstill_distance_m)
+    )
     if not np.isclose(cfg.speed_mps, scenario.speed_mps, atol=1e-9, rtol=0.0):
         raise ValueError("group simulator and scenario speed must match")
     if cfg.simulation.clock.dt_control_s < cfg.simulation.clock.dt_radio_s:
@@ -226,7 +235,7 @@ def run_group_simulation(
         np.full(entry_time_s.shape, cfg.lateral_offset_m),
     )
     radio = compute_link_state(trajectory, scenario.base_stations, scenario.radio)
-    link_quality = evaluate_link_quality(radio, scenario.link_quality)
+    link_quality = evaluate_link_quality(radio, stream_link_quality)
     last_policy_tick = np.floor(
         (duration_s + 1e-12) / cfg.simulation.clock.dt_control_s
     ) * cfg.simulation.clock.dt_control_s
@@ -270,7 +279,7 @@ def run_group_simulation(
         link_quality,
         uam_ids,
         scenario.policy.group_size,
-        scenario.policy.window_s,
+        stream_window_s,
         scenario.policy.coordinated_exposure_tolerance,
         scenario.policy.reactive_exposure_tolerance,
         policy_times,
@@ -281,7 +290,7 @@ def run_group_simulation(
         adaptive_policy,
         adaptive_valid,
         policy_times,
-        scenario.capacity,
+        stream_capacity,
     )
 
     entrant_rows = [
@@ -384,8 +393,8 @@ def run_group_simulation(
         "policy": {
             "maximum_group_size": scenario.policy.group_size,
             "minimum_group_size": min(int(row["group_size"]) for row in policy_rows),
-            "window_s": scenario.policy.window_s,
-            "sinr_threshold_db": scenario.link_quality.sinr_threshold_db,
+            "window_s": stream_window_s,
+            "sinr_threshold_db": stream_link_quality.sinr_threshold_db,
             "coordinated_exposure_tolerance": (
                 scenario.policy.coordinated_exposure_tolerance
             ),
@@ -422,6 +431,9 @@ def run_group_simulation(
                 "only as a regression comparison."
             ),
             "sampling_interval_s": scenario.time_step_s,
+            "sinr_threshold_db": scenario.link_quality.sinr_threshold_db,
+            "window_s": scenario.policy.window_s,
+            "capacity": asdict(scenario.capacity),
             "warmup_s": scenario.policy.warmup_s,
             "observation_count": reference_total,
             "counts": reference_counts,
@@ -431,6 +443,7 @@ def run_group_simulation(
                 cfg.reliability_rho,
             ),
         },
+        "stream_model": {"capacity": asdict(stream_capacity)},
         "clock": asdict(cfg.simulation.clock),
         "scientific_boundary": (
             "Deterministic single-lane/single-level planning-model stream. "

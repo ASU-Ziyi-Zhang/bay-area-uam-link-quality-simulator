@@ -34,7 +34,7 @@ the group shrinks when fewer neighbors are available:
 - interior aircraft use five;
 - during initial loading, groups may contain one or two aircraft.
 
-The temporal exposure window follows the same principle. Before 30 s of
+The temporal exposure window follows the same principle. Before 90 s of
 history exist, policy uses all observations available since that focal
 aircraft entered. There is no unclassified startup or edge state.
 
@@ -62,16 +62,25 @@ in the animation.
 | Offered demand | 112.5 UAM/h |
 | Entry interval | 32 s |
 | Maximum local group | 5 aircraft |
-| Policy history | up to 30 s |
+| Policy history | up to 90 s |
 | SINR threshold | -2.0 dB |
 | Radio sampling | 2 s |
 | Policy update | 5 s |
 | C/R exposure tolerances | 5% / 10% bad observations |
 | Persistence | k=3 |
+| Spacing | 152.4 m + τ·v + 0.167·v², τ = 15/30/60 s |
 | Legacy TRB reference step | 5 s |
 
-All model and policy parameters are stored in each scenario's
-`group_simulator.json`. No random number generator is used.
+These are the Bay Area calibrated settings ([bay_area_calibration.md](bay_area_calibration.md)),
+applied to both scenario packs through the `policy`, `link_quality` and
+`capacity` blocks of each `group_simulator.json`. The `trb_reference_regression`
+block of every run keeps the scenario pack's original settings (30 s window,
+200 m standstill distance and the pack's threshold), so the TRB reproduction is
+unchanged. No random number generator is used.
+
+Aircraft in this mode fly at constant speed on one lane. Longitudinal spacing
+control and lane changes are shown on the separate
+[lane-change page](../dashboard/motion.html) ([method](motion_control.md)).
 
 The dashboard preserves that frozen baseline and also provides a deterministic
 experiment panel. `Departure interval` is the traffic input and offered demand

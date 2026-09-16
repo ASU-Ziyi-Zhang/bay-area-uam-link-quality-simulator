@@ -1,0 +1,84 @@
+{
+  "status": "confirmed_verified_baseline",
+  "revision": "02",
+  "date": "2026-09-12",
+  "authorization": "User fixed the Bay Area assessment window at 90 s and directed the verified one-lane demand-stream result to be placed in confirmed before the same-altitude three-lane lane-change study.",
+  "approval_scope": "The 90 s parameter set, verified R0048 single-lane longitudinal result, and its role as the matched baseline for the next three-lane study. This does not confirm capacity, lane-change benefit, or a fully settled longitudinal controller.",
+  "traffic_definition": "One global requested arrival every 32 s over a fixed demand horizon; the realized count of 93 requests is a derived run record and is not the experiment label.",
+  "fixed_policy": {
+    "threshold_db": -2.0,
+    "radio_sampling_s": 2.0,
+    "assessment_window_s": 90.0,
+    "policy_update_s": 5.0,
+    "coordinated_bad_exposure": 0.05,
+    "reactive_bad_exposure": 0.1,
+    "persistence_k": 3
+  },
+  "run_id": "R0048",
+  "comparison_run_id": "R0040",
+  "verified_outcomes": {
+    "completed_requests": "93/93",
+    "sampled_nmac_count": 0,
+    "matched_horizon_policy_percent": {
+      "coordinated": 66.4579,
+      "reactive": 32.7114,
+      "fallback": 0.8307
+    },
+    "operational_switches_per_flight": 6.0215,
+    "raw_switches_per_flight": 11.7204,
+    "timing_compatible_fraction": 0.483696,
+    "fully_settled_fraction": 0.059783,
+    "gap_error_improved_fraction": 0.871377,
+    "speed_direction_reversals_per_flight": 49.3763
+  },
+  "interpretation_boundary": "The longer window stabilizes policy classification but does not remove feedback-controller chatter. The three-lane study must retain settling and speed-direction reversals as primary outcomes.",
+  "preservation_rule": "Do not overwrite this revision. The same-altitude three-lane result receives a later revision only after its paired runs and independent validation exist.",
+  "sources": [
+    {
+      "path": "bay-area-90s-staged-protocol.md",
+      "sha256": "196201ea89e1111a0565f3415a840ff393e1367d61143c6f712aeba28a2987b4"
+    },
+    {
+      "path": "configs/bay_area_longitudinal_90s_demand.json",
+      "sha256": "ac4015cbc645989905825e481edea9c6adba8e00730047b1182b49c1a5c12359"
+    },
+    {
+      "path": "runs/R0048/resolved_config.json",
+      "sha256": "a99e3eec8f23652232343f2395aeec9b7a13c3f72c677ce70ddfd90d8f111f19"
+    },
+    {
+      "path": "runs/R0048/manifest.json",
+      "sha256": "4b8dd122ca85335e623ab405885700903e9972eb51a77ffab5688e247871d78e"
+    },
+    {
+      "path": "runs/R0048/validation.json",
+      "sha256": "504847586a062869d8ced26741187b50a697792012a59030193720d899954a5f"
+    },
+    {
+      "path": "reports/R0048.md",
+      "sha256": "b97204d01a27b1947ac8afe2d088b8cb2691ccf87d1a02888033d5f6cebb65bd"
+    },
+    {
+      "path": "figures/R0048/manifest.json",
+      "sha256": "b385acdaa350413aa5daa373937a286155df016d7b93e753fff3268677f715d4"
+    }
+  ],
+  "copied_evidence": [
+    {
+      "path": "figures/01-window-30s-vs-90s.png",
+      "sha256": "2d3a681cb0cf8b0203112338e11e6214c4db0bcc78084c05fc0b7532a0c99943"
+    },
+    {
+      "path": "figures/01-window-30s-vs-90s.svg",
+      "sha256": "8cf7d3bffc58417b156beb7532321e4c3274e2d483bff4cf1d414f69309749b1"
+    },
+    {
+      "path": "source-data.csv",
+      "sha256": "1947dcfdedff0a4d0d01057a32377da77576991e3974072620e66a6676ab7dc6"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "504847586a062869d8ced26741187b50a697792012a59030193720d899954a5f"
+    }
+  ]
+}

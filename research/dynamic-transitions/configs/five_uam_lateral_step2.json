@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "study": "five_uam_lateral_step2",
+  "protocol": "research/dynamic-transitions/three-uam-lateral-protocol.md",
+  "status": "prespecified before any formal run; not to be edited after Stage 1 starts",
+  "parameters": {
+    "traffic": {
+      "cruise_mps": 50.0,
+      "speed_min_mps": 30.0,
+      "speed_max_mps": 80.0,
+      "policy_s": 1.0,
+      "decision_s": 5.0,
+      "neighbors_each_side": 2,
+      "window_s": 30.0,
+      "threshold_db": -1.5,
+      "exposure_c": 0.05,
+      "exposure_r": 0.1,
+      "group_radius_m": 3569.9,
+      "d0_m": 152.4,
+      "control_period_s": 0.5
+    },
+    "envelope": {
+      "lateral_accel_max_mps2": 0.981,
+      "lateral_speed_max_mps": 8.0
+    },
+    "admission_volume": {
+      "horizontal_m": 152.4,
+      "vertical_m": 30.48,
+      "label": "nmac_admission",
+      "provenance": "quantitative NMAC convention (HMD <= 500 ft and VMD <= 100 ft, joint, Chen 2019) used directly as the hard gate; no added margin, the uncertainty margin lives in the policy headway tau*v"
+    }
+  },
+  "numerics": {
+    "dt_s": 0.5,
+    "horizon_s": 150.0,
+    "prediction_s": 60.0,
+    "stage0": {
+      "scenario": "A1_safe_and_better",
+      "dt_s": [
+        1.0,
+        0.5,
+        0.25
+      ],
+      "decision_phases_s": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0
+      ]
+    },
+    "refinement_dt_s": [
+      0.5,
+      0.25
+    ],
+    "refinement_cases": [
+      "A1_safe_and_better",
+      "B2"
+    ]
+  },
+  "gate": {
+    "primary": "revised",
+    "variants": {
+      "revised": "delta_num (integration only) + delta_pred"
+    },
+    "note": "step 2 uses the numerical gate only; the operational minimum worthwhile gain is chosen in step 3 together with the policy classification parameters"
+  },
+  "shapes": [
+    {
+      "kind": "quintic"
+    },
+    {
+      "kind": "beta",
+      "p": 3,
+      "q": 2
+    },
+    {
+      "kind": "beta",
+      "p": 2,
+      "q": 3
+    },
+    {
+      "kind": "beta",
+      "p": 3,
+      "q": 3
+    },
+    {
+      "kind": "clothoid3",
+      "fraction": 0.25
+    }
+  ],
+  "fields": {
+    "sharp": {
+      "kind": "sharp",
+      "lane0_below_y_m": 150.0,
+      "q_from_m": 1000.0,
+      "q_to_m": 11000.0,
+      "bad_db": -20.0,
+      "good_db": 20.0
+    },
+    "real_L700_g0.05": {
+      "kind": "real",
+      "centre_q_m": 2000.0,
+      "bad_length_m": 700.0,
+      "depth_db": 0.7,
+      "outside_margin_db": 2.0,
+      "gradient_db_per_100m": 0.05
+    },
+    "real_L700_g0.16": {
+      "kind": "real",
+      "centre_q_m": 2000.0,
+      "bad_length_m": 700.0,
+      "depth_db": 0.7,
+      "outside_margin_db": 2.0,
+      "gradient_db_per_100m": 0.16
+    },
+    "real_L1650_g0.05": {
+      "kind": "real",
+      "centre_q_m": 2000.0,
+      "bad_length_m": 1650.0,
+      "depth_db": 0.7,
+      "outside_margin_db": 2.0,
+      "gradient_db_per_100m": 0.05
+    },
+    "real_L1650_g0.16": {
+      "kind": "real",
+      "centre_q_m": 2000.0,
+      "bad_length_m": 1650.0,
+      "depth_db": 0.7,
+      "outside_margin_db": 2.0,
+      "gradient_db_per_100m": 0.16
+    }
+  },
+  "real_field_formula": "SINR = theta - depth + (depth+margin)*min(1, ((q-c)/R)^2) + gradient*y/100, R = (bad_length/2)/sqrt(depth/(depth+margin)), theta = -1.5 dB",
+  "part_A": [
+    {
+      "id": "A1_safe_and_better",
+      "predicates": "safe + benefit → change",
+      "note": "10 km weak zone ahead in the own lane; adjacent lane free",
+      "expected": {
+        "first_action": "change",
+        "first_reason": "gain_above_threshold"
+      },
+      "scenario": {
+        "ego_q_m": 0.0,
+        "gap_to_leader_m": 1319.9,
+        "gap_from_follower_m": 6000.0,
+        "target_lane_front_offset_m": 5000.0,
+        "target_lane_rear_offset_m": 5000.0,
+        "lane_separation_m": 300.0,
+        "altitude_m": 300.0,
+        "cruise_mps": 50.0,
+        "zones": [
+          [
+            0,
+            1000.0,
+            10000.0,
+            "F"
+          ]
+        ]
+      },
+      "options": {
+        "start_delays": [
+          0.0
+        ],
+        "duration_factors": [
+          1.0,
+          1.5
+        ]
+      },
+      "stay_control": true
+    },
+    {
+      "id": "A2_safe_no_gain",
+      "predicates": "safe + no benefit → stay",
+      "note": "both lanes are F over the same stretch; changing gains nothing",
+      "expected": {
+        "never_change": true,
+        "reason_present": "gain_below_threshold"
+      },
+      "scenario": {
+        "ego_q_m": 0.0,
+        "gap_to_leader_m": 1319.9,
+        "gap_from_follower_m": 6000.0,
+        "target_lane_front_offset_m": 5000.0,
+        "target_lane_rear_offset_m": 5000.0,
+        "lane_separation_m": 300.0,
+        "altitude_m": 300.0,
+        "cruise_mps": 50.0,
+        "zones": [
+          [
+            0,
+            1000.0,
+            10000.0,
+            "F"
+          ],
+          [
+            1,
+            1000.0,
+            10000.0,
+            "F"
+          ]
+        ]
+      },
+      "options": {
+        "start_delays": [
+          0.0
+        ],
+        "duration_factors": [
+          1.0,
+          1.5
+        ]
+      },
+      "stay_control": true
+    },
+    {
+      "id": "A3_unsafe_but_better",
+      "predicates": "unsafe + benefit → stay",
+      "note": "large benefit, but the adjacent-lane aircraft ahead and behind are only 1000 m away, so insertion fails the C spacing",
+      "expected": {
+        "never_change": true,
+        "reason_present": "no_admissible_candidate"
+      },
+      "scenario": {
+        "ego_q_m": 0.0,
+        "gap_to_leader_m": 1319.9,
+        "gap_from_follower_m": 6000.0,
+        "target_lane_front_offset_m": 1000.0,
+        "target_lane_rear_offset_m": 1000.0,
+        "lane_separation_m": 300.0,
+        "altitude_m": 300.0,
+        "cruise_mps": 50.0,
+        "zones": [
+          [
+            0,
+            1000.0,
+            10000.0,
+            "F"
+          ]
+        ]
+      },
+      "options": {
+        "start_delays": [
+          0.0
+        ],
+        "duration_factors": [
+          1.0,
+          1.5
+        ]
+      },
+      "stay_control": true
+    },
+    {
+      "id": "A9_unsafe_and_no_gain",
+      "predicates": "unsafe + no benefit → stay",
+      "note": "both lanes are F and the adjacent-lane aircraft ahead and behind are only 1000 m away",
+      "expected": {
+        "never_change": true,
+        "reason_present": "no_admissible_candidate"
+      },
+      "scenario": {
+        "ego_q_m": 0.0,
+        "gap_to_leader_m": 1319.9,
+        "gap_from_follower_m": 6000.0,
+        "target_lane_front_offset_m": 1000.0,
+        "target_lane_rear_offset_m": 1000.0,
+        "lane_separation_m": 300.0,
+        "altitude_m": 300.0,
+        "cruise_mps": 50.0,
+        "zones": [
+          [
+            0,
+            1000.0,
+            10000.0,
+            "F"
+          ],
+          [
+            1,
+            1000.0,
+            10000.0,
+            "F"
+          ]
+        ]
+      },
+      "options": {
+        "start_delays": [
+          0.0
+        ],
+        "duration_factors": [
+          1.0,
+          1.5
+        ]
+      },
+      "stay_control": true
+    }
+  ],
+  "part_B": {
+    "scenario": {
+      "ego_q_m": 0.0,
+      "gap_to_leader_m": 4000.0,
+      "gap_from_follower_m": 6000.0,
+      "target_lane_front_offset_m": 5000.0,
+      "target_lane_rear_offset_m": 5000.0,
+      "lane_separation_m": 300.0,
+      "altitude_m": 300.0,
+      "cruise_mps": 50.0,
+      "established_pairs": []
+    },
+    "field": "sharp",
+    "B1": {
+      "duration_s": 90.0,
+      "start_s": 0.0,
+      "note": "same D = 300 m and same T for every shape"
+    },
+    "B2": {
+      "duration_factors": [
+        1.0,
+        1.5,
+        2.0
+      ],
+      "start_delays": [
+        0.0
+      ],
+      "note": "each shape at its own minimum feasible duration and multiples"
+    }
+  },
+  "part_C": {
+    "scenario": {
+      "ego_q_m": 0.0,
+      "gap_to_leader_m": 4000.0,
+      "gap_from_follower_m": 6000.0,
+      "target_lane_front_offset_m": 5000.0,
+      "target_lane_rear_offset_m": 5000.0,
+      "lane_separation_m": 300.0,
+      "altitude_m": 300.0,
+      "cruise_mps": 50.0,
+      "established_pairs": []
+    },
+    "fields": [
+      "real_L700_g0.05",
+      "real_L700_g0.16",
+      "real_L1650_g0.05",
+      "real_L1650_g0.16"
+    ],
+    "same_as": "part_B"
+  },
+  "acceptance": {
+    "declared": {
+      "lon_quadrature_m": 0.3,
+      "lon_fd_accel_mps2": 0.05,
+      "lon_refine_curve_m": 0.2,
+      "lon_refine_endpoint_m": 0.1,
+      "lat_quadrature_m": 0.05,
+      "lat_fd_accel_mps2": 0.005,
+      "lat_refine_curve_m": 0.05,
+      "lat_refine_endpoint_m": 0.02,
+      "eta_max": 1.0,
+      "eta_tolerance": 1e-06,
+      "lateral_peak_rel": 0.01
+    },
+    "tightening_rule": "after Stage 0, each trajectory threshold becomes min(declared, max(10 x measured Stage-0 refinement difference, 1e-6)); thresholds may only tighten, never loosen"
+  },
+  "provenance": {
+    "real_fields": "2026-09-10 lateral +/-900 m SINR survey of scenarios/airport_to_airport: centre SINR -1.84 to -2.43 dB, bad lengths 175-1650 m, in-zone lateral change per 100 m median 0.05 / 95th pct 0.16 dB; margin 2.0 dB from +0.46 dB about 850 m from the 8375-9075 m zone centre",
+    "far_leader": "L at 4000 m lies beyond the 3617.5 m group radius and the fallback spacing, so E is declared not to be an established follower (established_pairs = [])",
+    "shapes": "quintic = beta(2,2); beta kernel from the TR-C manuscript KS1A applied to lateral position; clothoid3 = Oh et al. AVEC 2022 / TCST 2025 transcribed to the Frenet frame (<= 1.26% error)"
+  },
+  "fixture_revisions": [
+    {
+      "date": "2026-09-11",
+      "stage": "before Stage 0 of the formal run; found in a --quick debug run and a fixture pilot",
+      "cases": [
+        "A4_mixed_candidate_set",
+        "A5_flip_infeasible_to_feasible",
+        "A6_flip_better_to_not"
+      ],
+      "reason": "neighbour_speeds sets only the initial speed; the rear neighbour's ACC restores cruise within seconds, so a 'slower rear neighbour' never opens the gap and A4-A6 stayed no_admissible_candidate for the whole run (no mixed set, no flip). Replaced by a policy-driven flip: NR starts inside an F zone of the target lane, so inserting ahead of it needs S(F,50)=3617.5 m; it leaves the zone at t=40 s and the requirement drops to S(C,50)=1367.5 m. The far leader (4000 m, established_pairs=[]) keeps E from slowing in its own zone, as in part B.",
+      "unchanged": "expected outcomes, acceptance thresholds, tightening rule, gates and every other case"
+    },
+    {
+      "date": "2026-09-11",
+      "stage": "before R0035, after reviewing the rules themselves",
+      "cases": [
+        "A1",
+        "A2",
+        "A3",
+        "A9 (new)",
+        "A4-A8 removed"
+      ],
+      "reason": "the decision has two predicates, so the situations are the 2x2 of safe/unsafe and gain/no gain. A7 was the same cell as A3 (it had a gain of 81 but could not insert) and the unsafe-and-no-gain cell was untested; A9 fills it. A4 tested filter-before-rank, which an automated test already covers, and A5/A6 were the same cells varying over time, which the rolling decision produces anyway. A8 became a unit test when a failed audit stopped ending the run.",
+      "unchanged": "acceptance thresholds and the tightening rule"
+    }
+  ]
+}

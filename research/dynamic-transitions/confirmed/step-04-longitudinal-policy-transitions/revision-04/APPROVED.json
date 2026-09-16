@@ -1,0 +1,97 @@
+{
+  "status": "updated_per_user_request",
+  "revision": "04",
+  "date": "2026-09-11",
+  "authorization": "User chose to anchor the spacing constant to the NMAC horizontal threshold and to update Confirmed accordingly.",
+  "approval_scope": "Authorized the parameter change and the Confirmed update; not a separate post-run user endorsement of all numerical results.",
+  "run": "R0036",
+  "supersedes": "revision-03 (R0033), which used d0 = 200 m; retained unedited as history",
+  "config": "configs/two_uam_longitudinal_nmac.json",
+  "protocol": "two-uam-longitudinal-protocol.md amendments A6-A7",
+  "parameter_change": {
+    "d0_m": {
+      "from": 200.0,
+      "to": 152.4
+    },
+    "provenance": "NMAC quantitative convention, HMD <= 500 ft jointly with VMD <= 100 ft (Chen 2019); replaces an uncited value",
+    "equilibrium_spacing_m": {
+      "C": 1319.9,
+      "R": 2069.9,
+      "F": 3569.9
+    }
+  },
+  "independent_validation": {
+    "status": "passed",
+    "traces": 72,
+    "failed_checks": 0,
+    "unit_tests_passed": 325
+  },
+  "headline_findings": [
+    "The spacing law now has a stated residual: after worst-case braking the pair is no closer than the NMAC boundary.",
+    "All six policy equilibria are still reached by both controllers within the same tolerances.",
+    "KS2 settling remains about 5.5x faster in both directions; this is not a universal ranking.",
+    "Only the equilibrium spacings move, by 47.6 m; no qualitative finding of revision-03 changes."
+  ],
+  "excluded": [
+    "calibrated flight capability",
+    "complete radio fallback traversal",
+    "automatic geographic relationship management",
+    "multi-aircraft/string stability",
+    "capacity gain",
+    "universal AKS correctness",
+    "NMAC as a separation standard rather than a modelling convention"
+  ],
+  "sources": [
+    {
+      "path": "runs/R0036/manifest.json",
+      "sha256": "d038fb91ec7e2bb39d9663818a5db873c47ab5d35642d279f11af9e6453190a3"
+    },
+    {
+      "path": "runs/R0036/validation.json",
+      "sha256": "5659d8d23e5039eab44ee0312d0ce3e10667a308d13accc87bce439595970ff4"
+    },
+    {
+      "path": "runs/R0036/resolved_config.json",
+      "sha256": "6585df2293f8ad1c6de2b6e0b855f7b97e1098e31013db1f2d756b27152c972c"
+    },
+    {
+      "path": "figures/R0036/manifest.json",
+      "sha256": "993ded74ff424bfe8c67b796e5afb3ce3ec4efc770fe0d76f6f45c0904ac5349"
+    }
+  ],
+  "confirmed_files": [
+    {
+      "path": "README.md",
+      "sha256": "f08a98e56c819245597964af857402403c5e9d69c7e4874e66a7c766d122be9a"
+    },
+    {
+      "path": "figures/01-policy-degradation-C-to-F.png",
+      "sha256": "b943c8a070596b1cd9669cfcfafbd00055b8cc1fee693f62ecbe16bed28728a8"
+    },
+    {
+      "path": "figures/01-policy-degradation-C-to-F.svg",
+      "sha256": "2919f9f79fb570377f2e037f218d45d0176e60a74ed022539605042025e57ca6"
+    },
+    {
+      "path": "figures/02-policy-upgrade-F-to-C.png",
+      "sha256": "ce00aa537bce917476921ef4b215a05c516d72a721aa68e41525a87201ba665b"
+    },
+    {
+      "path": "figures/02-policy-upgrade-F-to-C.svg",
+      "sha256": "2fdb718d80123f47888dd47098fd377fc7571e512576b14fe29812019424e8b0"
+    },
+    {
+      "path": "results-table.csv",
+      "sha256": "3864b1ce6d106ee5b1eb2da16a96783f7dde02e23f6de068b60d5b23738fe741"
+    },
+    {
+      "path": "results-table.md",
+      "sha256": "4eeda1671db8b1ffafa106834184a4f0435d6977aaac273db94e2497c0791662"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "5659d8d23e5039eab44ee0312d0ce3e10667a308d13accc87bce439595970ff4"
+    }
+  ],
+  "figure_revision": "R0036"
+}

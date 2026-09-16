@@ -1,0 +1,99 @@
+{
+  "status": "approved_final",
+  "approval_date": "2026-09-10",
+  "approved_by": "user",
+  "approval_scope": "Two presentation figures -- one policy degradation (C to F) and one policy upgrade (F to C), each in speed / gap / commanded-acceleration panels -- plus the six-transition and six-variant results table. Longitudinal only; no lateral movement, no third aircraft, no capacity result.",
+  "run": "R0032",
+  "config": "configs/two_uam_longitudinal_refined.json",
+  "protocol": "two-uam-longitudinal-protocol.md (amendments A1-A5)",
+  "independent_validation": {
+    "status": "passed",
+    "traces": 72,
+    "failed_checks": 0,
+    "refinement_comparisons": 48,
+    "refinement_failed": 0,
+    "unit_tests_passed": 252
+  },
+  "speed_envelope_mps": {
+    "min": 30.0,
+    "max": 80.0,
+    "cruise": 50.0,
+    "min_source": "1.2 x Vstall for a low-wing-loading eVTOL; below it the aircraft is no longer wing-borne",
+    "max_source": "156 kt, below the 170 kt maximum cruise reported for the Joby S4",
+    "note": "sourced declared bounds, not calibrated capabilities of a specific airframe"
+  },
+  "headline_findings": [
+    "The KS2 reference reaches all six policy targets exactly; the baseline ACC reaches none.",
+    "Opening: the baseline stops 100-135 m short while saturating its 2.0 m/s^2 braking limit; the shortfall does not grow with transition size.",
+    "Closing: the baseline shortfall equals the full transition (750, 1500, 2250 m) because its command is min(free-flow, following) and the free-flow term is exactly zero at cruise. Structural, not a gain-tuning question.",
+    "Effort runs opposite to achievement: the reference uses up to six times less peak acceleration and arrives.",
+    "The closing failure costs capacity rather than safety: an aircraft that cannot close its gap goes on holding up to 2250 m more separation than its policy requires."
+  ],
+  "excluded_from_approval": [
+    "The leader-braking no-exit case is reported but is a diagnostic of a state with no longitudinal exit, not a controller-comparison result.",
+    "No string-stability, multi-aircraft, lateral or capacity claim is approved here."
+  ],
+  "preservation_rule": "Do not overwrite this confirmed item. Any later figure, table, method, or interpretation change must use a new confirmed revision or item.",
+  "sources": [
+    {
+      "path": "figures/R0032/manifest.json",
+      "sha256": "c187388452a4174494291f1296b346dc0bb95c1a89d0dacc8898c4135f03a358"
+    },
+    {
+      "path": "validation-R0032.json",
+      "sha256": "741c853feb648a92a314563dec4d845da5e419101c59d9544ace9b7820af8fd5"
+    },
+    {
+      "path": "runs/R0032/manifest.json",
+      "sha256": "3fb117e3889bef5e1733136c53a40d47fc14a73d9d2d26f2461210158d241ab1"
+    }
+  ],
+  "confirmed_files": [
+    {
+      "path": "README.md",
+      "sha256": "86910e0bd485b10c9508464d042bc06afba8e626de9a08c3ed821997c48e12a1",
+      "note": "annotated after approval; see post_approval_annotations"
+    },
+    {
+      "path": "figures/01-policy-degradation-C-to-F.png",
+      "sha256": "39d1c5a696394076fe1dc2fa4ca14816894443005629e60d2570778982d03ba4"
+    },
+    {
+      "path": "figures/01-policy-degradation-C-to-F.svg",
+      "sha256": "f2f83c66501b17350fa65d6684992e36140742dde777a858d251d3f7046a4172"
+    },
+    {
+      "path": "figures/02-policy-upgrade-F-to-C.png",
+      "sha256": "bdda6cd6dc4acea4db47575b3169677d301eedac0e9ca13eafe65adb58ca014f"
+    },
+    {
+      "path": "figures/02-policy-upgrade-F-to-C.svg",
+      "sha256": "be63c7e62d8fce7947c4d041b974d5c634252d39bd76ec627730ce638f104996"
+    },
+    {
+      "path": "results-table.csv",
+      "sha256": "8d722b674cbdf4b1660c6d15b36af00d03a5c2b96012d3b0696de9cc50d6a540"
+    },
+    {
+      "path": "results-table.md",
+      "sha256": "c5d5b31c85dd8d295dc19b07994f375ff002571455c4ba196e237cd9e9e793b2"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "741c853feb648a92a314563dec4d845da5e419101c59d9544ace9b7820af8fd5"
+    }
+  ],
+  "figure_revision": "R0032/revision-02",
+  "revision_note": "Revision 02 replaces the two bar charts of revision 01 with the results table and a second time-series figure for the closing direction. No run, validation or number changed; this is a presentation change only, made because the bar charts compressed twelve trajectories into bar heights and lost the mechanism.",
+  "post_approval_annotations": [
+    {
+      "path": "README.md",
+      "date": "2026-09-10",
+      "sha256_at_approval": "2edebb0cbd7e42881a60d5fd0aff9b2106eef21c4651fbcc1d798b8b9d122f47",
+      "sha256_after_annotation": "86910e0bd485b10c9508464d042bc06afba8e626de9a08c3ed821997c48e12a1",
+      "change": "A superseded banner was prepended. No approved figure, number, table or conclusion below the banner was altered; the original text is retained verbatim under it. Recorded here rather than silently re-baselining the hash, so the integrity record still shows that this file is not byte-identical to what was approved.",
+      "reason": "A reader landing directly in this folder would otherwise read a withdrawn conclusion with no warning.",
+      "made_by": "assistant, at the user's request to fix the confirmed layer"
+    }
+  ]
+}

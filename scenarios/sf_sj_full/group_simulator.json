@@ -15,14 +15,25 @@
   },
   "clock": {
     "dt_motion_s": 1.0,
-    "dt_radio_s": 1.0,
-    "dt_control_s": 1.0,
-    "policy_window_s": 30.0,
+    "dt_radio_s": 2.0,
+    "dt_control_s": 5.0,
+    "policy_window_s": 90.0,
     "capacity_aggregation_s": 60.0
   },
   "metadata": {
     "phase": "fixed_single_lane_single_level",
     "lane_change_allowed": false,
-    "level_change_allowed": false
+    "level_change_allowed": false,
+    "settings": "Bay Area calibration: docs/bay_area_calibration.md. The trb_reference_regression block keeps the scenario pack's TRB settings."
+  },
+  "policy": {
+    "persistence_k": 3,
+    "window_s": 90.0
+  },
+  "link_quality": {
+    "sinr_threshold_db": -2.0
+  },
+  "capacity": {
+    "standstill_distance_m": 152.4
   }
 }

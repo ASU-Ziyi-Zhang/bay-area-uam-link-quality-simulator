@@ -1,0 +1,53 @@
+{
+  "run": "research/dynamic-transitions/runs/R0063",
+  "validation_status": "passed",
+  "diagnostic_only": false,
+  "run_manifest_sha256": "11a600aeff0bc67a390f3e69eb5b362c050c6e881ee30caf0d9aacdac1858fcb",
+  "outputs": [
+    {
+      "path": "01-part-A-decisions.png",
+      "sha256": "504543ee57b490aac92ee66858959155a56f35f4429de04acef242b9437323b6"
+    },
+    {
+      "path": "01-part-A-decisions.svg",
+      "sha256": "76d7b90c26fcfc67bb13b7bdb32b7a0b0585afb72293aec6b31b0a24a5c0040d"
+    },
+    {
+      "path": "02-part-B1-shapes.png",
+      "sha256": "c3c6b27b89f17faf8daa05297ca058804cc3ca6bb4491816669ffa832bd09700"
+    },
+    {
+      "path": "02-part-B1-shapes.svg",
+      "sha256": "1fe7a982a265bfb03a3c6cfb525af0ba07ee4b6aee3a58bce5ab62a69d031c79"
+    },
+    {
+      "path": "03-part-C-real-fields.png",
+      "sha256": "25ab76c55699fca6f986de1c71e88d28bf572b1fb68bef28d5d230c35e6287cb"
+    },
+    {
+      "path": "03-part-C-real-fields.svg",
+      "sha256": "706985d76f17d619fe238e343341d4b70b78b9383855137696b436c1932b402c"
+    },
+    {
+      "path": "part-A.csv",
+      "sha256": "8dbd0f3edbd793ec950ed3c027129e97965475436a866517ed01bbe7ee5488fc"
+    },
+    {
+      "path": "part-B1.csv",
+      "sha256": "91d5c27b8ef76da8b9432f11a89c6a5c3c2efb4e4edc15f63940d51c28eb9786"
+    },
+    {
+      "path": "parts-B2-C2.csv",
+      "sha256": "7663f25789e3bdb5784cc268e43a001c14f56e40ab311e4f1a86e00b337d2e8e"
+    },
+    {
+      "path": "plot_source.py",
+      "sha256": "263211fb455bb233332568fd0ecfe01aa2b9b0880c5773218cf933ce06b0672f"
+    },
+    {
+      "path": "tables.md",
+      "sha256": "6825dc9156477e10cba328fcd883322490837dd6390d1f3d543b74b1aca279b3"
+    }
+  ],
+  "release_note": "v0.2.0: run path made repository-relative; decision-case labels in part-A.csv and tables.md translated to English and the tables title corrected from R0034 to R0063; those two hashes updated. Numbers unchanged."
+}

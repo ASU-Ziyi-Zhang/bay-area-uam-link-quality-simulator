@@ -1,0 +1,11 @@
+{
+  "run_id": "R0048",
+  "passed": true,
+  "failures": [],
+  "checks": {
+    "trace_rows": 205022,
+    "radio_observations": 49192,
+    "policy_updates": 19677,
+    "completed_aircraft": 93
+  }
+}

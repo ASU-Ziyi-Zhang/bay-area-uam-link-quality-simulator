@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_predictive_spatial_response",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 5.0,
+    "policy_s": 5.0,
+    "decision_s": 5.0,
+    "horizon_s": 180.0,
+    "window_s": 30.0,
+    "cooldown_s": 5.0,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "minimum_exposure_benefit": 0.02,
+    "lateral_speed_limit_mps": 8.0,
+    "lateral_accel_limit_mps2": 0.3,
+    "vertical_speed_limit_mps": 3.0,
+    "vertical_accel_limit_mps2": 0.2,
+    "min_maneuver_s": 30.0,
+    "center_control_step_m": 500.0,
+    "spatial_sample_m": 50.0,
+    "predictive_enabled": true,
+    "reaction_latency_s": 0.0,
+    "predictive_completion_before_f": false,
+    "predictive_rollout_s": 60.0,
+    "predictive_evaluation_s": 60.0,
+    "policy_cost_r": 1.0,
+    "policy_cost_f": 2.0,
+    "predictive_endpoint_upgrade": true
+  },
+  "planning": {
+    "minimum_radius_m": 976.0,
+    "candidate_spacing_m": 100.0,
+    "duration_search_step_s": 20.0
+  },
+  "offsets_m": [-200, -100, 0, 100, 200],
+  "heights_m": [200, 300, 400],
+  "cases": [
+    {
+      "id": "fixed_reference",
+      "mode": "none",
+      "parameters": {
+        "predictive_enabled": false,
+        "predictive_endpoint_upgrade": false,
+        "predictive_rollout_s": 0.0,
+        "predictive_evaluation_s": 0.0
+      }
+    },
+    {
+      "id": "rolling_60plus0_joint",
+      "mode": "joint",
+      "parameters": {
+        "predictive_evaluation_s": 0.0
+      }
+    },
+    {
+      "id": "rolling_60plus60_joint",
+      "mode": "joint"
+    }
+  ],
+  "notes": [
+    "Demonstration assumptions for method discussion; the 60 s and 60 s values are not calibrated operational standards.",
+    "Every 5 s, the controller checks for any policy degradation inside the 60 s warning horizon.",
+    "When warned, all candidates are evaluated over one common 120 s interval: 60 s warning plus 60 s extension.",
+    "A candidate may take longer than 60 s but must finish within 120 s and pass the provisional curvature guard.",
+    "Candidate benefit is the reduction in integrated ordinal policy cost with l(C)=0, l(R)=1 and l(F)=2.",
+    "Among improving candidates, selection minimizes policy cost, then endpoint policy severity, displacement and maneuver duration.",
+    "Local grid only; singleton exposure with no neighboring traffic, ACC, three-dimensional conflict resolution or capacity estimate.",
+    "The controller is modular receding-horizon logic, not a calibrated MPC or multi-stage dynamic-programming optimum."
+  ]
+}

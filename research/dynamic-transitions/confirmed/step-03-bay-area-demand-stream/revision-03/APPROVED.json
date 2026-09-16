@@ -1,0 +1,71 @@
+{
+  "status": "confirmed_external_result",
+  "revision": "03",
+  "date": "2026-09-12",
+  "authorization": "User requested that the external presentation show only the final calibrated 90 s single-lane test and its absolute results, without the 30 s versus 90 s parameter-selection comparison.",
+  "approval_scope": "External presentation framing for the verified R0048 single-lane result. The 30 s comparison remains internal provenance in revision-02.",
+  "run_id": "R0048",
+  "fixed_conditions": {
+    "scenario": "airport_to_airport",
+    "lanes": 1,
+    "altitude_m": 300.0,
+    "requested_arrival_interval_s": 32.0,
+    "lateral_change": false,
+    "vertical_change": false,
+    "threshold_db": -2.0,
+    "radio_sampling_s": 2.0,
+    "assessment_window_s": 90.0,
+    "policy_update_s": 5.0,
+    "coordinated_bad_exposure": 0.05,
+    "reactive_bad_exposure": 0.1,
+    "persistence_k": 3
+  },
+  "verified_outcomes": {
+    "completed_requests": "93/93",
+    "policy_percent": {
+      "coordinated": 63.1694,
+      "reactive": 36.0121,
+      "fallback": 0.8185
+    },
+    "sampled_nmac_count": 0,
+    "minimum_sampled_horizontal_separation_m": 1222.863,
+    "mean_entry_delay_s": 28.1149,
+    "gap_error_improved_fraction": 0.871377,
+    "timing_compatible_fraction": 0.483696,
+    "fully_settled_fraction": 0.059783
+  },
+  "interpretation_boundary": "The result demonstrates completion and absolute policy/operational performance for this fixed demand stream. It does not estimate capacity or establish complete longitudinal settling.",
+  "sources": [
+    {
+      "path": "figures/R0048/02-single-lane-final-result-contract.md",
+      "sha256": "b373758c74ed91a99e98cf590f6a0adb00dfcb6f059fb8425b4a19bc950b7d8c"
+    },
+    {
+      "path": "figures/R0048/02-single-lane-final-result-manifest.json",
+      "sha256": "ce2f86e020df038137d595bb12c03ae26b7b2fa6871ed6ea7a5affa4732afe66"
+    },
+    {
+      "path": "runs/R0048/validation.json",
+      "sha256": "504847586a062869d8ced26741187b50a697792012a59030193720d899954a5f"
+    }
+  ],
+  "copied_evidence": [
+    {
+      "path": "figures/02-single-lane-final-result.png",
+      "sha256": "3a4d73e4ea2fee17a3e456a0081837e1ec45c817d2134e4cc482f36c1a259d7a"
+    },
+    {
+      "path": "figures/02-single-lane-final-result.svg",
+      "sha256": "b6068bc64cb1e538b9480d1bf2779648867c11035608f3bdb6e2b54009a6c8ba"
+    },
+    {
+      "path": "source-data.csv",
+      "sha256": "93857f882968caef263a16764a440a99575e693e9dbc7a74eeaae94013cfdd7c"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "504847586a062869d8ced26741187b50a697792012a59030193720d899954a5f"
+    }
+  ],
+  "preservation_rule": "Do not overwrite this revision. Confirmed same-altitude three-lane results receive a later revision after paired execution and independent validation."
+}

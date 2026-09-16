@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_longitudinal_control",
+  "protocol": "research/dynamic-transitions/bay-area-longitudinal-large-stream-protocol.md",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300.0,
+    "cruise_mps": 50.0,
+    "dt_s": 0.5,
+    "forecast_dt_s": 1.0,
+    "radio_s": 2.0,
+    "policy_s": 5.0,
+    "decision_s": 5.0,
+    "persistence_k": 3,
+    "window_s": 30.0,
+    "threshold_db": -2.0,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "neighbors_each_side": 2,
+    "group_radius_m": null,
+    "d0_m": 152.4,
+    "tau_c_s": 15.0,
+    "tau_r_s": 30.0,
+    "tau_f_s": 60.0,
+    "buffer_s2_per_m": 0.167,
+    "target_c_m": 1319.9,
+    "target_r_m": 2069.9,
+    "target_f_m": 3569.9,
+    "k_speed_per_s": 0.2,
+    "k_gap_per_s2": 0.005,
+    "k_relative_per_s": 0.4,
+    "acceleration_limit_mps2": 1.5,
+    "deceleration_limit_mps2": 2.0,
+    "speed_min_mps": 30.0,
+    "speed_max_mps": 80.0,
+    "control_period_s": 0.5,
+    "horizontal_separation_m": 152.4,
+    "vertical_separation_m": 30.48,
+    "maximum_time_s": 4800.0,
+    "admission_retry_s": 0.5
+  },
+  "envelope": {
+    "longitudinal_accel_max_mps2": 1.5,
+    "longitudinal_decel_max_mps2": 2.0,
+    "lateral_accel_max_mps2": 0.981,
+    "route_normal_accel_max_mps2": 4.575,
+    "lateral_speed_max_mps": 8.0,
+    "vertical_accel_max_mps2": 0.2,
+    "coupling_mode": "maneuver_only"
+  },
+  "traffic": {
+    "aircraft_count": 93,
+    "entry_headway_s": 32.0,
+    "lateral_offset_m": 0.0,
+    "horizon_s": 4800.0,
+    "comparison_horizon_s": 2972.56
+  },
+  "case": {
+    "id": "longitudinal_93_uam_github_arrivals",
+    "lane_change_allowed": false,
+    "level_change_allowed": false
+  },
+  "notes": [
+    "Traffic count and 32 s arrivals match the published GitHub baseline.",
+    "No distance cutoff is applied to the adjacent-five policy group, matching the dashboard definition.",
+    "The full run checks completion; common-horizon policy metrics use the dashboard's 2972.56 s interval."
+  ]
+}

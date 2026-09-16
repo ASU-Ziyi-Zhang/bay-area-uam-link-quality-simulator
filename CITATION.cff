@@ -9,14 +9,17 @@ abstract: >-
   A reproducible toolkit for a Caltrain-referenced San Francisco to San Jose UAM
   corridor: the 75.423 km centerline, 18 retained physical macro-site locations,
   a deterministic RSRP/SINR link-quality kernel based on the 3GPP TR 36.777
-  UMa-AV LOS path-loss model, and a single-UAM multi-rate simulator with an
-  interactive 2D/3D dashboard. Parts of the code, tests, and documentation were
+  UMa-AV LOS path-loss model, a single-UAM multi-rate simulator with an
+  interactive 2D/3D dashboard, and multi-UAM motion control: policy-dependent
+  longitudinal spacing (ACC and AKS), lane-change profiles checked against a coupled
+  acceleration envelope and NMAC, a Bay Area policy calibration, and a 3 x 3 corridor
+  capacity experiment. Parts of the code, tests, and documentation were
   developed with AI coding assistants (OpenAI Codex and Anthropic Claude),
   limited to implementation, refactoring, test authoring, and drafting; the
   scenario definition, site selection and evidence review, modeling assumptions,
   and interpretation of results are the author's own.
-version: 0.1.0
-date-released: 2026-08-15
+version: 0.2.0
+date-released: 2026-09-14
 license:
   - MIT
   - CC-BY-4.0
@@ -29,3 +32,6 @@ keywords:
   - SINR
   - cellular connectivity
   - reproducible research
+  - adaptive cruise control
+  - lane change
+  - airspace capacity

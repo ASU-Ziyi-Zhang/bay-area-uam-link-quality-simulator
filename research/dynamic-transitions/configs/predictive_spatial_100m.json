@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "study": "bay_area_predictive_spatial_response",
+  "scenario": "../../../scenarios/airport_to_airport/scenario.json",
+  "parameters": {
+    "altitude_m": 300,
+    "cruise_mps": 50,
+    "dt_s": 0.5,
+    "forecast_dt_s": 5.0,
+    "policy_s": 5.0,
+    "decision_s": 20.0,
+    "horizon_s": 180.0,
+    "window_s": 30.0,
+    "cooldown_s": 30.0,
+    "threshold_db": -1.5,
+    "exposure_c": 0.05,
+    "exposure_r": 0.10,
+    "minimum_exposure_benefit": 0.02,
+    "lateral_speed_limit_mps": 8.0,
+    "lateral_accel_limit_mps2": 0.3,
+    "vertical_speed_limit_mps": 3.0,
+    "vertical_accel_limit_mps2": 0.2,
+    "min_maneuver_s": 30.0,
+    "center_control_step_m": 500.0,
+    "spatial_sample_m": 50.0,
+    "predictive_enabled": true,
+    "reaction_latency_s": 0.0,
+    "predictive_completion_before_f": true
+  },
+  "planning": {
+    "minimum_radius_m": 976.0,
+    "candidate_spacing_m": 100.0,
+    "duration_search_step_s": 20.0
+  },
+  "offsets_m": [-100, 0, 100],
+  "heights_m": [200, 300, 400],
+  "cases": [
+    {"id": "fixed_reference", "mode": "none", "parameters": {"predictive_enabled": false, "reaction_latency_s": 0.0}},
+    {"id": "reactive_joint", "mode": "joint", "parameters": {"predictive_enabled": false, "reaction_latency_s": 0.0}},
+    {"id": "predictive_joint", "mode": "joint", "parameters": {"predictive_enabled": true, "reaction_latency_s": 0.0, "predictive_completion_before_f": true}}
+  ],
+  "notes": [
+    "This is a lightweight predictive-trigger comparison, not the final multi-UAM study.",
+    "The fixed reference is forecast from the already reconstructed corridor radio/policy field.",
+    "Predictive mode checks future no-action policy before candidate search; this isolated timing run sets reaction_latency_s=0 because no calibrated command delay is available.",
+    "Predictive candidates must complete before at least one forecast F sample; late candidates are retained for audit but rejected.",
+    "Only the nearest 100 m candidate shell can win the minimum-change objective; duration trials use a 20 s step.",
+    "Forecast step is 5 s (the policy sampling interval) and horizon is 180 s for a rapid, auditable run.",
+    "Singleton local-group exposure only; no traffic, ACC, capacity, or aviation certification."
+  ]
+}

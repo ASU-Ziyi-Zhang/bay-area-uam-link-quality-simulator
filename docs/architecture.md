@@ -19,6 +19,26 @@ centered-five TRB definition is retained as a separate regression comparison.
 Neither mode implements operational conflict resolution or certified airborne
 capacity.
 
+## Motion layer (0.2.0)
+
+Research modules add motion on top of the policy layer:
+
+8. `Spacing` turns each aircraft's policy into a target
+   S = d0 + τ_p v + b v² (`GeographicTrafficConfig.spacing`).
+9. `Longitudinal control` follows the target with ACC (`geographic_traffic.acc_controls`)
+   or an AKS reference (`aks.py`).
+10. `Lateral actions` move aircraft between lanes or grid cells along exact
+    polynomial profiles (`five_uam_lateral.py`, `bay_area_dispatch.py`).
+11. `Motion envelope` and `Safety` bound every manoeuvre and count NMAC events
+    (`motion_envelope.py`, `safety.py`).
+12. `Capacity` reports the policy-conditioned planning rate of the moving stream
+    (`capacity_analysis.py`, `bay_area_dispatch.py`).
+
+These modules are used by the research runners under `scripts/` and do not change
+the single-UAM and fixed-lane dashboard modes. Methods and results:
+`docs/motion_control.md`, `docs/bay_area_calibration.md`,
+`docs/corridor_experiment.md`.
+
 ## Replaceable inputs
 
 - Select or add a self-contained pack under `scenarios/`; each pack owns its

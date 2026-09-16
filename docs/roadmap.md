@@ -33,19 +33,34 @@
 - Animate simultaneous UAMs and color each focal aircraft by C/R/F policy.
 - Report policy fractions, instantaneous mixed capacity, and `Q0.95`.
 
-## S3B — multi-lane and multi-level baseline (next)
+## S3B — multi-lane and multi-level baseline (research backend implemented)
 
 - Replicate the fixed corridor across explicit lane and altitude-level IDs.
 - Keep each aircraft in its assigned lane and level.
 - Compare capacity and communication results against the 1 x 1 baseline.
+- Implemented as a research backend (`research/geometry-response/`); not yet in
+  the dashboard.
 
-## S3C — dynamic lane/level changes (later)
+## S3C — motion control and dynamic lane/level changes (implemented in 0.2.0)
 
-- Add departure/arrival and vertiport dwell events.
-- Add conflict checks and level/lane occupancy.
-- Add a separately selectable MOBIL-style controller with SINR and spacing
-  criteria.
-- Aggregate capacity over explicit windows and report bottleneck causes.
+- Policy-dependent longitudinal spacing with ACC and AKS
+  (`docs/motion_control.md`).
+- Lane-change profiles, change/stay decision with admission filtering, coupled
+  motion envelope and NMAC event counting.
+- Bay Area classifier calibration (`docs/bay_area_calibration.md`).
+- Single-stream corridor experiment on a 3 × 3 lateral/altitude grid with
+  policy-conditioned planning capacity (`docs/corridor_experiment.md`).
+- Departure/arrival are virtual connectors; vertiport dwell and resources remain
+  out of scope.
+
+## S3D — next
+
+- Separate lanes by altitude instead of parallel lanes at one altitude.
+- Plan the corridor alignment from base-station locations.
+- Tune base-station transmit power and tilt per site, and improve the link-quality
+  and policy forecast.
+- Sweep the requested arrival interval for maximum sustainable capacity.
+- Show motion-control runs in the dashboard.
 
 ## S4 — GitHub packaging (completed locally)
 

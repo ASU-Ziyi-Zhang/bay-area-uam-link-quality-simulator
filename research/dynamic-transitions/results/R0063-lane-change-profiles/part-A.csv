@@ -1,0 +1,5 @@
+case,tests,first_change_revised_s,stay_cost,decision_rule_cost,status,checks_pass
+A1_safe_and_better,safe + benefit → change,0.0,580.0,352.0,completed,True
+A2_safe_no_gain,safe + no benefit → stay,,882.0,882.0,completed,True
+A3_unsafe_but_better,unsafe + benefit → stay,,580.0,580.0,completed,True
+A9_unsafe_and_no_gain,unsafe + no benefit → stay,,1100.0,1100.0,completed,True

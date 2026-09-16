@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "study": "local_synthetic_closed_fleet_mechanism_checks",
+  "radio_fixture": "synthetic_radio_v1",
+  "speed_definition": "local_straight_axis_ds_dt_not_total_3d_speed",
+  "parameters": {
+    "dt_s": 0.5,
+    "forecast_dt_s": 2.0,
+    "duration_s": 240.0,
+    "decision_interval_s": 20.0,
+    "forecast_horizon_s": 240.0,
+    "cooldown_s": 30.0,
+    "cruise_mps": 50.0,
+    "min_gap_m": 300.0,
+    "horizontal_separation_m": 200.0,
+    "vertical_separation_m": 100.0,
+    "min_maneuver_s": 30.0,
+    "lateral_speed_limit_mps": 8.0,
+    "vertical_speed_limit_mps": 3.0,
+    "lateral_accel_limit_mps2": 0.3,
+    "vertical_accel_limit_mps2": 0.2,
+    "accel_limit_mps2": 1.0,
+    "decel_limit_mps2": 1.5,
+    "acc_standstill_m": 200.0,
+    "acc_headway_s": 15.0,
+    "acc_speed_gain_per_s": 0.2,
+    "acc_gap_gain_per_s2": 0.005,
+    "acc_relative_gain_per_s": 0.4,
+    "sinr_threshold_db": -1.5,
+    "minimum_benefit_fraction": 0.05
+  },
+  "layouts": [
+    {
+      "id": "2x2",
+      "offsets_m": [-250, 250],
+      "heights_m": [300, 600],
+      "initial_aircraft": [
+        {"aircraft_id": "uam001", "s_m": 3000, "v_mps": 50, "cell": [0, 0]},
+        {"aircraft_id": "uam002", "s_m": 3700, "v_mps": 50, "cell": [1, 0]},
+        {"aircraft_id": "uam003", "s_m": 2300, "v_mps": 50, "cell": [1, 0]}
+      ]
+    },
+    {
+      "id": "3x3",
+      "offsets_m": [-500, 0, 500],
+      "heights_m": [150, 300, 450],
+      "initial_aircraft": [
+        {"aircraft_id": "uam001", "s_m": 3000, "v_mps": 50, "cell": [1, 1]},
+        {"aircraft_id": "uam002", "s_m": 3700, "v_mps": 50, "cell": [2, 1]},
+        {"aircraft_id": "uam003", "s_m": 2300, "v_mps": 50, "cell": [2, 1]}
+      ]
+    }
+  ],
+  "refinement": {"layout_id": "2x2", "factor": 2},
+  "notes": [
+    "All separation, controller and maneuver parameters are research assumptions, not aviation standards or calibrated vehicle dynamics.",
+    "Three initially active aircraft per layout, not one aircraft in every lane/level; identical initial states within each four-way comparison.",
+    "Synthetic prescribed SINR field deliberately exercises decisions; no Bay Area geometry, radio kernel, loading or capacity results are claimed.",
+    "Closed fleet on an unbounded local straight axis: no departures, queues, arrivals or throughput estimates.",
+    "ACC-like proportional speed/spacing feedback is independent of C/R/F; no policy-dependent following or original MOBIL has been implemented.",
+    "Screening is sampled, not a continuous-time proof. Aircraft are points with an ellipsoidal protected region and dual-cell gap reservation.",
+    "This local benchmark does not impose the separate corridor-optimization 8000 m curvature rule. Global georeferenced maneuver feasibility remains future work.",
+    "No randomness; ID-ordered serial arbitration is deterministic, not a fairness guarantee. Future control decisions are not known to the predictor."
+  ]
+}
