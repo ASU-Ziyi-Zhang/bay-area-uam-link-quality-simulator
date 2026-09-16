@@ -570,96 +570,136 @@
     return { ctx, width, height };
   }
 
-  // Cross-section: per cell, how many aircraft are in it and which policies they hold.
-  // Fixed vertical slots (tag, count, bar, counts) so nothing overlaps in a short cell.
-  function drawGrid(states, selected) {
-    const { ctx, width, height } = setupCanvas($("grid-chart"), 270);
-    const pad = { left: 54, right: 14, top: 16, bottom: 34 };
-    const cellW = (width - pad.left - pad.right) / offsets.length;
-    const cellH = (height - pad.top - pad.bottom) / altitudes.length;
-    const columnX = (offset) => pad.left + (offsets.indexOf(offset) + .5) * cellW;
-    const rowY = (altitude) => pad.top + (altitudes.length - 1 - altitudes.indexOf(altitude) + .5) * cellH;
-    const exactX = (offset) => pad.left + ((offset - offsets[0]) / (offsets.at(-1) - offsets[0]) * (offsets.length - 1) + .5) * cellW;
-    const exactY = (altitude) => pad.top + ((altitudes.at(-1) - altitude) / (altitudes.at(-1) - altitudes[0]) * (altitudes.length - 1) + .5) * cellH;
-    const counts = summary.grid.map(() => ({ C: 0, R: 0, F: 0 }));
-    states.forEach((state) => { counts[state.cell][state.policy] += 1; });
+  // Insertion geometry: where the neighbours are along the corridor relative to the selected
+  // aircraft, per grid cell, against the spacing its policy requires. This is the geometry the
+  // admission check works on; a corridor-wide count per cell was not decision-relevant.
+  const INSERTION_WINDOW_M = 4000;
+  function drawInsertion(states, selected) {
+    const { ctx, width, height } = setupCanvas($("grid-chart"), 230);
+    if (!selected) { ctx.fillStyle = "#64747c"; ctx.fillText("Select an aircraft on the map.", 14, 24); return; }
+    const pad = { left: 92, right: 58, top: 18, bottom: 30 };
+    const plotW = width - pad.left - pad.right;
+    const xAt = (metres) => pad.left + (metres + INSERTION_WINDOW_M) / (2 * INSERTION_WINDOW_M) * plotW;
 
-    summary.grid.forEach((cell, cellIndex) => {
-      const count = counts[cellIndex];
-      const total = count.C + count.R + count.F;
-      const left = columnX(cell.offset_m) - cellW / 2 + 5;
-      const top = rowY(cell.altitude_m) - cellH / 2 + 5;
-      const boxW = cellW - 10;
-      const boxH = cellH - 10;
-      const entry = cellIndex === summary.entry_flow_index;
-      ctx.fillStyle = total ? "#eef4f1" : "#f7f7f5";
-      ctx.strokeStyle = entry ? "#17364a" : "#d7ddd9";
-      ctx.lineWidth = entry ? 2 : 1;
-      ctx.fillRect(left, top, boxW, boxH);
-      ctx.strokeRect(left, top, boxW, boxH);
-      if (entry) {
-        ctx.fillStyle = "#64747c";
-        ctx.font = "9px system-ui";
-        const tag = "entry";
-        ctx.fillText(tag, left + boxW - ctx.measureText(tag).width - 8, top + 13);
-      }
-      ctx.fillStyle = total ? "#17364a" : "#b3bcbf";
-      ctx.font = "700 21px system-ui";
-      const countText = String(total);
-      ctx.fillText(countText, left + 10, top + 34);
-      const countWidth = ctx.measureText(countText).width;
-      ctx.fillStyle = "#64747c";
-      ctx.font = "9px system-ui";
-      ctx.fillText(total === 1 ? "aircraft" : "aircraft", left + 14 + countWidth, top + 34);
-      if (total) {
-        const barW = boxW - 20;
-        const barY = top + boxH - 27;
-        let x = left + 10;
-        POLICIES.split("").forEach((policy) => {
-          const share = count[policy] / total;
-          if (share <= 0) return;
-          ctx.fillStyle = colors[policy];
-          ctx.fillRect(x, barY, barW * share, 8);
-          x += barW * share;
-        });
-        ctx.font = "700 10px system-ui";
-        let labelX = left + 10;
-        POLICIES.split("").forEach((policy) => {
-          if (!count[policy]) return;
-          const label = `${policy} ${count[policy]}`;
-          ctx.fillStyle = colors[policy];
-          ctx.fillText(label, labelX, top + boxH - 7);
-          labelX += ctx.measureText(label).width + 9;
-        });
-      }
+    const near = states.filter((state) => Math.abs(state.q - selected.q) <= INSERTION_WINDOW_M);
+    const byCell = new Map();
+    near.forEach((state) => {
+      if (!byCell.has(state.cell)) byCell.set(state.cell, []);
+      byCell.get(state.cell).push(state);
     });
+    const change = activeChange(selected.idx, simulatedTime);
+    const pinned = new Set([selected.cell]);
+    if (change) pinned.add(change[3]);
+    pinned.forEach((cell) => { if (!byCell.has(cell)) byCell.set(cell, []); });
+    let cells = [...byCell.keys()];
+    cells.sort((a, b) => (pinned.has(b) ? 1 : 0) - (pinned.has(a) ? 1 : 0) || byCell.get(b).length - byCell.get(a).length);
+    const shown = cells.slice(0, 5);
+    shown.sort((a, b) => summary.grid[b].altitude_m - summary.grid[a].altitude_m || summary.grid[a].offset_m - summary.grid[b].offset_m);
+    const rowH = (height - pad.top - pad.bottom) / Math.max(1, shown.length);
+    const required = spacing[selected.policy];
 
-    ctx.fillStyle = "#64747c";
-    ctx.font = "10px system-ui";
-    offsets.forEach((offset) => {
-      const label = `${offset > 0 ? "+" : ""}${offset} m`;
-      ctx.fillText(label, columnX(offset) - ctx.measureText(label).width / 2, height - 18);
-    });
-    ctx.fillText("lateral offset", pad.left, height - 5);
-    altitudes.forEach((altitude) => ctx.fillText(`${altitude} m`, 8, rowY(altitude) + 3));
+    shown.forEach((cellIndex, row) => {
+      const y = pad.top + (row + .5) * rowH;
+      const cell = summary.grid[cellIndex];
+      const isEgo = cellIndex === selected.cell;
+      const isTarget = Boolean(change) && cellIndex === change[3];
 
-    if (selected) {
-      const x = exactX(selected.offset);
-      const y = exactY(selected.altitude);
-      const change = activeChange(selected.idx, simulatedTime);
-      if (change) {
-        const target = summary.grid[change[3]];
-        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4; ctx.setLineDash([4, 3]);
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(columnX(target.offset_m), rowY(target.altitude_m)); ctx.stroke();
-        ctx.strokeStyle = "#17364a"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(columnX(target.offset_m), rowY(target.altitude_m)); ctx.stroke();
+      if (isEgo || isTarget) {
+        ctx.fillStyle = colors[selected.policy];
+        ctx.globalAlpha = .1;
+        ctx.fillRect(xAt(-required), y - rowH / 2 + 3, xAt(required) - xAt(-required), rowH - 6);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = colors[selected.policy];
+        ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+        [-required, required].forEach((metres) => {
+          ctx.beginPath(); ctx.moveTo(xAt(metres), y - rowH / 2 + 3); ctx.lineTo(xAt(metres), y + rowH / 2 - 3); ctx.stroke();
+        });
         ctx.setLineDash([]);
       }
-      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = "#17364a"; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+
+      ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
+
+      ctx.fillStyle = isEgo ? "#17364a" : "#64747c";
+      ctx.font = isEgo ? "700 10px system-ui" : "10px system-ui";
+      ctx.fillText(`${cell.offset_m > 0 ? "+" : ""}${cell.offset_m} m · ${cell.altitude_m} m`, 6, y - 1);
+      ctx.fillStyle = "#9aa5a9"; ctx.font = "9px system-ui";
+      ctx.fillText(isEgo ? "own cell" : isTarget ? "target cell" : "", 6, y + 11);
+
+      const others = byCell.get(cellIndex).filter((state) => state.idx !== selected.idx);
+      others.forEach((state) => {
+        const dx = state.q - selected.q;
+        ctx.fillStyle = colors[state.policy];
+        ctx.beginPath(); ctx.arc(xAt(dx), y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5; ctx.stroke();
+      });
+
+      const ahead = others.filter((state) => state.q > selected.q).sort((a, b) => a.q - b.q)[0];
+      const behind = others.filter((state) => state.q < selected.q).sort((a, b) => b.q - a.q)[0];
+      ctx.font = "9px system-ui";
+      ctx.fillStyle = "#64747c";
+      const aheadText = ahead ? `${fmt((ahead.q - selected.q) / 1000, 2)} km` : "clear";
+      const behindText = behind ? `${fmt((selected.q - behind.q) / 1000, 2)} km` : "clear";
+      ctx.fillText(`↑ ${aheadText}`, width - pad.right + 6, y - 2);
+      ctx.fillText(`↓ ${behindText}`, width - pad.right + 6, y + 10);
+
+      if (isEgo) {
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(xAt(0), y, 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = colors[selected.policy];
+        ctx.beginPath(); ctx.arc(xAt(0), y, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#17364a"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(xAt(0), y, 9, 0, Math.PI * 2); ctx.stroke();
+      }
+    });
+
+    ctx.strokeStyle = "#17364a"; ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xAt(0), pad.top - 4); ctx.lineTo(xAt(0), height - pad.bottom + 4); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
+    [-4000, -2000, 0, 2000, 4000].forEach((metres) => {
+      const label = metres === 0 ? "0" : `${metres > 0 ? "+" : ""}${metres / 1000} km`;
+      ctx.fillText(label, xAt(metres) - ctx.measureText(label).width / 2, height - 14);
+    });
+    ctx.fillText("distance along the corridor from the selected aircraft  ·  ahead →", pad.left, height - 2);
+    $("grid-note").textContent = `needs ${fmt(required, 0)} m (${selected.policy}) ahead and behind · ±4 km shown`;
+  }
+
+  // Predicted gain of each lane change, as recorded at the decision in the archived run.
+  function drawBenefit(selected) {
+    const { ctx, width, height } = setupCanvas($("benefit-chart"), 150);
+    const changes = caseData.changes;
+    if (!changes.length) {
+      ctx.fillStyle = "#64747c";
+      ctx.fillText("No lane changes in this case: every aircraft stays on the entry cell.", 14, 24);
+      $("benefit-note").textContent = "—";
+      return;
     }
+    const pad = { left: 40, right: 12, top: 16, bottom: 24 };
+    const tMax = Math.max(...changes.map((change) => change[0]), frames.at(-1).t);
+    const gains = changes.map((change) => change[5]);
+    const maxGain = Math.max(...gains, 1);
+    const xAt = (t) => pad.left + t / tMax * (width - pad.left - pad.right);
+    const yAt = (gain) => pad.top + (maxGain - gain) / maxGain * (height - pad.top - pad.bottom);
+    ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, height - pad.bottom); ctx.lineTo(width - pad.right, height - pad.bottom); ctx.stroke();
+    changes.forEach((change) => {
+      const mine = selected && change[1] === selected.idx;
+      ctx.fillStyle = mine ? "#17364a" : "#9aa5a9";
+      ctx.beginPath(); ctx.arc(xAt(change[0]), yAt(change[5]), mine ? 5 : 3, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), pad.top); ctx.lineTo(xAt(simulatedTime), height - pad.bottom); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
+    ctx.fillText(`${fmt(maxGain, 0)} s`, 6, pad.top + 8);
+    ctx.fillText("0", 6, height - pad.bottom);
+    ctx.fillText("predicted policy-cost improvement per change", pad.left + 4, pad.top - 4);
+    ctx.fillText(formatTime(0), pad.left, height - 8);
+    ctx.fillText(formatTime(tMax), width - pad.right - 32, height - 8);
+    const mine = selected ? changes.filter((change) => change[1] === selected.idx) : [];
+    const worsened = changes.filter((change) => change[8] > 0).length;
+    $("benefit-note").textContent = mine.length
+      ? `${aircraft[selected.idx].id}: ${mine.length} change${mine.length > 1 ? "s" : ""}, predicted ${mine.map((change) => `${fmt(change[5], 0)} s`).join(" · ")}`
+      : `${changes.length} changes · ${worsened} with an aircraft predicted worse off`;
   }
 
   function aircraftSeries(idx) {
@@ -897,7 +937,8 @@
       $("link-current").textContent = "—";
     }
     drawPolicyShares();
-    drawGrid(states, selected);
+    drawInsertion(states, selected);
+    drawBenefit(selected);
     drawLinkChart(selected);
     drawAircraftChart(selected);
     drawCapacity();

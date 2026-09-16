@@ -96,7 +96,10 @@ def build_case(run_dir, case, frame_s, to_geo, controllers):
             int(r["lane"]), round(r["q_m"])])
     capacity = [[float(row["timestamp_s"]), round(float(row["q_mix_uam_h"]), 3), int(row["n_C"]), int(row["n_R"]), int(row["n_F"])]
                 for row in read_csv(case_dir / "capacity_trace.csv")]
-    changes = [[e["t_s"], index[e["aircraft_id"]], int(e["source_lane"]), int(e["target_lane"]), float(e["duration_s"])]
+    changes = [[e["t_s"], index[e["aircraft_id"]], int(e["source_lane"]), int(e["target_lane"]), float(e["duration_s"]),
+                round(float(e.get("predicted_global_policy_cost_improvement_s") or 0.0), 2),
+                round(float(e.get("predicted_ego_policy_cost_improvement_s") or 0.0), 2),
+                len(e.get("affected_aircraft") or []), len(e.get("worsened_aircraft") or [])]
                for e in events if e.get("status") == "change_started"]
     metrics = summary["policy_and_longitudinal_metrics"]
     return {
@@ -162,6 +165,8 @@ def main():
             "compared_window_s": [first_exit, last_entry], "controllers": controllers,
             "row_fields": ["aircraft", "lat_e5", "lon_e5", "x_m", "y_m", "altitude_m", "offset_m", "speed_dmps",
                            "policy", "controller", "gap_m", "moving", "cell", "q_m"],
+            "change_fields": ["t_s", "aircraft", "source_cell", "target_cell", "duration_s",
+                              "predicted_global_s", "predicted_ego_s", "affected", "worsened"],
             "validation": validation.get("status"),
         },
         "route": route, "route_metric": route_metric, "stations": stations, "cases": cases,

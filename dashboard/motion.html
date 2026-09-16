@@ -11,7 +11,7 @@
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
     <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
-    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v4" />
+    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v5" />
   </head>
   <body>
     <div class="traffic-dashboard motion-dashboard">
@@ -150,9 +150,13 @@
           </section>
 
           <section class="policy-card" aria-labelledby="grid-heading">
-            <div class="card-heading"><div><span class="eyebrow">CROSS-SECTION</span><h2 id="grid-heading">Where the aircraft fly</h2></div><span id="grid-note">—</span></div>
-            <canvas id="grid-chart" aria-label="Aircraft count in each lateral and altitude cell"></canvas>
-            <p>Looking along the corridor from behind: columns are lateral offset (−300 / 0 / +300 m), rows are altitude (200 / 300 / 400 m). In each cell the large number is how many aircraft are flying there at this moment, the bar is the mix of their policies, and <strong>C</strong>/<strong>R</strong>/<strong>F</strong> below it count them. The ring is the selected aircraft at its own offset and altitude; a dashed line points to the cell it is moving to.</p>
+            <div class="card-heading"><div><span class="eyebrow">INSERTION GEOMETRY</span><h2 id="grid-heading">Neighbours around the selected aircraft</h2></div><span id="grid-note">—</span></div>
+            <canvas id="grid-chart" aria-label="Along-track position of nearby aircraft in each grid cell, relative to the selected aircraft"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--ego"></i>selected aircraft</span>
+              <span><i class="chart-key chart-key--band chart-key--band-c"></i>spacing its policy requires, ahead and behind</span>
+              <span>rows = grid cells near it · x = distance along the corridor · ↑ nearest ahead, ↓ nearest behind</span>
+            </p>
           </section>
 
           <section class="selected-card" aria-labelledby="selected-heading">
@@ -195,6 +199,16 @@
             </p>
           </section>
 
+          <section class="policy-card" aria-labelledby="benefit-heading">
+            <div class="card-heading"><div><span class="eyebrow">LANE-CHANGE BENEFIT</span><h2 id="benefit-heading">Predicted gain of each change</h2></div><span id="benefit-note">—</span></div>
+            <canvas id="benefit-chart" aria-label="Predicted policy-cost improvement of each lane change over time"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--other"></i>every change in this case</span>
+              <span><i class="chart-key chart-key--ego"></i>changes by the selected aircraft</span>
+              <span>predicted at the decision, not a measured outcome</span>
+            </p>
+          </section>
+
           <section class="policy-card" aria-labelledby="compare-heading">
             <div class="card-heading"><div><span class="eyebrow">CASE SUMMARY</span><h2 id="compare-heading">No lane change against lane change</h2></div><span id="compare-window">—</span></div>
             <div class="motion-table-wrap"><table id="compare-table" class="motion-table"></table></div>
@@ -217,7 +231,7 @@
             crossorigin="anonymous"></script>
     <script>
       (() => {
-        const version = "20260916-lanechange-v4";
+        const version = "20260916-lanechange-v5";
         const dataScript = document.createElement("script");
         dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
         dataScript.addEventListener("load", () => {
