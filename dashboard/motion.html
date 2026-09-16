@@ -11,7 +11,7 @@
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
     <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
-    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v2" />
+    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v3" />
   </head>
   <body>
     <div class="traffic-dashboard motion-dashboard">
@@ -81,8 +81,8 @@
                 <span><i class="policy-dot policy-dot--c"></i>Coordinated</span>
                 <span><i class="policy-dot policy-dot--r"></i>Reactive</span>
                 <span><i class="policy-dot policy-dot--f"></i>Fallback</span>
-                <span><i class="motion-legend-ac">3</i>altitude (×100 m)</span>
-                <span><i class="motion-legend-ac motion-legend-ac--moving"></i>changing lane</span>
+                <span><i class="motion-legend-plane">✈</i>aircraft, altitude on the badge</span>
+                <span><i class="motion-legend-plane motion-legend-plane--moving">✈</i>changing lane</span>
               </div>
             </div>
             <div id="motion-map" role="application" aria-label="Multi-aircraft corridor map with lateral lanes"></div>
@@ -136,10 +136,23 @@
             <article><span>Lane changes</span><strong id="lane-changes">—</strong><small id="lane-change-caption">started so far / total</small></article>
           </section>
 
+          <section class="policy-card" aria-labelledby="policy-heading">
+            <div class="card-heading"><div><span class="eyebrow">THIS CASE</span><h2 id="policy-heading">Policy fractions</h2></div><span id="policy-observations">—</span></div>
+            <div class="policy-bar" aria-label="Policy time shares">
+              <span id="share-c-bar" class="policy-bar__c"></span><span id="share-r-bar" class="policy-bar__r"></span><span id="share-f-bar" class="policy-bar__f"></span>
+            </div>
+            <div class="policy-values">
+              <div><i class="policy-dot policy-dot--c"></i><span>Coordinated</span><strong id="share-c">—</strong></div>
+              <div><i class="policy-dot policy-dot--r"></i><span>Reactive</span><strong id="share-r">—</strong></div>
+              <div><i class="policy-dot policy-dot--f"></i><span>Fallback</span><strong id="share-f">—</strong></div>
+            </div>
+            <p id="policy-description">Share of aircraft-time in each policy.</p>
+          </section>
+
           <section class="policy-card" aria-labelledby="grid-heading">
             <div class="card-heading"><div><span class="eyebrow">CROSS-SECTION</span><h2 id="grid-heading">Where the aircraft fly</h2></div><span id="grid-note">—</span></div>
             <canvas id="grid-chart" aria-label="Aircraft count in each lateral and altitude cell"></canvas>
-            <p>Looking along the corridor: count of aircraft in each cell, coloured by their policy. The ring marks the selected aircraft at its flown offset and altitude.</p>
+            <p>Looking along the corridor. Each cell shows how many aircraft are in it and a C/R/F bar of their policies; the ring marks the selected aircraft at its flown offset and altitude.</p>
           </section>
 
           <section class="selected-card" aria-labelledby="selected-heading">
@@ -152,18 +165,38 @@
               <div><dt>Gap to leader</dt><dd id="selected-gap">—</dd></div>
               <div><dt>Spacing target</dt><dd id="selected-target">—</dd></div>
               <div><dt>SINR</dt><dd id="selected-sinr">—</dd></div>
+              <div><dt>RSRP</dt><dd id="selected-rsrp">—</dd></div>
               <div><dt>Progress</dt><dd id="selected-progress">—</dd></div>
               <div class="selected-wide"><dt>Lane change</dt><dd id="selected-move">—</dd></div>
             </dl>
           </section>
 
+          <section class="link-card" aria-labelledby="link-heading">
+            <div class="card-heading"><div><span class="eyebrow">LINK QUALITY</span><h2 id="link-heading">Selected aircraft: SINR and policy</h2></div><span id="link-current">—</span></div>
+            <canvas id="link-quality-chart" aria-label="SINR of the selected aircraft over its flight, with the policy it held"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--sinr"></i>SINR</span>
+              <span><i class="chart-key chart-key--dash"></i>threshold Θ</span>
+              <span><i class="chart-key chart-key--band chart-key--band-c"></i>C</span>
+              <span><i class="chart-key chart-key--band chart-key--band-r"></i>R</span>
+              <span><i class="chart-key chart-key--band chart-key--band-f"></i>F</span>
+              <span>band = the policy this aircraft held</span>
+            </p>
+          </section>
+
           <section class="link-card" aria-labelledby="aircraft-heading">
-            <div class="card-heading"><div><span class="eyebrow">SPACING CONTROL</span><h2 id="aircraft-heading">Selected aircraft: speed and spacing</h2></div><span id="aircraft-note">—</span></div>
+            <div class="card-heading"><div><span class="eyebrow">SPACING CONTROL</span><h2 id="aircraft-heading">Selected aircraft: speed and spacing</h2></div></div>
             <canvas id="aircraft-chart" aria-label="Selected aircraft speed, gap and spacing target over time"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--speed"></i>speed</span>
+              <span><i class="chart-key chart-key--gap"></i>gap to leader</span>
+              <span><i class="chart-key chart-key--thick"></i>spacing target S(policy)</span>
+              <span><i class="chart-key chart-key--grey"></i>no leader in the group</span>
+            </p>
           </section>
 
           <section class="policy-card" aria-labelledby="compare-heading">
-            <div class="card-heading"><div><span class="eyebrow">RESULT</span><h2 id="compare-heading">No lane change against lane change</h2></div><span id="compare-window">—</span></div>
+            <div class="card-heading"><div><span class="eyebrow">CASE SUMMARY</span><h2 id="compare-heading">No lane change against lane change</h2></div><span id="compare-window">—</span></div>
             <div class="motion-table-wrap"><table id="compare-table" class="motion-table"></table></div>
             <p id="compare-note">Same demand, spacing law and controller in both cases. Grid cells are alternative positions for one stream, not extra lanes.</p>
           </section>
@@ -184,7 +217,7 @@
             crossorigin="anonymous"></script>
     <script>
       (() => {
-        const version = "20260916-lanechange-v2";
+        const version = "20260916-lanechange-v3";
         const dataScript = document.createElement("script");
         dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
         dataScript.addEventListener("load", () => {

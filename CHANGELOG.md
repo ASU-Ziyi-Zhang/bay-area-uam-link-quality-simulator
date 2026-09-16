@@ -48,6 +48,11 @@ unchanged.
   uses the 5 s replay grid rather than the run's 2 s radio sampling, so with the
   archived settings it reports C/R/F 71.2/28.2/0.6% against the run's
   73.8/25.9/0.3%. One click restores the archived run.
+  The page uses the same aircraft symbol as the other two, with altitude on a
+  badge; the cross-section reports a count and a C/R/F bar per cell instead of
+  one dot per aircraft; policy fractions for the case and the selected
+  aircraft's SINR against the threshold with the policy it held are shown as on
+  the policy page; both per-aircraft charts carry legends.
 
 ### Changed
 

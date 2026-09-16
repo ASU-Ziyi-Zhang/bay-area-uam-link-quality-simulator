@@ -76,18 +76,18 @@
     };
   }
 
-  const decoded = {};       // caseId -> array over frames of Map(idx -> row)
-  const archived = {};      // caseId -> { policies, capacity, stats }
+  const decoded = {};
+  const archived = {};
   Object.entries(data.cases).forEach(([caseId, caseData]) => {
     decoded[caseId] = caseData.frames.map((frame) => new Map(frame.rows.map((row) => [row[field.aircraft], decodeRow(row)])));
     archived[caseId] = {
       policies: decoded[caseId].map((rows) => new Map([...rows].map(([idx, row]) => [idx, row.policy]))),
       capacity: caseData.capacity,
       stats: { ...caseData.stats },
+      observations: decoded[caseId].reduce((total, rows) => total + rows.size, 0),
     };
   });
-  let active = JSON.parse(JSON.stringify({}));   // placeholder, replaced below
-  active = {};
+  const active = {};
   Object.keys(archived).forEach((caseId) => { active[caseId] = archived[caseId]; });
   let recomputed = false;
 
@@ -134,15 +134,15 @@
     return values;
   }
 
-  // ------------------------------------------------------------------ policy recomputation
-  const sinrCache = {};   // caseId -> array over frames of Map(idx -> sinr)
+  // ------------------------------------------------------------------ radio and policy recomputation
+  const radioCache = {};   // caseId -> array over frames of Map(idx -> {sinr, rsrp, site})
 
-  function sinrFor(caseId) {
-    if (sinrCache[caseId]) return sinrCache[caseId];
-    sinrCache[caseId] = decoded[caseId].map((rows) => new Map([...rows].map(([idx, row]) => [
-      idx, engine.evaluateRadio(data.stations, summary.radio, { x_m: row.x, y_m: row.y }, row.altitude).sinr,
+  function radioFor(caseId) {
+    if (radioCache[caseId]) return radioCache[caseId];
+    radioCache[caseId] = decoded[caseId].map((rows) => new Map([...rows].map(([idx, row]) => [
+      idx, engine.evaluateRadio(data.stations, summary.radio, { x_m: row.x, y_m: row.y }, row.altitude),
     ])));
-    return sinrCache[caseId];
+    return radioCache[caseId];
   }
 
   function groupMembers(rows, focal, values) {
@@ -168,16 +168,16 @@
   function recomputeCase(caseId, values) {
     const frames = data.cases[caseId].frames;
     const rowsByFrame = decoded[caseId];
-    const sinr = sinrFor(caseId);
+    const radio = radioFor(caseId);
     const windowFrames = Math.max(1, Math.round(values.windowS / frameS));
-    const history = new Map();      // idx -> array of support values
+    const history = new Map();
     const held = new Map();
     const candidate = new Map();
     const policies = [];
     const capacity = [];
     const counts = { C: 0, R: 0, F: 0 };
     rowsByFrame.forEach((rows, k) => {
-      const ok = new Map([...rows].map(([idx, row]) => [idx, sinr[k].get(idx) >= values.thresholdDb]));
+      const ok = new Map([...rows].map(([idx]) => [idx, radio[k].get(idx).sinr >= values.thresholdDb]));
       const framePolicies = new Map();
       for (const [idx, row] of rows) {
         const members = groupMembers(rows, row, values);
@@ -207,16 +207,18 @@
         counts[held.get(idx)] += 1;
       }
       policies.push(framePolicies);
-      const values_ = [...framePolicies.values()];
-      const mean = values_.reduce((total, policy) => total + spacing[policy], 0) / Math.max(1, values_.length);
+      const framePolicyValues = [...framePolicies.values()];
+      const mean = framePolicyValues.reduce((total, policy) => total + spacing[policy], 0) / Math.max(1, framePolicyValues.length);
       capacity.push([frames[k].t, 3600 * referenceSpeed / mean,
-        values_.filter((p) => p === "C").length, values_.filter((p) => p === "R").length, values_.filter((p) => p === "F").length]);
+        framePolicyValues.filter((p) => p === "C").length,
+        framePolicyValues.filter((p) => p === "R").length,
+        framePolicyValues.filter((p) => p === "F").length]);
     });
     const total = counts.C + counts.R + counts.F;
     const [lo, hi] = summary.compared_window_s;
     const windowValues = capacity.filter((row) => row[0] >= lo && row[0] <= hi).map((row) => row[1]);
     return {
-      policies, capacity,
+      policies, capacity, observations: total,
       stats: {
         ...data.cases[caseId].stats,
         policy_shares: { C: counts.C / total, R: counts.R / total, F: counts.F / total },
@@ -331,6 +333,11 @@
     return out;
   }
 
+  function headingOf(state) {
+    const point = engine.interpolateRoute(route, corridorLengthM, state.q, 0);
+    return Math.atan2(point.tangentX, point.tangentY) * 180 / Math.PI;
+  }
+
   function activeChange(idx, t) {
     return caseData.changes.find((change) => change[1] === idx && change[0] <= t + 1e-9 && t < change[0] + change[4]);
   }
@@ -400,14 +407,19 @@
     if (viewer3d) { for (const entity of aircraft3d.values()) viewer3d.entities.remove(entity); aircraft3d.clear(); }
   }
 
-  function markerIcon(state, selected) {
-    const classes = ["motion-ac"];
-    if (state.moving) classes.push("motion-ac--moving");
-    if (selected) classes.push("motion-ac--selected");
+  // Same aircraft symbol as the other two pages: a plane rotated to its heading and coloured by
+  // policy. Altitude rides along as a small badge, because this page has three levels.
+  function markerIcon(state, heading, selected) {
+    const classes = ["uam-traffic-marker"];
+    if (selected) classes.push("uam-traffic-marker--selected");
+    if (state.moving) classes.push("uam-traffic-marker--moving");
     return L.divIcon({
       className: "",
-      html: `<div class="${classes.join(" ")}" style="background:${colors[state.policy]}">${Math.round(state.altitude / 100)}</div>`,
-      iconSize: selected ? [28, 28] : [20, 20], iconAnchor: selected ? [14, 14] : [10, 10],
+      html: `<div class="uam-traffic-hit">`
+        + `<div class="${classes.join(" ")}" style="background:${colors[state.policy]};transform:rotate(${heading + 45}deg)" aria-label="${state.policy} policy aircraft">✈</div>`
+        + `<span class="motion-ac-alt">${Math.round(state.altitude)} m</span></div>`,
+      iconSize: selected ? [40, 40] : [32, 32],
+      iconAnchor: selected ? [20, 20] : [16, 16],
     });
   }
 
@@ -418,7 +430,8 @@
     }
     states.forEach((state) => {
       const selected = state.idx === selectedIdx;
-      const key = `${state.policy}${state.moving}${selected}${Math.round(state.altitude / 100)}`;
+      const heading = headingOf(state);
+      const key = `${state.policy}${state.moving}${selected}${Math.round(state.altitude)}${Math.round(heading / 5)}`;
       let marker = markers.get(state.idx);
       if (!marker) {
         marker = L.marker([state.lat, state.lon], { title: `Select ${aircraft[state.idx].id}`, keyboard: true })
@@ -427,7 +440,7 @@
       }
       marker.setLatLng([state.lat, state.lon]);
       if (marker._motionKey !== key) {
-        marker.setIcon(markerIcon(state, selected));
+        marker.setIcon(markerIcon(state, heading, selected));
         marker.setZIndexOffset(selected ? 1200 : 800);
         marker.bindTooltip(`${aircraft[state.idx].id} · ${state.policy} · ${Math.round(state.altitude)} m`, { direction: "top" });
         marker._motionKey = key;
@@ -557,8 +570,9 @@
     return { ctx, width, height };
   }
 
+  // Cross-section: one number per cell plus a C/R/F bar, rather than one symbol per aircraft.
   function drawGrid(states, selected) {
-    const { ctx, width, height } = setupCanvas($("grid-chart"), 240);
+    const { ctx, width, height } = setupCanvas($("grid-chart"), 230);
     const pad = { left: 52, right: 14, top: 14, bottom: 30 };
     const cellW = (width - pad.left - pad.right) / offsets.length;
     const cellH = (height - pad.top - pad.bottom) / altitudes.length;
@@ -569,29 +583,37 @@
     states.forEach((state) => { counts[state.cell][state.policy] += 1; });
     summary.grid.forEach((cell, cellIndex) => {
       const cx = xAt(cell.offset_m); const cy = yOf(cell.altitude_m);
-      const total = counts[cellIndex].C + counts[cellIndex].R + counts[cellIndex].F;
+      const count = counts[cellIndex];
+      const total = count.C + count.R + count.F;
       const entry = cellIndex === summary.entry_flow_index;
+      const left = cx - cellW / 2 + 5; const top = cy - cellH / 2 + 5;
+      const boxW = cellW - 10; const boxH = cellH - 10;
       ctx.fillStyle = total ? "#eef4f1" : "#f7f7f5";
       ctx.strokeStyle = entry ? "#17364a" : "#d7ddd9";
       ctx.lineWidth = entry ? 2 : 1;
-      ctx.fillRect(cx - cellW / 2 + 4, cy - cellH / 2 + 4, cellW - 8, cellH - 8);
-      ctx.strokeRect(cx - cellW / 2 + 4, cy - cellH / 2 + 4, cellW - 8, cellH - 8);
-      let dot = 0;
-      POLICIES.split("").forEach((policy) => {
-        for (let n = 0; n < counts[cellIndex][policy] && dot < 18; n += 1, dot += 1) {
-          ctx.fillStyle = colors[policy];
-          ctx.beginPath();
-          ctx.arc(cx - cellW / 2 + 16 + (dot % 6) * 11, cy - cellH / 2 + 18 + Math.floor(dot / 6) * 11, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
+      ctx.fillRect(left, top, boxW, boxH);
+      ctx.strokeRect(left, top, boxW, boxH);
       ctx.fillStyle = total ? "#17364a" : "#9aa5a9";
-      ctx.font = "700 13px system-ui";
-      ctx.fillText(String(total), cx + cellW / 2 - 24, cy + cellH / 2 - 12);
+      ctx.font = "700 20px system-ui";
+      ctx.fillText(String(total), left + 10, top + boxH / 2 + 4);
       ctx.font = "10px system-ui";
-      if (entry) { ctx.fillStyle = "#17364a"; ctx.fillText("entry", cx - cellW / 2 + 10, cy + cellH / 2 - 12); }
+      if (entry) { ctx.fillStyle = "#64747c"; ctx.fillText("entry", left + 10, top + 14); }
+      if (total) {
+        const barW = boxW - 20; const barY = top + boxH - 16;
+        let x = left + 10;
+        POLICIES.split("").forEach((policy) => {
+          const share = count[policy] / total;
+          if (share <= 0) return;
+          ctx.fillStyle = colors[policy];
+          ctx.fillRect(x, barY, barW * share, 7);
+          x += barW * share;
+        });
+        ctx.fillStyle = "#64747c";
+        ctx.fillText(`${count.C}/${count.R}/${count.F}`, left + 10, barY - 4);
+      }
     });
     ctx.fillStyle = "#64747c";
+    ctx.font = "10px system-ui";
     offsets.forEach((offset) => ctx.fillText(`${offset > 0 ? "+" : ""}${offset} m`, xAt(offset) - 16, height - 10));
     altitudes.forEach((altitude) => ctx.fillText(`${altitude} m`, 6, yOf(altitude) + 3));
     if (selected) {
@@ -609,24 +631,69 @@
 
   function aircraftSeries(idx) {
     if (seriesCache && seriesCache.idx === idx && seriesCache.caseId === caseId) return seriesCache.rows;
+    const radio = radioFor(caseId);
     const rows = [];
     rowsByFrame.forEach((frameRows, k) => {
       const row = frameRows.get(idx);
-      if (row) rows.push({ t: frames[k].t, ...row, policy: policyAt(k, idx, row.policy) });
+      if (!row) return;
+      const link = radio[k].get(idx);
+      rows.push({ t: frames[k].t, ...row, policy: policyAt(k, idx, row.policy), sinr: link.sinr, rsrp: link.rsrp, site: link.site });
     });
     seriesCache = { idx, caseId, rows };
     return rows;
   }
 
+  // Link quality of the selected aircraft over its own flight, with the policy it produced.
+  function drawLinkChart(selected) {
+    const { ctx, width, height } = setupCanvas($("link-quality-chart"), 200);
+    if (!selected) { ctx.fillStyle = "#64747c"; ctx.fillText("Select an aircraft on the map.", 14, 24); return; }
+    const rows = aircraftSeries(selected.idx);
+    const pad = { left: 46, right: 12, top: 34, bottom: 26 };
+    const t0 = rows[0].t; const t1 = rows.at(-1).t;
+    const threshold = recomputed ? currentParameters.thresholdDb : Number(parameters.threshold_db);
+    const values = rows.map((row) => row.sinr).concat([threshold]);
+    const min = Math.floor(Math.min(...values) - 1);
+    const max = Math.ceil(Math.max(...values) + 1);
+    const xAt = (t) => pad.left + (t - t0) / Math.max(1, t1 - t0) * (width - pad.left - pad.right);
+    const yAt = (value) => pad.top + (max - value) / (max - min) * (height - pad.top - pad.bottom);
+
+    // policy of the aircraft as a band under the curve
+    for (let i = 0; i + 1 < rows.length; i += 1) {
+      ctx.fillStyle = colors[rows[i].policy];
+      ctx.globalAlpha = .18;
+      ctx.fillRect(xAt(rows[i].t), pad.top, Math.max(1, xAt(rows[i + 1].t) - xAt(rows[i].t)), height - pad.top - pad.bottom);
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, height - pad.bottom); ctx.lineTo(width - pad.right, height - pad.bottom); ctx.stroke();
+    ctx.strokeStyle = "#d65353"; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.left, yAt(threshold)); ctx.lineTo(width - pad.right, yAt(threshold)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#d65353";
+    ctx.fillText(`Θ ${fmt(threshold)} dB`, width - pad.right - 62, yAt(threshold) - 4);
+    ctx.strokeStyle = "#168c85"; ctx.lineWidth = 2; ctx.beginPath();
+    rows.forEach((row, i) => { const x = xAt(row.t); const y = yAt(row.sinr); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), pad.top); ctx.lineTo(xAt(simulatedTime), height - pad.bottom); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#64747c";
+    ctx.fillText("SINR (dB)", pad.left + 4, pad.top - 6);
+    ctx.fillText(String(max), 6, pad.top + 8);
+    ctx.fillText(String(min), 6, height - pad.bottom);
+    ctx.fillText(formatTime(t0), pad.left, height - 8);
+    ctx.fillText(formatTime(t1), width - pad.right - 32, height - 8);
+    const switches = rows.reduce((total, row, i) => total + (i && row.policy !== rows[i - 1].policy ? 1 : 0), 0);
+    $("link-current").textContent = `${aircraft[selected.idx].id} · ${switches} policy changes`;
+  }
+
   function drawAircraftChart(selected) {
-    const { ctx, width, height } = setupCanvas($("aircraft-chart"), 230);
+    const { ctx, width, height } = setupCanvas($("aircraft-chart"), 210);
     if (!selected) { ctx.fillStyle = "#64747c"; ctx.fillText("Select an aircraft on the map.", 14, 24); return; }
     const rows = aircraftSeries(selected.idx);
     const pad = { left: 46, right: 12 };
     const t0 = rows[0].t; const t1 = rows.at(-1).t;
     const xAt = (t) => pad.left + (t - t0) / Math.max(1, t1 - t0) * (width - pad.left - pad.right);
-    const speedPanel = { top: 14, h: 72, min: parameters.speed_min_mps - 2, max: parameters.speed_max_mps + 2, label: "speed (m/s)" };
-    const gapPanel = { top: 116, h: 84, min: 0, max: spacing.F * 1.35, label: "gap to leader vs spacing target (m, capped)" };
+    const speedPanel = { top: 14, h: 64, min: parameters.speed_min_mps - 2, max: parameters.speed_max_mps + 2, label: "speed (m/s)" };
+    const gapPanel = { top: 108, h: 74, min: 0, max: spacing.F * 1.35, label: "gap and spacing target (m, capped)" };
     [speedPanel, gapPanel].forEach((panel) => {
       panel.yAt = (value) => panel.top + (panel.max - Math.min(value, panel.max)) / (panel.max - panel.min) * panel.h;
       ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
@@ -637,8 +704,7 @@
       ctx.fillText(fmt(panel.min, 0), 4, panel.top + panel.h);
     });
 
-    // stretches without a leader in the group: shade them instead of leaving an unexplained blank
-    ctx.fillStyle = "#f0f0ee";
+    ctx.fillStyle = "#e9e9e6";
     let runStart = null;
     rows.forEach((row, i) => {
       if (row.gap < 0 && runStart === null) runStart = row.t;
@@ -653,7 +719,6 @@
     rows.forEach((row, i) => { const x = xAt(row.t); const y = speedPanel.yAt(row.speed); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
     ctx.stroke();
 
-    // spacing target: a step line, with the vertical connector drawn at each policy change
     for (let i = 0; i + 1 < rows.length; i += 1) {
       const level = gapPanel.yAt(spacing[rows[i].policy]);
       ctx.strokeStyle = colors[rows[i].policy]; ctx.lineWidth = 3;
@@ -674,11 +739,24 @@
     ctx.stroke();
 
     ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
-    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), 8); ctx.lineTo(xAt(simulatedTime), 204); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), 8); ctx.lineTo(xAt(simulatedTime), 186); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "#64747c";
-    ctx.fillText(formatTime(t0), pad.left, 222);
-    ctx.fillText(formatTime(t1), width - pad.right - 32, 222);
-    ctx.fillText("thick = spacing target S(policy) · thin = actual gap · grey = no leader in the group", pad.left + 52, 222);
+    ctx.fillText(formatTime(t0), pad.left, 202);
+    ctx.fillText(formatTime(t1), width - pad.right - 32, 202);
+  }
+
+  function drawPolicyShares() {
+    const stats = active[caseId].stats;
+    POLICIES.split("").forEach((policy) => {
+      const share = Number(stats.policy_shares[policy] || 0);
+      $(`share-${policy.toLowerCase()}`).textContent = `${fmt(100 * share)}%`;
+      $(`share-${policy.toLowerCase()}-bar`).style.width = `${100 * share}%`;
+    });
+    const observations = active[caseId].observations || archived[caseId].observations;
+    $("policy-observations").textContent = `${observations.toLocaleString()} aircraft-frames`;
+    $("policy-description").textContent = recomputed
+      ? `Share of aircraft-time in each policy, recomputed with Θ ${fmt(currentParameters.thresholdDb)} dB, ${fmt(currentParameters.windowS, 0)} s window, k = ${currentParameters.persistenceK}.`
+      : `Share of aircraft-time in each policy in the archived run (Θ ${fmt(parameters.threshold_db)} dB, ${fmt(parameters.window_s, 0)} s window, k = ${parameters.persistence_k}).`;
   }
 
   function drawCapacity() {
@@ -705,8 +783,6 @@
     ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), pad.top); ctx.lineTo(xAt(simulatedTime), height - pad.bottom); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "#64747c";
     ctx.fillText(String(maxY), 6, pad.top + 8); ctx.fillText(String(minY), 6, height - pad.bottom);
-    const label = caseId === "spatial_grid" ? "lane change" : "no lane change";
-    ctx.fillText(`teal = ${label} · grey = other case · UAM/h${recomputed ? " · recomputed policy" : ""}`, pad.left + 6, height - 6);
   }
 
   function renderCompareTable() {
@@ -719,9 +795,7 @@
       ["Planning rate, 95% reliable", (s) => `${fmt(s.window_q95_uam_h)} UAM/h`],
       ["Completed lane changes", (s) => String(s.completed_lane_changes)],
       ["Aircraft held at entry", (s) => String(s.held_at_entry)],
-      ["Longest entry hold", (s) => `${fmt(s.longest_entry_hold_s)} s`],
       ["Speed reversals per flight", (s) => fmt(s.speed_reversals_per_flight)],
-      ["Last aircraft out", (s) => `${fmt(s.end_s / 60)} min`],
       ["Completed / sampled NMAC", (s) => `${s.completed}/${s.scheduled} · ${s.sampled_nmac ? "yes" : "none"}`],
     ];
     const header = `<thead><tr><th></th>${ids.map((id) => `<th class="${id === caseId ? "motion-table__current" : ""}">${id === "spatial_grid" ? "Lane change" : "No change"}</th>`).join("")}</tr></thead>`;
@@ -735,6 +809,7 @@
   function select(idx) {
     setPlaying(false);
     selectedIdx = idx;
+    seriesCache = null;
     cameraMode = "follow";
     annotateCamera();
     draw();
@@ -778,16 +853,19 @@
       $("selected-gap").textContent = selected.gap >= 0 ? `${fmt(selected.gap, 0)} m` : "no leader in group";
       $("selected-target").textContent = `${fmt(spacing[selected.policy], 0)} m (${selected.policy})`;
       $("selected-sinr").textContent = `${fmt(link.sinr)} dB · ${link.site.id}`;
+      $("selected-rsrp").textContent = `${fmt(link.rsrp)} dBm/RE`;
       $("selected-progress").textContent = `${fmt(selected.q / 1000, 2)} km · ${fmt(100 * selected.q / corridorLengthM)}%`;
       $("selected-move").textContent = change
         ? `${cellLabel(change[2])} → ${cellLabel(change[3])} · ${fmt(simulatedTime - change[0], 0)} of ${fmt(change[4], 1)} s`
         : `none now · ${caseData.changes.filter((c) => c[1] === selected.idx).length} in this flight · entry delay ${fmt(record.entry_delay_s)} s`;
-      $("aircraft-note").textContent = record.id;
       servingLine.setLatLngs([[selected.lat, selected.lon], [link.site.lat, link.site.lon]]);
     } else {
       servingLine.setLatLngs([]);
+      $("link-current").textContent = "—";
     }
+    drawPolicyShares();
     drawGrid(states, selected);
+    drawLinkChart(selected);
     drawAircraftChart(selected);
     drawCapacity();
   }
@@ -850,6 +928,7 @@
     }),
     setCase: (id) => { $("case-select").value = id; $("case-select").dispatchEvent(new Event("change")); },
     seek: (t) => { setPlaying(false); simulatedTime = t; index = Math.max(0, Math.min(frames.length - 1, Math.floor((t - frames[0].t) / frameS))); draw(); },
+    select: (id) => { const found = aircraft.findIndex((row) => row.id === id); if (found >= 0) select(found); return found; },
     recompute: (overrides = {}) => {
       populateForm({ ...currentParameters, ...overrides });
       $("experiment-form").dispatchEvent(new Event("submit"));

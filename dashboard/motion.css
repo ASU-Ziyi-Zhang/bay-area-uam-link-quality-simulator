@@ -37,3 +37,29 @@
   #motion-map { min-height: 380px; }
   .motion-settings { margin: 8px 8px 0; padding: 12px; }
 }
+
+/* aircraft symbol: same plane as the other pages, with its altitude on a badge */
+.uam-traffic-hit { position: relative; }
+.uam-traffic-marker--moving { box-shadow: 0 0 0 3px #17364a, 0 2px 6px rgb(0 0 0 / 30%); }
+.motion-ac-alt { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 1px); padding: 0 3px; border-radius: 4px; background: rgb(255 253 250 / 92%); color: var(--ink); font-size: .58rem; font-weight: 750; white-space: nowrap; pointer-events: none; }
+.motion-legend-plane { display: inline-grid; place-items: center; width: 15px; height: 15px; border: 2px solid white; border-radius: 50% 50% 50% 0; background: var(--muted); color: white; font-size: 8px; font-style: normal; transform: rotate(45deg); box-shadow: 0 0 0 1px rgb(23 54 74 / 20%); }
+.motion-legend-plane--moving { box-shadow: 0 0 0 2px var(--ink); }
+
+/* chart legends */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 5px 13px; margin: 6px 15px 13px; color: var(--muted); font-size: .65rem; }
+.chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.chart-key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; background: var(--muted); }
+.chart-key--sinr { background: var(--teal); }
+.chart-key--speed { background: #294f70; }
+.chart-key--gap { background: var(--ink); height: 2px; }
+.chart-key--dash { height: 0; border-top: 2px dashed var(--fallback); }
+.chart-key--thick { height: 5px; background: linear-gradient(90deg, var(--coordinated) 0 50%, var(--reactive) 50% 100%); }
+.chart-key--grey { width: 14px; height: 10px; border-radius: 2px; background: #e9e9e6; }
+.chart-key--band { width: 12px; height: 10px; border-radius: 2px; opacity: .4; }
+.chart-key--band-c { background: var(--coordinated); }
+.chart-key--band-r { background: var(--reactive); }
+.chart-key--band-f { background: var(--fallback); }
+
+#link-quality-chart { display: block; width: 100%; height: 200px; border-top: 1px solid var(--line); }
+#grid-chart { height: 230px; }
+#aircraft-chart { height: 210px; }
