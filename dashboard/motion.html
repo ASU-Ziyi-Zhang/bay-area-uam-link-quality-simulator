@@ -11,7 +11,7 @@
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
     <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
-    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v3" />
+    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v4" />
   </head>
   <body>
     <div class="traffic-dashboard motion-dashboard">
@@ -152,7 +152,7 @@
           <section class="policy-card" aria-labelledby="grid-heading">
             <div class="card-heading"><div><span class="eyebrow">CROSS-SECTION</span><h2 id="grid-heading">Where the aircraft fly</h2></div><span id="grid-note">—</span></div>
             <canvas id="grid-chart" aria-label="Aircraft count in each lateral and altitude cell"></canvas>
-            <p>Looking along the corridor. Each cell shows how many aircraft are in it and a C/R/F bar of their policies; the ring marks the selected aircraft at its flown offset and altitude.</p>
+            <p>Looking along the corridor from behind: columns are lateral offset (−300 / 0 / +300 m), rows are altitude (200 / 300 / 400 m). In each cell the large number is how many aircraft are flying there at this moment, the bar is the mix of their policies, and <strong>C</strong>/<strong>R</strong>/<strong>F</strong> below it count them. The ring is the selected aircraft at its own offset and altitude; a dashed line points to the cell it is moving to.</p>
           </section>
 
           <section class="selected-card" aria-labelledby="selected-heading">
@@ -217,7 +217,7 @@
             crossorigin="anonymous"></script>
     <script>
       (() => {
-        const version = "20260916-lanechange-v3";
+        const version = "20260916-lanechange-v4";
         const dataScript = document.createElement("script");
         dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
         dataScript.addEventListener("load", () => {

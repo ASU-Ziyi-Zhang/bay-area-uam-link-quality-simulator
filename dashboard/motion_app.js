@@ -570,62 +570,95 @@
     return { ctx, width, height };
   }
 
-  // Cross-section: one number per cell plus a C/R/F bar, rather than one symbol per aircraft.
+  // Cross-section: per cell, how many aircraft are in it and which policies they hold.
+  // Fixed vertical slots (tag, count, bar, counts) so nothing overlaps in a short cell.
   function drawGrid(states, selected) {
-    const { ctx, width, height } = setupCanvas($("grid-chart"), 230);
-    const pad = { left: 52, right: 14, top: 14, bottom: 30 };
+    const { ctx, width, height } = setupCanvas($("grid-chart"), 270);
+    const pad = { left: 54, right: 14, top: 16, bottom: 34 };
     const cellW = (width - pad.left - pad.right) / offsets.length;
     const cellH = (height - pad.top - pad.bottom) / altitudes.length;
-    const xAt = (offset) => pad.left + (offsets.indexOf(offset) + .5) * cellW;
-    const xOf = (offset) => pad.left + ((offset - offsets[0]) / (offsets.at(-1) - offsets[0]) * (offsets.length - 1) + .5) * cellW;
-    const yOf = (altitude) => pad.top + ((altitudes.at(-1) - altitude) / (altitudes.at(-1) - altitudes[0]) * (altitudes.length - 1) + .5) * cellH;
+    const columnX = (offset) => pad.left + (offsets.indexOf(offset) + .5) * cellW;
+    const rowY = (altitude) => pad.top + (altitudes.length - 1 - altitudes.indexOf(altitude) + .5) * cellH;
+    const exactX = (offset) => pad.left + ((offset - offsets[0]) / (offsets.at(-1) - offsets[0]) * (offsets.length - 1) + .5) * cellW;
+    const exactY = (altitude) => pad.top + ((altitudes.at(-1) - altitude) / (altitudes.at(-1) - altitudes[0]) * (altitudes.length - 1) + .5) * cellH;
     const counts = summary.grid.map(() => ({ C: 0, R: 0, F: 0 }));
     states.forEach((state) => { counts[state.cell][state.policy] += 1; });
+
     summary.grid.forEach((cell, cellIndex) => {
-      const cx = xAt(cell.offset_m); const cy = yOf(cell.altitude_m);
       const count = counts[cellIndex];
       const total = count.C + count.R + count.F;
+      const left = columnX(cell.offset_m) - cellW / 2 + 5;
+      const top = rowY(cell.altitude_m) - cellH / 2 + 5;
+      const boxW = cellW - 10;
+      const boxH = cellH - 10;
       const entry = cellIndex === summary.entry_flow_index;
-      const left = cx - cellW / 2 + 5; const top = cy - cellH / 2 + 5;
-      const boxW = cellW - 10; const boxH = cellH - 10;
       ctx.fillStyle = total ? "#eef4f1" : "#f7f7f5";
       ctx.strokeStyle = entry ? "#17364a" : "#d7ddd9";
       ctx.lineWidth = entry ? 2 : 1;
       ctx.fillRect(left, top, boxW, boxH);
       ctx.strokeRect(left, top, boxW, boxH);
-      ctx.fillStyle = total ? "#17364a" : "#9aa5a9";
-      ctx.font = "700 20px system-ui";
-      ctx.fillText(String(total), left + 10, top + boxH / 2 + 4);
-      ctx.font = "10px system-ui";
-      if (entry) { ctx.fillStyle = "#64747c"; ctx.fillText("entry", left + 10, top + 14); }
+      if (entry) {
+        ctx.fillStyle = "#64747c";
+        ctx.font = "9px system-ui";
+        const tag = "entry";
+        ctx.fillText(tag, left + boxW - ctx.measureText(tag).width - 8, top + 13);
+      }
+      ctx.fillStyle = total ? "#17364a" : "#b3bcbf";
+      ctx.font = "700 21px system-ui";
+      const countText = String(total);
+      ctx.fillText(countText, left + 10, top + 34);
+      const countWidth = ctx.measureText(countText).width;
+      ctx.fillStyle = "#64747c";
+      ctx.font = "9px system-ui";
+      ctx.fillText(total === 1 ? "aircraft" : "aircraft", left + 14 + countWidth, top + 34);
       if (total) {
-        const barW = boxW - 20; const barY = top + boxH - 16;
+        const barW = boxW - 20;
+        const barY = top + boxH - 27;
         let x = left + 10;
         POLICIES.split("").forEach((policy) => {
           const share = count[policy] / total;
           if (share <= 0) return;
           ctx.fillStyle = colors[policy];
-          ctx.fillRect(x, barY, barW * share, 7);
+          ctx.fillRect(x, barY, barW * share, 8);
           x += barW * share;
         });
-        ctx.fillStyle = "#64747c";
-        ctx.fillText(`${count.C}/${count.R}/${count.F}`, left + 10, barY - 4);
+        ctx.font = "700 10px system-ui";
+        let labelX = left + 10;
+        POLICIES.split("").forEach((policy) => {
+          if (!count[policy]) return;
+          const label = `${policy} ${count[policy]}`;
+          ctx.fillStyle = colors[policy];
+          ctx.fillText(label, labelX, top + boxH - 7);
+          labelX += ctx.measureText(label).width + 9;
+        });
       }
     });
+
     ctx.fillStyle = "#64747c";
     ctx.font = "10px system-ui";
-    offsets.forEach((offset) => ctx.fillText(`${offset > 0 ? "+" : ""}${offset} m`, xAt(offset) - 16, height - 10));
-    altitudes.forEach((altitude) => ctx.fillText(`${altitude} m`, 6, yOf(altitude) + 3));
+    offsets.forEach((offset) => {
+      const label = `${offset > 0 ? "+" : ""}${offset} m`;
+      ctx.fillText(label, columnX(offset) - ctx.measureText(label).width / 2, height - 18);
+    });
+    ctx.fillText("lateral offset", pad.left, height - 5);
+    altitudes.forEach((altitude) => ctx.fillText(`${altitude} m`, 8, rowY(altitude) + 3));
+
     if (selected) {
-      ctx.strokeStyle = "#17364a"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(xOf(selected.offset), yOf(selected.altitude), 9, 0, Math.PI * 2); ctx.stroke();
+      const x = exactX(selected.offset);
+      const y = exactY(selected.altitude);
       const change = activeChange(selected.idx, simulatedTime);
       if (change) {
         const target = summary.grid[change[3]];
-        ctx.setLineDash([4, 3]);
-        ctx.beginPath(); ctx.moveTo(xOf(selected.offset), yOf(selected.altitude)); ctx.lineTo(xAt(target.offset_m), yOf(target.altitude_m)); ctx.stroke();
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(columnX(target.offset_m), rowY(target.altitude_m)); ctx.stroke();
+        ctx.strokeStyle = "#17364a"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(columnX(target.offset_m), rowY(target.altitude_m)); ctx.stroke();
         ctx.setLineDash([]);
       }
+      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = "#17364a"; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
     }
   }
 
