@@ -4,6 +4,11 @@
 .motion-settings__list dt { color: var(--muted); font-size: .64rem; font-weight: 750; text-transform: uppercase; letter-spacing: .03em; }
 .motion-settings__list dd { margin: 3px 0 0; font-size: .82rem; font-weight: 750; }
 
+/* This page has five policy inputs and three group inputs; let them flow instead of forcing four columns. */
+.motion-dashboard .experiment-controls form { grid-template-columns: minmax(360px, 1.25fr) minmax(300px, .9fr) auto; }
+.motion-dashboard .experiment-controls fieldset,
+.motion-dashboard .experiment-controls fieldset:nth-of-type(2) { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+
 #motion-map { height: min(56vh, 600px); min-height: 420px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 #motion-3d { height: 420px; border-top: 1px solid var(--line); }
 #capacity-chart { height: 190px; }

@@ -1,4 +1,4 @@
-"""Checks for the motion-control dashboard page and its precomputed bundle."""
+"""Checks for the multi-UAM lane-change dashboard page and its precomputed bundle."""
 import json
 from pathlib import Path
 
@@ -13,15 +13,18 @@ def read_bundle() -> dict:
     return json.loads(text[len(prefix):].strip().removesuffix(";"))
 
 
-def test_motion_page_links_and_controls():
+def test_lane_change_page_links_and_controls():
     html = (ROOT / "dashboard" / "motion.html").read_text(encoding="utf-8")
     app = (ROOT / "dashboard" / "motion_app.js").read_text(encoding="utf-8")
     for element_id in ("case-select", "motion-map", "motion-3d", "time-slider", "capacity-chart", "grid-chart",
-                       "aircraft-chart", "compare-table", "settings-list", "selected-controller", "selected-move"):
+                       "aircraft-chart", "compare-table", "settings-list", "selected-controller", "selected-move",
+                       "input-theta", "input-window", "input-persistence", "input-c-tolerance", "input-r-tolerance",
+                       "input-group-size", "input-group-mode", "input-reliability", "run-experiment", "reset-experiment"):
         assert f'id="{element_id}"' in html
     assert "data/airport_to_airport_motion.js" in html
     assert "traffic_engine.js" in html
     assert 'href="traffic.html' in html and 'href="index.html' in html
+    assert "Lane Change" in html and "Multi-UAM lane change" in html
     assert "window.UAM_MOTION_DATA" in app and "UAM_MOTION_QA" in app
 
 
@@ -34,7 +37,8 @@ def test_motion_bundle_comes_from_a_validated_run_with_calibrated_settings():
     assert p["d0_m"] == 152.4
     assert {k: round(v, 1) for k, v in summary["spacing_m"].items()} == {"C": 1319.9, "R": 2069.9, "F": 3569.9}
     assert len(summary["grid"]) == 9
-    assert summary["row_fields"][0] == "aircraft" and len(summary["row_fields"]) == 13
+    assert summary["row_fields"][0] == "aircraft" and len(summary["row_fields"]) == 14
+    assert "q_m" in summary["row_fields"]
 
 
 def test_every_frame_matches_the_capacity_trace():

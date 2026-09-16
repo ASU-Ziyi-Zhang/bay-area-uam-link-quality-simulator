@@ -80,7 +80,7 @@ unchanged. No random number generator is used.
 
 Aircraft in this mode fly at constant speed on one lane. Longitudinal spacing
 control and lane changes are shown on the separate
-[motion-control page](../dashboard/motion.html) ([method](motion_control.md)).
+[lane-change page](../dashboard/motion.html) ([method](motion_control.md)).
 
 The dashboard preserves that frozen baseline and also provides a deterministic
 experiment panel. `Departure interval` is the traffic input and offered demand

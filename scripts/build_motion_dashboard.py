@@ -93,7 +93,7 @@ def build_case(run_dir, case, frame_s, to_geo, controllers):
             index[r["aircraft_id"]], round(lat * 1e5), round(lon * 1e5), round(r["xyz"][0]), round(r["xyz"][1]),
             round(r["xyz"][2]), round(r["offset_m"]), round(r["v_mps"] * 10), POLICIES.index(r["policy"]),
             controllers.index(mode), round(min(gaps)) if gaps else -1, 0 if r.get("target_lane") is None else 1,
-            int(r["lane"])])
+            int(r["lane"]), round(r["q_m"])])
     capacity = [[float(row["timestamp_s"]), round(float(row["q_mix_uam_h"]), 3), int(row["n_C"]), int(row["n_R"]), int(row["n_F"])]
                 for row in read_csv(case_dir / "capacity_trace.csv")]
     changes = [[e["t_s"], index[e["aircraft_id"]], int(e["source_lane"]), int(e["target_lane"]), float(e["duration_s"])]
@@ -161,7 +161,7 @@ def main():
             "global_headway_s": cfg["traffic"]["global_headway_s"], "requests": cfg["traffic"]["global_entry_count"],
             "compared_window_s": [first_exit, last_entry], "controllers": controllers,
             "row_fields": ["aircraft", "lat_e5", "lon_e5", "x_m", "y_m", "altitude_m", "offset_m", "speed_dmps",
-                           "policy", "controller", "gap_m", "moving", "cell"],
+                           "policy", "controller", "gap_m", "moving", "cell", "q_m"],
             "validation": validation.get("status"),
         },
         "route": route, "route_metric": route_metric, "stations": stations, "cases": cases,

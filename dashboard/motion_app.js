@@ -7,7 +7,7 @@
   if (!data || !window.L || !engine) {
     errorPanel.hidden = false;
     errorPanel.textContent = !data
-      ? "Motion data bundle is missing. Rebuild it with scripts/build_motion_dashboard.py."
+      ? "Lane-change data bundle is missing. Rebuild it with scripts/build_motion_dashboard.py."
       : !window.L ? "The bundled Leaflet map library did not load." : "The shared radio engine did not load.";
     return;
   }
@@ -22,6 +22,9 @@
   const frameS = Number(summary.frame_s);
   const offsets = [...new Set(summary.grid.map((cell) => cell.offset_m))].sort((a, b) => a - b);
   const altitudes = [...new Set(summary.grid.map((cell) => cell.altitude_m))].sort((a, b) => a - b);
+  const cellIndexOf = summary.grid.map((cell) => ({
+    offset: offsets.indexOf(cell.offset_m), altitude: altitudes.indexOf(cell.altitude_m),
+  }));
   const controllerLabels = {
     cruise: "Cruise · no binding leader",
     ks2_tracker: "AKS reference tracking",
@@ -29,36 +32,240 @@
   };
   const $ = (id) => document.getElementById(id);
   const fmt = (value, digits = 1) => Number(value).toFixed(digits);
+  const spacing = summary.spacing_m;
+  const referenceSpeed = Number(parameters.cruise_mps);
 
   function formatTime(seconds) {
     const value = Math.max(0, Math.round(seconds));
     return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
   }
 
-  // ------------------------------------------------------------------ settings
-  const spacing = summary.spacing_m;
-  const settings = [
-    ["SINR threshold Θ", `${fmt(parameters.threshold_db)} dB`],
-    ["Radio sampling", `${fmt(parameters.radio_s, 0)} s`],
-    ["Policy update", `${fmt(parameters.policy_s, 0)} s`],
-    ["Assessment window", `${fmt(parameters.window_s, 0)} s`],
-    ["Persistence k", String(parameters.persistence_k)],
-    ["Exposure C / R", `${fmt(100 * parameters.exposure_c, 0)}% / ${fmt(100 * parameters.exposure_r, 0)}%`],
-    ["Exposure group", `${parameters.group_mode} · 5 aircraft`],
-    ["Spacing C / R / F", `${fmt(spacing.C, 0)} / ${fmt(spacing.R, 0)} / ${fmt(spacing.F, 0)} m`],
-    ["Spacing law", `${fmt(parameters.d0_m)} + τ·v + ${parameters.buffer_s2_per_m}·v²`],
-    ["Speed", `${fmt(parameters.speed_min_mps, 0)}–${fmt(parameters.speed_max_mps, 0)} m/s`],
+  function lowerTail(values, rho) {
+    const ordered = [...values].sort((a, b) => a - b);
+    return ordered[Math.max(0, Math.min(ordered.length - 1, Math.floor((1 - rho) * (ordered.length - 1))))];
+  }
+
+  // ------------------------------------------------------------------ fixed settings
+  const fixedSettings = [
+    ["Cruise speed", `${fmt(parameters.cruise_mps, 0)} m/s`],
+    ["Speed range", `${fmt(parameters.speed_min_mps, 0)}–${fmt(parameters.speed_max_mps, 0)} m/s`],
     ["Longitudinal accel.", `+${fmt(parameters.acceleration_limit_mps2)} / −${fmt(parameters.deceleration_limit_mps2)} m/s²`],
     ["Lane-change accel.", `${fmt(summary.envelope.lateral_accel_max_mps2, 3)} m/s² (0.1 g)`],
+    ["Spacing law", `${fmt(parameters.d0_m)} + τ·v + ${parameters.buffer_s2_per_m}·v²`],
+    ["Spacing C / R / F", `${fmt(spacing.C, 0)} / ${fmt(spacing.R, 0)} / ${fmt(spacing.F, 0)} m`],
+    ["Headways τ", `${fmt(parameters.tau_c_s, 0)} / ${fmt(parameters.tau_r_s, 0)} / ${fmt(parameters.tau_f_s, 0)} s`],
     ["Demand", `1 request / ${fmt(summary.global_headway_s, 0)} s · ${summary.requests} requests`],
+    ["Replay grid", `${fmt(frameS, 0)} s (run sampled radio every ${fmt(parameters.radio_s, 0)} s)`],
   ];
-  $("settings-list").replaceChildren(...settings.map(([label, value]) => {
+  $("settings-list").replaceChildren(...fixedSettings.map(([label, value]) => {
     const item = document.createElement("div");
     item.innerHTML = `<dt>${label}</dt><dd>${value}</dd>`;
     return item;
   }));
   $("run-note").textContent = `Run ${summary.run_id} · validation ${summary.validation} · ${summary.display.route_label || summary.scenario_id}`;
-  $("footer-run").textContent = `Precomputed from verified run ${summary.run_id} · frames every ${fmt(frameS, 0)} s, interpolated for playback`;
+  $("footer-run").textContent = `Replay of verified run ${summary.run_id} · frames every ${fmt(frameS, 0)} s, interpolated for playback`;
+
+  // ------------------------------------------------------------------ archived state
+  function decodeRow(row) {
+    return {
+      idx: row[field.aircraft], lat: row[field.lat_e5] / 1e5, lon: row[field.lon_e5] / 1e5,
+      x: row[field.x_m], y: row[field.y_m], altitude: row[field.altitude_m], offset: row[field.offset_m],
+      speed: row[field.speed_dmps] / 10, policy: POLICIES[row[field.policy]],
+      controller: summary.controllers[row[field.controller]], gap: row[field.gap_m],
+      moving: row[field.moving] === 1, cell: row[field.cell], q: row[field.q_m],
+    };
+  }
+
+  const decoded = {};       // caseId -> array over frames of Map(idx -> row)
+  const archived = {};      // caseId -> { policies, capacity, stats }
+  Object.entries(data.cases).forEach(([caseId, caseData]) => {
+    decoded[caseId] = caseData.frames.map((frame) => new Map(frame.rows.map((row) => [row[field.aircraft], decodeRow(row)])));
+    archived[caseId] = {
+      policies: decoded[caseId].map((rows) => new Map([...rows].map(([idx, row]) => [idx, row.policy]))),
+      capacity: caseData.capacity,
+      stats: { ...caseData.stats },
+    };
+  });
+  let active = JSON.parse(JSON.stringify({}));   // placeholder, replaced below
+  active = {};
+  Object.keys(archived).forEach((caseId) => { active[caseId] = archived[caseId]; });
+  let recomputed = false;
+
+  const baselineParameters = {
+    thresholdDb: Number(parameters.threshold_db),
+    windowS: Number(parameters.window_s),
+    persistenceK: Number(parameters.persistence_k),
+    coordinatedTolerance: Number(parameters.exposure_c),
+    reactiveTolerance: Number(parameters.exposure_r),
+    groupSize: 5,
+    groupMode: String(parameters.group_mode),
+    reliabilityRho: 0.95,
+  };
+  let currentParameters = { ...baselineParameters };
+
+  function populateForm(values) {
+    $("input-theta").value = String(values.thresholdDb);
+    $("input-window").value = String(values.windowS);
+    $("input-persistence").value = String(values.persistenceK);
+    $("input-c-tolerance").value = String(Math.round(100 * values.coordinatedTolerance));
+    $("input-r-tolerance").value = String(Math.round(100 * values.reactiveTolerance));
+    $("input-group-size").value = String(values.groupSize);
+    $("input-group-mode").value = values.groupMode;
+    $("input-reliability").value = String(Math.round(100 * values.reliabilityRho));
+  }
+
+  function readForm() {
+    const values = {
+      thresholdDb: Number($("input-theta").value),
+      windowS: Number($("input-window").value),
+      persistenceK: Number($("input-persistence").value),
+      coordinatedTolerance: Number($("input-c-tolerance").value) / 100,
+      reactiveTolerance: Number($("input-r-tolerance").value) / 100,
+      groupSize: Number($("input-group-size").value),
+      groupMode: $("input-group-mode").value,
+      reliabilityRho: Number($("input-reliability").value) / 100,
+    };
+    if (!(values.windowS >= frameS)) throw new Error(`exposure window must be at least ${frameS} s`);
+    if (!Number.isInteger(values.persistenceK) || values.persistenceK < 1) throw new Error("persistence k must be a positive integer");
+    if (!(values.coordinatedTolerance >= 0 && values.coordinatedTolerance <= values.reactiveTolerance && values.reactiveTolerance <= 1)) {
+      throw new Error("exposure limits must satisfy 0 ≤ C ≤ R ≤ 1");
+    }
+    if (!(values.reliabilityRho > 0 && values.reliabilityRho <= 1)) throw new Error("reliability ρ must lie in (0, 1]");
+    return values;
+  }
+
+  // ------------------------------------------------------------------ policy recomputation
+  const sinrCache = {};   // caseId -> array over frames of Map(idx -> sinr)
+
+  function sinrFor(caseId) {
+    if (sinrCache[caseId]) return sinrCache[caseId];
+    sinrCache[caseId] = decoded[caseId].map((rows) => new Map([...rows].map(([idx, row]) => [
+      idx, engine.evaluateRadio(data.stations, summary.radio, { x_m: row.x, y_m: row.y }, row.altitude).sinr,
+    ])));
+    return sinrCache[caseId];
+  }
+
+  function groupMembers(rows, focal, values) {
+    const neighbours = Math.floor(values.groupSize / 2);
+    const cap = neighbours * spacing.F;
+    const focalCell = cellIndexOf[focal.cell];
+    const candidates = [];
+    for (const row of rows.values()) {
+      if (row.idx === focal.idx) continue;
+      const cell = cellIndexOf[row.cell];
+      const adjacent = values.groupMode === "lane_order"
+        ? row.cell === focal.cell
+        : Math.abs(cell.offset - focalCell.offset) <= 1 && Math.abs(cell.altitude - focalCell.altitude) <= 1;
+      if (!adjacent) continue;
+      const along = Math.abs(row.q - focal.q);
+      if (along > cap) continue;
+      candidates.push({ row, along });
+    }
+    candidates.sort((a, b) => a.along - b.along);
+    return [focal, ...candidates.slice(0, 2 * neighbours).map((entry) => entry.row)];
+  }
+
+  function recomputeCase(caseId, values) {
+    const frames = data.cases[caseId].frames;
+    const rowsByFrame = decoded[caseId];
+    const sinr = sinrFor(caseId);
+    const windowFrames = Math.max(1, Math.round(values.windowS / frameS));
+    const history = new Map();      // idx -> array of support values
+    const held = new Map();
+    const candidate = new Map();
+    const policies = [];
+    const capacity = [];
+    const counts = { C: 0, R: 0, F: 0 };
+    rowsByFrame.forEach((rows, k) => {
+      const ok = new Map([...rows].map(([idx, row]) => [idx, sinr[k].get(idx) >= values.thresholdDb]));
+      const framePolicies = new Map();
+      for (const [idx, row] of rows) {
+        const members = groupMembers(rows, row, values);
+        const support = members.filter((member) => ok.get(member.idx)).length / members.length;
+        const past = history.get(idx) || [];
+        past.push(support);
+        while (past.length > windowFrames) past.shift();
+        history.set(idx, past);
+        const exposure = 1 - past.reduce((total, value) => total + value, 0) / past.length;
+        const raw = exposure <= values.coordinatedTolerance + 1e-12 ? "C"
+          : exposure <= values.reactiveTolerance + 1e-12 ? "R" : "F";
+        if (!held.has(idx)) {
+          held.set(idx, raw);
+          candidate.set(idx, { policy: raw, count: 0 });
+        } else if (raw === held.get(idx)) {
+          candidate.set(idx, { policy: raw, count: 0 });
+        } else {
+          const previous = candidate.get(idx);
+          const count = previous && previous.policy === raw ? previous.count + 1 : 1;
+          candidate.set(idx, { policy: raw, count });
+          if (count >= values.persistenceK) {
+            held.set(idx, raw);
+            candidate.set(idx, { policy: raw, count: 0 });
+          }
+        }
+        framePolicies.set(idx, held.get(idx));
+        counts[held.get(idx)] += 1;
+      }
+      policies.push(framePolicies);
+      const values_ = [...framePolicies.values()];
+      const mean = values_.reduce((total, policy) => total + spacing[policy], 0) / Math.max(1, values_.length);
+      capacity.push([frames[k].t, 3600 * referenceSpeed / mean,
+        values_.filter((p) => p === "C").length, values_.filter((p) => p === "R").length, values_.filter((p) => p === "F").length]);
+    });
+    const total = counts.C + counts.R + counts.F;
+    const [lo, hi] = summary.compared_window_s;
+    const windowValues = capacity.filter((row) => row[0] >= lo && row[0] <= hi).map((row) => row[1]);
+    return {
+      policies, capacity,
+      stats: {
+        ...data.cases[caseId].stats,
+        policy_shares: { C: counts.C / total, R: counts.R / total, F: counts.F / total },
+        window_mean_uam_h: windowValues.reduce((sum, value) => sum + value, 0) / windowValues.length,
+        window_q95_uam_h: lowerTail(windowValues, values.reliabilityRho),
+      },
+    };
+  }
+
+  function applyRecompute(values) {
+    const before = active[caseId].stats.policy_shares;
+    Object.keys(data.cases).forEach((id) => { active[id] = recomputeCase(id, values); });
+    currentParameters = values;
+    recomputed = true;
+    seriesCache = null;
+    const after = active[caseId].stats.policy_shares;
+    $("experiment-status").textContent =
+      `Recomputed on the ${fmt(frameS, 0)} s grid · C/R/F ${fmt(100 * before.C)}/${fmt(100 * before.R)}/${fmt(100 * before.F)}% → `
+      + `${fmt(100 * after.C)}/${fmt(100 * after.R)}/${fmt(100 * after.F)}%`;
+    renderCompareTable();
+    draw();
+  }
+
+  function restoreArchived() {
+    Object.keys(data.cases).forEach((id) => { active[id] = archived[id]; });
+    currentParameters = { ...baselineParameters };
+    recomputed = false;
+    seriesCache = null;
+    populateForm(currentParameters);
+    $("experiment-status").textContent = "Archived run restored";
+    renderCompareTable();
+    draw();
+  }
+
+  $("experiment-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    $("run-experiment").disabled = true;
+    $("experiment-status").textContent = "Recomputing…";
+    window.setTimeout(() => {
+      try {
+        applyRecompute(readForm());
+      } catch (error) {
+        $("experiment-status").textContent = `Input error: ${error.message}`;
+      } finally {
+        $("run-experiment").disabled = false;
+      }
+    }, 20);
+  });
+  $("reset-experiment").addEventListener("click", restoreArchived);
 
   // ------------------------------------------------------------------ case state
   const params = new URLSearchParams(window.location.search);
@@ -75,22 +282,12 @@
   let rafId = null;
   let seriesCache = null;
 
-  function decodeRow(row) {
-    return {
-      idx: row[field.aircraft], lat: row[field.lat_e5] / 1e5, lon: row[field.lon_e5] / 1e5,
-      x: row[field.x_m], y: row[field.y_m], altitude: row[field.altitude_m], offset: row[field.offset_m],
-      speed: row[field.speed_dmps] / 10, policy: POLICIES[row[field.policy]],
-      controller: summary.controllers[row[field.controller]], gap: row[field.gap_m],
-      moving: row[field.moving] === 1, cell: row[field.cell],
-    };
-  }
-
   function loadCase(nextCase) {
     caseId = nextCase;
     caseData = data.cases[caseId];
     frames = caseData.frames;
     aircraft = caseData.aircraft;
-    rowsByFrame = frames.map((frame) => new Map(frame.rows.map((row) => [row[field.aircraft], decodeRow(row)])));
+    rowsByFrame = decoded[caseId];
     index = 0;
     simulatedTime = frames[0].t;
     seriesCache = null;
@@ -98,8 +295,6 @@
     $("case-select").value = caseId;
     $("time-slider").max = String(frames.length - 1);
     $("total-time").textContent = `/ ${formatTime(frames.at(-1).t)}`;
-    const stats = caseData.stats;
-    $("window-capacity").textContent = `${fmt(stats.window_mean_uam_h)} / ${fmt(stats.window_q95_uam_h)}`;
     const [lo, hi] = summary.compared_window_s;
     $("window-caption").textContent = `mean / 95% reliable · ${fmt(lo / 60)}–${fmt(hi / 60)} min`;
     renderCompareTable();
@@ -109,7 +304,11 @@
     window.history.replaceState(null, "", url);
   }
 
-  // interpolated aircraft states at simulated time t
+  function policyAt(k, idx, fallback) {
+    const frame = active[caseId].policies[k];
+    return (frame && frame.get(idx)) || fallback;
+  }
+
   function statesAt(t) {
     const k = Math.max(0, Math.min(frames.length - 1, Math.floor((t - frames[0].t) / frameS + 1e-9)));
     const a = rowsByFrame[k];
@@ -118,14 +317,15 @@
     const f = Math.max(0, Math.min(1, (t - frames[k].t) / span));
     const out = [];
     for (const [idx, row] of a) {
+      const policy = policyAt(k, idx, row.policy);
       const next = b.get(idx);
-      if (!next || f === 0) { out.push(row); continue; }
+      if (!next || f === 0) { out.push({ ...row, policy }); continue; }
       out.push({
-        ...row,
+        ...row, policy,
         lat: row.lat + f * (next.lat - row.lat), lon: row.lon + f * (next.lon - row.lon),
         x: row.x + f * (next.x - row.x), y: row.y + f * (next.y - row.y),
         altitude: row.altitude + f * (next.altitude - row.altitude), offset: row.offset + f * (next.offset - row.offset),
-        speed: row.speed + f * (next.speed - row.speed),
+        speed: row.speed + f * (next.speed - row.speed), q: row.q + f * (next.q - row.q),
       });
     }
     return out;
@@ -140,28 +340,40 @@
     return `${cell.offset_m > 0 ? "+" : ""}${fmt(cell.offset_m, 0)} m · ${fmt(cell.altitude_m, 0)} m`;
   }
 
-  function progressM(state) {
-    let best = null;
-    for (let i = 0; i + 1 < route.length; i += 1) {
-      const a = route[i]; const b = route[i + 1];
-      const dx = b.x_m - a.x_m; const dy = b.y_m - a.y_m;
-      const len2 = dx * dx + dy * dy || 1;
-      const u = Math.max(0, Math.min(1, ((state.x - a.x_m) * dx + (state.y - a.y_m) * dy) / len2));
-      const d2 = (a.x_m + u * dx - state.x) ** 2 + (a.y_m + u * dy - state.y) ** 2;
-      if (!best || d2 < best.d2) best = { d2, s: a.s_m + u * Math.sqrt(len2) };
-    }
-    return best ? best.s : 0;
+  // ------------------------------------------------------------------ lane geometry
+  // The corridor polyline has sub-metre segments at some vertices; offsetting each vertex along its
+  // own segment normal spikes there. Sample the centreline at a fixed step and use a smoothed
+  // tangent so the parallel lanes stay parallel through corners.
+  const LANE_STEP_M = 200;
+  const TANGENT_HALF_M = 150;
+  function lanePoint(sM, offsetM) {
+    const centre = engine.interpolateRoute(route, corridorLengthM, sM, 0);
+    if (offsetM === 0) return { lat: centre.lat, lon: centre.lon };
+    const back = engine.interpolateRoute(route, corridorLengthM, Math.max(0, sM - TANGENT_HALF_M), 0);
+    const ahead = engine.interpolateRoute(route, corridorLengthM, Math.min(corridorLengthM, sM + TANGENT_HALF_M), 0);
+    const dx = ahead.x_m - back.x_m;
+    const dy = ahead.y_m - back.y_m;
+    const length = Math.hypot(dx, dy) || 1;
+    const normalX = -dy / length;
+    const normalY = dx / length;
+    return {
+      lat: centre.lat + offsetM * normalY / 111320,
+      lon: centre.lon + offsetM * normalX / (111320 * Math.cos(centre.lat * Math.PI / 180)),
+    };
   }
+  function laneLine(offsetM) {
+    const steps = Math.ceil(corridorLengthM / LANE_STEP_M);
+    return Array.from({ length: steps + 1 }, (_unused, i) => lanePoint(Math.min(corridorLengthM, i * LANE_STEP_M), offsetM));
+  }
+  const laneGeometry = new Map(offsets.map((offset) => [offset, laneLine(offset)]));
 
   // ------------------------------------------------------------------ map
   const map = L.map("motion-map", { preferCanvas: true });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }).addTo(map);
   const laneLines = offsets.map((offset) => L.polyline(
-    route.map((row) => { const p = engine.interpolateRoute(route, corridorLengthM, row.s_m, offset); return [p.lat, p.lon]; }),
+    laneGeometry.get(offset).map((point) => [point.lat, point.lon]),
     offset === 0 ? { color: "#168c85", weight: 4, opacity: .85 } : { color: "#607177", weight: 2, opacity: .7, dashArray: "6 6" },
   ).addTo(map));
-  // The pane can still be laying out when the script runs, so keep fitting the corridor until the
-  // container settles. Any pointer or wheel gesture on the map hands control to the viewer.
   const mapNode = document.getElementById("motion-map");
   let viewerMovedMap = false;
   const fitCorridor = () => {
@@ -200,9 +412,9 @@
   }
 
   function update2d(states) {
-    const active = new Set(states.map((state) => state.idx));
+    const activeIds = new Set(states.map((state) => state.idx));
     for (const [idx, marker] of markers) {
-      if (!active.has(idx)) { map.removeLayer(marker); markers.delete(idx); }
+      if (!activeIds.has(idx)) { map.removeLayer(marker); markers.delete(idx); }
     }
     states.forEach((state) => {
       const selected = state.idx === selectedIdx;
@@ -260,7 +472,7 @@
     viewer3d.scene.globe.depthTestAgainstTerrain = false;
     const laneColor = { 200: "#8fb9d6", 300: "#168c85", 400: "#17364a" };
     offsets.forEach((offset) => altitudes.forEach((altitude) => {
-      const positions = route.flatMap((row) => { const p = engine.interpolateRoute(route, corridorLengthM, row.s_m, offset); return [p.lon, p.lat, altitude]; });
+      const positions = laneGeometry.get(offset).flatMap((point) => [point.lon, point.lat, altitude]);
       viewer3d.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(positions), width: offset === 0 && altitude === 300 ? 4 : 2,
         material: Cesium.Color.fromCssColorString(laneColor[altitude] || "#607177").withAlpha(.65) } });
     }));
@@ -294,9 +506,9 @@
 
   function update3d(states, selected, link) {
     if (!viewer3d) return;
-    const active = new Set(states.map((state) => state.idx));
+    const activeIds = new Set(states.map((state) => state.idx));
     for (const [idx, entity] of aircraft3d) {
-      if (!active.has(idx)) { viewer3d.entities.remove(entity); aircraft3d.delete(idx); }
+      if (!activeIds.has(idx)) { viewer3d.entities.remove(entity); aircraft3d.delete(idx); }
     }
     states.forEach((state) => {
       const isSelected = state.idx === selectedIdx;
@@ -398,7 +610,10 @@
   function aircraftSeries(idx) {
     if (seriesCache && seriesCache.idx === idx && seriesCache.caseId === caseId) return seriesCache.rows;
     const rows = [];
-    rowsByFrame.forEach((frameRows, k) => { const row = frameRows.get(idx); if (row) rows.push({ t: frames[k].t, ...row }); });
+    rowsByFrame.forEach((frameRows, k) => {
+      const row = frameRows.get(idx);
+      if (row) rows.push({ t: frames[k].t, ...row, policy: policyAt(k, idx, row.policy) });
+    });
     seriesCache = { idx, caseId, rows };
     return rows;
   }
@@ -410,13 +625,10 @@
     const pad = { left: 46, right: 12 };
     const t0 = rows[0].t; const t1 = rows.at(-1).t;
     const xAt = (t) => pad.left + (t - t0) / Math.max(1, t1 - t0) * (width - pad.left - pad.right);
-    const panels = [
-      { top: 14, h: 72, min: parameters.speed_min_mps - 2, max: parameters.speed_max_mps + 2, label: "speed (m/s)" },
-      { top: 116, h: 84, min: 0, max: spacing.F * 1.35, label: "gap to leader vs spacing target (m, capped)" },
-    ];
-    panels.forEach((panel) => {
-      const yAt = (value) => panel.top + (panel.max - value) / (panel.max - panel.min) * panel.h;
-      panel.yAt = yAt;
+    const speedPanel = { top: 14, h: 72, min: parameters.speed_min_mps - 2, max: parameters.speed_max_mps + 2, label: "speed (m/s)" };
+    const gapPanel = { top: 116, h: 84, min: 0, max: spacing.F * 1.35, label: "gap to leader vs spacing target (m, capped)" };
+    [speedPanel, gapPanel].forEach((panel) => {
+      panel.yAt = (value) => panel.top + (panel.max - Math.min(value, panel.max)) / (panel.max - panel.min) * panel.h;
       ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(pad.left, panel.top); ctx.lineTo(pad.left, panel.top + panel.h); ctx.lineTo(width - pad.right, panel.top + panel.h); ctx.stroke();
       ctx.fillStyle = "#64747c";
@@ -424,35 +636,56 @@
       ctx.fillText(fmt(panel.max, 0), 4, panel.top + 8);
       ctx.fillText(fmt(panel.min, 0), 4, panel.top + panel.h);
     });
-    const [speedPanel, gapPanel] = panels;
+
+    // stretches without a leader in the group: shade them instead of leaving an unexplained blank
+    ctx.fillStyle = "#f0f0ee";
+    let runStart = null;
+    rows.forEach((row, i) => {
+      if (row.gap < 0 && runStart === null) runStart = row.t;
+      const ends = row.gap >= 0 || i === rows.length - 1;
+      if (runStart !== null && ends) {
+        ctx.fillRect(xAt(runStart), gapPanel.top, Math.max(1, xAt(row.t) - xAt(runStart)), gapPanel.h);
+        runStart = null;
+      }
+    });
+
     ctx.strokeStyle = "#294f70"; ctx.lineWidth = 2; ctx.beginPath();
     rows.forEach((row, i) => { const x = xAt(row.t); const y = speedPanel.yAt(row.speed); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
     ctx.stroke();
+
+    // spacing target: a step line, with the vertical connector drawn at each policy change
     for (let i = 0; i + 1 < rows.length; i += 1) {
+      const level = gapPanel.yAt(spacing[rows[i].policy]);
       ctx.strokeStyle = colors[rows[i].policy]; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(xAt(rows[i].t), gapPanel.yAt(spacing[rows[i].policy])); ctx.lineTo(xAt(rows[i + 1].t), gapPanel.yAt(spacing[rows[i].policy])); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xAt(rows[i].t), level); ctx.lineTo(xAt(rows[i + 1].t), level); ctx.stroke();
+      if (rows[i + 1].policy !== rows[i].policy) {
+        ctx.strokeStyle = "#9aa5a9"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(xAt(rows[i + 1].t), level); ctx.lineTo(xAt(rows[i + 1].t), gapPanel.yAt(spacing[rows[i + 1].policy])); ctx.stroke();
+      }
     }
+
     ctx.strokeStyle = "#17364a"; ctx.lineWidth = 1.6; ctx.beginPath();
     let open = false;
     rows.forEach((row) => {
       if (row.gap < 0) { open = false; return; }
-      const x = xAt(row.t); const y = gapPanel.yAt(Math.min(row.gap, gapPanel.max));
+      const x = xAt(row.t); const y = gapPanel.yAt(row.gap);
       if (open) ctx.lineTo(x, y); else { ctx.moveTo(x, y); open = true; }
     });
     ctx.stroke();
+
     ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
     ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), 8); ctx.lineTo(xAt(simulatedTime), 204); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "#64747c";
     ctx.fillText(formatTime(t0), pad.left, 222);
     ctx.fillText(formatTime(t1), width - pad.right - 32, 222);
-    ctx.fillText("thick = target S(policy) · thin = actual gap (blank when no leader in the group)", pad.left + 60, 222);
+    ctx.fillText("thick = spacing target S(policy) · thin = actual gap · grey = no leader in the group", pad.left + 52, 222);
   }
 
   function drawCapacity() {
     const { ctx, width, height } = setupCanvas($("capacity-chart"), 190);
     const pad = { left: 40, right: 12, top: 18, bottom: 24 };
-    const all = Object.values(data.cases).flatMap((c) => c.capacity.map((row) => row[1]));
-    const tMax = Math.max(...Object.values(data.cases).map((c) => c.capacity.at(-1)[0]));
+    const all = Object.keys(data.cases).flatMap((id) => active[id].capacity.map((row) => row[1]));
+    const tMax = Math.max(...Object.keys(data.cases).map((id) => active[id].capacity.at(-1)[0]));
     const minY = Math.floor(Math.min(...all) / 10) * 10; const maxY = Math.ceil(Math.max(...all) / 10) * 10;
     const xAt = (t) => pad.left + t / tMax * (width - pad.left - pad.right);
     const yAt = (v) => pad.top + (maxY - v) / (maxY - minY) * (height - pad.top - pad.bottom);
@@ -461,23 +694,24 @@
     ctx.fillStyle = "#17364a"; ctx.fillText("compared window", (xAt(lo) + xAt(hi)) / 2 - 40, 12);
     ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, height - pad.bottom); ctx.lineTo(width - pad.right, height - pad.bottom); ctx.stroke();
-    Object.entries(data.cases).forEach(([id, c]) => {
+    Object.keys(data.cases).forEach((id) => {
       const current = id === caseId;
       ctx.strokeStyle = current ? "#168c85" : "#9aa5a9"; ctx.lineWidth = current ? 2 : 1.2;
       ctx.beginPath();
-      c.capacity.forEach((row, i) => { const x = xAt(row[0]); const y = yAt(row[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+      active[id].capacity.forEach((row, i) => { const x = xAt(row[0]); const y = yAt(row[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
       ctx.stroke();
     });
     ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
     ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), pad.top); ctx.lineTo(xAt(simulatedTime), height - pad.bottom); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "#64747c";
     ctx.fillText(String(maxY), 6, pad.top + 8); ctx.fillText(String(minY), 6, height - pad.bottom);
-    ctx.fillText(`teal = ${data.cases[caseId].label.split(" · ")[0].toLowerCase()} · grey = other case · UAM/h`, pad.left + 6, height - 6);
+    const label = caseId === "spatial_grid" ? "lane change" : "no lane change";
+    ctx.fillText(`teal = ${label} · grey = other case · UAM/h${recomputed ? " · recomputed policy" : ""}`, pad.left + 6, height - 6);
   }
 
   function renderCompareTable() {
     const ids = Object.keys(data.cases);
-    const stat = (id) => data.cases[id].stats;
+    const stat = (id) => active[id].stats;
     const pct = (value) => `${fmt(100 * value)}%`;
     const rows = [
       ["C / R / F time", (s) => `${pct(s.policy_shares.C)} / ${pct(s.policy_shares.R)} / ${pct(s.policy_shares.F)}`],
@@ -490,11 +724,11 @@
       ["Last aircraft out", (s) => `${fmt(s.end_s / 60)} min`],
       ["Completed / sampled NMAC", (s) => `${s.completed}/${s.scheduled} · ${s.sampled_nmac ? "yes" : "none"}`],
     ];
-    const header = `<thead><tr><th></th>${ids.map((id) => `<th class="${id === caseId ? "motion-table__current" : ""}">${id === "spatial_grid" ? "Move 3 × 3" : "Stay"}</th>`).join("")}</tr></thead>`;
+    const header = `<thead><tr><th></th>${ids.map((id) => `<th class="${id === caseId ? "motion-table__current" : ""}">${id === "spatial_grid" ? "Lane change" : "No change"}</th>`).join("")}</tr></thead>`;
     const body = rows.map(([label, value]) => `<tr><td>${label}</td>${ids.map((id) => `<td class="${id === caseId ? "motion-table__current" : ""}">${value(stat(id))}</td>`).join("")}</tr>`).join("");
     $("compare-table").innerHTML = header + `<tbody>${body}</tbody>`;
     const [lo, hi] = summary.compared_window_s;
-    $("compare-window").textContent = `window ${fmt(lo / 60)}–${fmt(hi / 60)} min`;
+    $("compare-window").textContent = `window ${fmt(lo / 60)}–${fmt(hi / 60)} min${recomputed ? " · recomputed" : ""}`;
   }
 
   // ------------------------------------------------------------------ frame update
@@ -511,23 +745,27 @@
     if (selectedIdx === null || !states.some((state) => state.idx === selectedIdx)) {
       const moving = states.find((state) => state.moving);
       selectedIdx = (moving || states[0] || { idx: null }).idx;
+      seriesCache = null;
     }
     const selected = states.find((state) => state.idx === selectedIdx) || null;
     const link = selected ? engine.evaluateRadio(data.stations, summary.radio, { x_m: selected.x, y_m: selected.y }, selected.altitude) : null;
     update2d(states);
     update3d(states, selected, link);
     const frame = frames[index];
-    const capacityRow = caseData.capacity.reduce((best, row) => (Math.abs(row[0] - frame.t) < Math.abs(best[0] - frame.t) ? row : best), caseData.capacity[0]);
+    const capacityRows = active[caseId].capacity;
+    const capacityRow = capacityRows.reduce((best, row) => (Math.abs(row[0] - frame.t) < Math.abs(best[0] - frame.t) ? row : best), capacityRows[0]);
     $("time-slider").value = String(index);
     $("current-time").textContent = formatTime(simulatedTime);
     $("active-count").textContent = String(states.length);
     $("current-capacity").textContent = fmt(capacityRow[1]);
     $("current-counts").textContent = `C/R/F now · ${capacityRow[2]}/${capacityRow[3]}/${capacityRow[4]}`;
+    const stats = active[caseId].stats;
+    $("window-capacity").textContent = `${fmt(stats.window_mean_uam_h)} / ${fmt(stats.window_q95_uam_h)}`;
     const started = caseData.changes.filter((change) => change[0] <= simulatedTime + 1e-9).length;
-    $("lane-changes").textContent = caseData.lane_change_allowed ? `${started} / ${caseData.changes.length}` : "off";
-    $("lane-change-caption").textContent = caseData.lane_change_allowed ? "started so far / total" : "stay case: aircraft keep the centre cell";
+    $("lane-changes").textContent = caseData.lane_change_allowed ? `${started} / ${caseData.changes.length}` : "none";
+    $("lane-change-caption").textContent = caseData.lane_change_allowed ? "started so far / total" : "this case keeps every aircraft on the entry cell";
     const movingNow = states.filter((state) => state.moving).length;
-    $("grid-note").textContent = caseData.lane_change_allowed ? `${movingNow} changing lane now` : "all at the entry cell";
+    $("grid-note").textContent = caseData.lane_change_allowed ? `${movingNow} changing lane now` : "all on the entry cell";
     if (selected) {
       const record = aircraft[selected.idx];
       const change = activeChange(selected.idx, simulatedTime);
@@ -540,8 +778,7 @@
       $("selected-gap").textContent = selected.gap >= 0 ? `${fmt(selected.gap, 0)} m` : "no leader in group";
       $("selected-target").textContent = `${fmt(spacing[selected.policy], 0)} m (${selected.policy})`;
       $("selected-sinr").textContent = `${fmt(link.sinr)} dB · ${link.site.id}`;
-      const s = progressM(selected);
-      $("selected-progress").textContent = `${fmt(s / 1000, 2)} km · ${fmt(100 * s / corridorLengthM)}%`;
+      $("selected-progress").textContent = `${fmt(selected.q / 1000, 2)} km · ${fmt(100 * selected.q / corridorLengthM)}%`;
       $("selected-move").textContent = change
         ? `${cellLabel(change[2])} → ${cellLabel(change[3])} · ${fmt(simulatedTime - change[0], 0)} of ${fmt(change[4], 1)} s`
         : `none now · ${caseData.changes.filter((c) => c[1] === selected.idx).length} in this flight · entry delay ${fmt(record.entry_delay_s)} s`;
@@ -592,6 +829,7 @@
   window.addEventListener("resize", () => draw());
 
   initialize3d();
+  populateForm(baselineParameters);
   loadCase(caseId);
   const startIndex = Math.min(frames.length - 1, Math.round(1200 / frameS));
   index = startIndex;
@@ -606,9 +844,16 @@
     state: () => ({
       case: caseId, t: simulatedTime, frame: index, active: statesAt(simulatedTime).length,
       selected: selectedIdx === null ? null : aircraft[selectedIdx].id, engine: viewer3d ? "cesium" : "none",
-      markers: markers.size,
+      markers: markers.size, recomputed,
+      shares: active[caseId].stats.policy_shares,
+      window: [active[caseId].stats.window_mean_uam_h, active[caseId].stats.window_q95_uam_h],
     }),
     setCase: (id) => { $("case-select").value = id; $("case-select").dispatchEvent(new Event("change")); },
     seek: (t) => { setPlaying(false); simulatedTime = t; index = Math.max(0, Math.min(frames.length - 1, Math.floor((t - frames[0].t) / frameS))); draw(); },
+    recompute: (overrides = {}) => {
+      populateForm({ ...currentParameters, ...overrides });
+      $("experiment-form").dispatchEvent(new Event("submit"));
+    },
+    reset: () => $("reset-experiment").click(),
   };
 })();

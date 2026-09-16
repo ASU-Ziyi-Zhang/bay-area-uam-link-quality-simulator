@@ -3,42 +3,70 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Multi-aircraft UAM motion control: longitudinal spacing and lane changes within a 3 × 3 lateral/altitude grid" />
-    <title>Bay Area UAM Motion Control</title>
+    <meta name="description" content="Multi-aircraft UAM lane change: one entry stream staying on the centre lane or changing lane within a 3 × 3 lateral/altitude grid" />
+    <title>Bay Area UAM Lane Change</title>
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
     <link rel="stylesheet"
           href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css"
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
     <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
-    <link rel="stylesheet" href="motion.css?v=20260914-motion-v3" />
+    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v2" />
   </head>
   <body>
     <div class="traffic-dashboard motion-dashboard">
       <header class="traffic-header">
         <div>
-          <span class="eyebrow">MOTION CONTROL · SINGLE ENTRY STREAM · 3 × 3 LATERAL / ALTITUDE GRID</span>
-          <h1 id="motion-title">Multi-UAM Motion Control</h1>
-          <p id="motion-subtitle">Link quality → group policy → spacing target → longitudinal control and lane changes → planning capacity</p>
+          <span class="eyebrow">LANE CHANGE · ONE ENTRY STREAM · 3 × 3 LATERAL / ALTITUDE GRID</span>
+          <h1 id="motion-title">Multi-UAM Lane Change</h1>
+          <p id="motion-subtitle">Many aircraft with spacing control, staying on the centre lane or changing lane → policy mix and capacity</p>
         </div>
         <div class="traffic-header__controls">
           <label for="case-select"><span>Case</span>
             <select id="case-select">
-              <option value="fixed_centerline">Stay at centre</option>
-              <option value="spatial_grid">Move within 3 × 3</option>
+              <option value="fixed_centerline">No lane change</option>
+              <option value="spatial_grid">Lane change in 3 × 3</option>
             </select>
           </label>
           <nav class="mode-nav" aria-label="Simulator mode">
             <a href="index.html?scenario=airport_to_airport">Single UAM</a>
             <a href="traffic.html?scenario=airport_to_airport">Multi-UAM policy</a>
-            <a class="mode-nav__active" aria-current="page" href="motion.html">Motion control</a>
+            <a class="mode-nav__active" aria-current="page" href="motion.html">Multi-UAM lane change</a>
           </nav>
         </div>
       </header>
 
+      <section class="experiment-controls" aria-labelledby="experiment-heading">
+        <div class="experiment-controls__heading">
+          <div><span class="eyebrow">EXPERIMENT INPUTS</span><h2 id="experiment-heading">Policy settings, recomputed on the flown trajectories</h2></div>
+          <span id="experiment-status" role="status" aria-live="polite">Archived run loaded</span>
+        </div>
+        <form id="experiment-form">
+          <fieldset>
+            <legend>Policy mapping</legend>
+            <label>SINR threshold Θ <span><input id="input-theta" type="number" min="-20" max="20" step="0.5" /> dB</span></label>
+            <label>Exposure window <span><input id="input-window" type="number" min="5" max="300" step="5" /> s</span></label>
+            <label>Persistence k <span><input id="input-persistence" type="number" min="1" max="10" step="1" /></span></label>
+            <label>Coordinated max exposure <span><input id="input-c-tolerance" type="number" min="0" max="100" step="1" /> %</span></label>
+            <label>Reactive max exposure <span><input id="input-r-tolerance" type="number" min="0" max="100" step="1" /> %</span></label>
+          </fieldset>
+          <fieldset>
+            <legend>Exposure group and capacity</legend>
+            <label>Maximum local group <select id="input-group-size"><option>3</option><option selected>5</option><option>7</option></select></label>
+            <label>Group form <select id="input-group-mode"><option value="neighbourhood" selected>Own + adjacent cells</option><option value="lane_order">Same cell only</option></select></label>
+            <label>Reliability ρ <span><input id="input-reliability" type="number" min="50" max="100" step="1" /> %</span></label>
+          </fieldset>
+          <div class="experiment-controls__actions">
+            <button id="run-experiment" class="experiment-controls__run" type="submit">Recompute policy</button>
+            <button id="reset-experiment" type="button">Archived run</button>
+            <small>Flight paths, spacing control and lane-change decisions stay as flown in the archived run. Only the policy layer and the planning rate are recomputed, on the 5 s replay grid instead of the run's 2 s radio sampling.</small>
+          </div>
+        </form>
+      </section>
+
       <section class="motion-settings" aria-labelledby="settings-heading">
         <div class="experiment-controls__heading">
-          <div><span class="eyebrow">CALIBRATED SETTINGS</span><h2 id="settings-heading">Policy, spacing and motion limits</h2></div>
+          <div><span class="eyebrow">FIXED IN THIS RUN</span><h2 id="settings-heading">Motion, spacing and demand</h2></div>
           <span id="run-note" role="status">Loading run…</span>
         </div>
         <dl id="settings-list" class="motion-settings__list"></dl>
@@ -64,7 +92,7 @@
               <strong id="current-time">00:00</strong>
               <label class="sr-only" for="time-slider">Simulation timeline</label>
               <input id="time-slider" type="range" min="0" max="1" value="0" step="1" disabled />
-              <span id="total-time" role="status" aria-live="polite">Loading motion data…</span>
+              <span id="total-time" role="status" aria-live="polite">Loading data…</span>
               <label class="sr-only" for="playback-speed">Playback speed</label>
               <select id="playback-speed" disabled><option value="5">5×</option><option value="20" selected>20×</option><option value="50">50×</option><option value="100">100×</option></select>
             </div>
@@ -95,12 +123,12 @@
           </section>
 
           <section class="capacity-card" aria-labelledby="capacity-heading">
-            <div class="card-heading"><div><span class="eyebrow">CAPACITY TRACE</span><h2 id="capacity-heading">Planning rate: stay against move</h2></div><span id="current-counts">—</span></div>
+            <div class="card-heading"><div><span class="eyebrow">CAPACITY TRACE</span><h2 id="capacity-heading">Planning rate: no lane change against lane change</h2></div><span id="current-counts">—</span></div>
             <canvas id="capacity-chart" aria-label="Planning rate over time for both cases"></canvas>
           </section>
         </div>
 
-        <aside class="traffic-sidebar" aria-label="Motion diagnostics">
+        <aside class="traffic-sidebar" aria-label="Lane-change diagnostics">
           <section class="metric-grid">
             <article><span>Aircraft in corridor</span><strong id="active-count">—</strong><small id="entry-note">one request every 32 s</small></article>
             <article><span>Current planning rate</span><strong id="current-capacity">—</strong><small>UAM/h · policy-weighted spacing</small></article>
@@ -130,21 +158,21 @@
           </section>
 
           <section class="link-card" aria-labelledby="aircraft-heading">
-            <div class="card-heading"><div><span class="eyebrow">LONGITUDINAL CONTROL</span><h2 id="aircraft-heading">Selected aircraft: speed and spacing</h2></div><span id="aircraft-note">—</span></div>
+            <div class="card-heading"><div><span class="eyebrow">SPACING CONTROL</span><h2 id="aircraft-heading">Selected aircraft: speed and spacing</h2></div><span id="aircraft-note">—</span></div>
             <canvas id="aircraft-chart" aria-label="Selected aircraft speed, gap and spacing target over time"></canvas>
           </section>
 
           <section class="policy-card" aria-labelledby="compare-heading">
-            <div class="card-heading"><div><span class="eyebrow">RESULT</span><h2 id="compare-heading">Stay against move</h2></div><span id="compare-window">—</span></div>
+            <div class="card-heading"><div><span class="eyebrow">RESULT</span><h2 id="compare-heading">No lane change against lane change</h2></div><span id="compare-window">—</span></div>
             <div class="motion-table-wrap"><table id="compare-table" class="motion-table"></table></div>
-            <p id="compare-note">Same demand, calibrated policy and controller in both cases. Grid cells are alternative positions for one stream, not extra lanes.</p>
+            <p id="compare-note">Same demand, spacing law and controller in both cases. Grid cells are alternative positions for one stream, not extra lanes.</p>
           </section>
         </aside>
       </main>
 
       <footer class="traffic-footer">
-        <span id="footer-run">Precomputed from a verified run</span>
-        <span>AKS/ACC longitudinal control · quintic lane changes to adjacent cells · NMAC counted every step</span>
+        <span id="footer-run">Replay of a verified run</span>
+        <span>AKS/ACC spacing control · quintic lane changes to adjacent cells · NMAC counted every step</span>
       </footer>
     </div>
     <div id="error-panel" class="error-panel" hidden role="alert"></div>
@@ -156,7 +184,7 @@
             crossorigin="anonymous"></script>
     <script>
       (() => {
-        const version = "20260914-motion-v3";
+        const version = "20260916-lanechange-v2";
         const dataScript = document.createElement("script");
         dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
         dataScript.addEventListener("load", () => {
@@ -167,8 +195,8 @@
         dataScript.addEventListener("error", () => {
           const panel = document.getElementById("error-panel");
           panel.hidden = false;
-          panel.textContent = "Motion data could not be loaded. Confirm that the dashboard server is running, then refresh the page.";
-          document.getElementById("total-time").textContent = "Motion data unavailable";
+          panel.textContent = "Lane-change data could not be loaded. Confirm that the dashboard server is running, then refresh the page.";
+          document.getElementById("total-time").textContent = "Data unavailable";
         });
         document.body.appendChild(dataScript);
       })();

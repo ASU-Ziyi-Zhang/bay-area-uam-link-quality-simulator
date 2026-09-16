@@ -22,7 +22,7 @@ A hosted build is published from `dashboard/` on every push to `main`:
 
 - [Single-UAM link-quality dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/)
 - [Multi-UAM policy dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/traffic.html?scenario=airport_to_airport)
-- [Motion-control dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/motion.html): one entry stream with longitudinal spacing control, staying at the centre or changing lane within a 3 × 3 lateral/altitude grid
+- [Multi-UAM lane-change dashboard](https://asu-ziyi-zhang.github.io/bay-area-uam-link-quality-simulator/motion.html): one entry stream with spacing control, staying on the centre lane or changing lane within a 3 × 3 lateral/altitude grid
 
 The header scenario selector switches between:
 
@@ -143,7 +143,7 @@ the fractions or capacity. Radio observations are sampled every 2 s and policy
 snapshots are updated every 5 s; the accepted five-second TRB baseline remains
 a separately labeled regression reference.
 
-## Run the motion-control dashboard
+## Run the lane-change dashboard
 
 The page replays both cases of the corridor experiment from a verified run
 archive. To rebuild its data from a run of
@@ -158,7 +158,7 @@ python scripts\serve_dashboard.py
 ```
 
 Open [http://127.0.0.1:8765/motion.html](http://127.0.0.1:8765/motion.html).
-Switch between **Stay at centre** and **Move within 3 × 3**; select an aircraft to
+Switch between **No lane change** and **Lane change in 3 × 3**; select an aircraft to
 follow its policy, controller (cruise, AKS reference tracking or ACC feedback),
 gap against its spacing target, lane change and serving link. The cross-section
 shows how many aircraft fly in each lateral/altitude cell.

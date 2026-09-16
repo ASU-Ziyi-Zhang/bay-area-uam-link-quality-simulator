@@ -36,12 +36,18 @@ unchanged.
 - Tests for all new modules (337 tests pass; 7 skip when local raw run archives
   are absent).
 
-- **Motion-control dashboard** (`dashboard/motion.html`, `motion_app.js`,
+- **Multi-UAM lane-change dashboard** (`dashboard/motion.html`, `motion_app.js`,
   `motion.css`, built by `scripts/build_motion_dashboard.py` from verified run
-  R0062): stay at the centre against moving within the 3 × 3 grid, with map, 3D
+  R0062): no lane change against lane change within the 3 × 3 grid, with map, 3D
   view at flown altitude, cross-section of cell occupancy, per-aircraft speed,
   gap and spacing target, controller mode, lane-change progress, planning-rate
-  trace and the stay/move comparison.
+  trace and the comparison table. An experiment panel recomputes the policy layer
+  (Θ, exposure window, persistence k, C/R tolerances, group size and form,
+  reliability ρ) on the flown trajectories and redraws the page; flight paths,
+  spacing control and lane-change decisions stay as flown, and the recomputation
+  uses the 5 s replay grid rather than the run's 2 s radio sampling, so with the
+  archived settings it reports C/R/F 71.2/28.2/0.6% against the run's
+  73.8/25.9/0.3%. One click restores the archived run.
 
 ### Changed
 
