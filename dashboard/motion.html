@@ -11,7 +11,7 @@
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
     <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
-    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v5" />
+    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v7" />
   </head>
   <body>
     <div class="traffic-dashboard motion-dashboard">
@@ -113,13 +113,34 @@
               <div id="motion-3d" role="application" aria-label="Three-dimensional corridor with nine flight lanes"></div>
               <div id="three-camera-note" class="traffic-three-note">Camera follows the selected aircraft.</div>
             </div>
-            <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; the map, cross-section and charts still work.</div>
+            <div id="three-warning" class="three-warning" hidden>The external 3D engine is unavailable; the map, charts and geometry still work.</div>
             <div class="traffic-three-legend">
               <span><i class="traffic-three-line motion-lane--200"></i>200 m lanes</span>
               <span><i class="traffic-three-line motion-lane--300"></i>300 m lanes</span>
               <span><i class="traffic-three-line motion-lane--400"></i>400 m lanes</span>
               <span><i class="traffic-three-line traffic-three-line--radio"></i>Selected serving link</span>
+              <span><i class="traffic-three-line motion-lane--flown"></i>Selected aircraft's flown path</span>
             </div>
+          </section>
+
+          <section class="policy-card" aria-labelledby="grid-heading">
+            <div class="card-heading"><div><span class="eyebrow">INSERTION GEOMETRY</span><h2 id="grid-heading">Neighbours around the selected aircraft</h2></div><span id="grid-note">—</span></div>
+            <canvas id="grid-chart" aria-label="Along-track position of nearby aircraft in each grid cell, relative to the selected aircraft"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--ego"></i>selected aircraft</span>
+              <span><i class="chart-key chart-key--band chart-key--band-c"></i>spacing its policy requires, ahead and behind</span>
+              <span>rows = grid cells near it · x = distance along the corridor · ↑ nearest ahead, ↓ nearest behind</span>
+            </p>
+          </section>
+
+          <section class="policy-card" aria-labelledby="trajectory-heading">
+            <div class="card-heading"><div><span class="eyebrow">FLIGHT PATH</span><h2 id="trajectory-heading">Where the selected aircraft went</h2></div><span id="trajectory-note">—</span></div>
+            <canvas id="trajectory-chart" aria-label="Lateral offset and altitude of the selected aircraft along the corridor, with its lane changes"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--thick"></i>path, coloured by its policy</span>
+              <span><i class="chart-key chart-key--ego"></i>lane change, labelled with its predicted gain</span>
+              <span>x = distance along the corridor · predicted at the decision, not a measured outcome</span>
+            </p>
           </section>
 
           <section class="capacity-card" aria-labelledby="capacity-heading">
@@ -147,16 +168,6 @@
               <div><i class="policy-dot policy-dot--f"></i><span>Fallback</span><strong id="share-f">—</strong></div>
             </div>
             <p id="policy-description">Share of aircraft-time in each policy.</p>
-          </section>
-
-          <section class="policy-card" aria-labelledby="grid-heading">
-            <div class="card-heading"><div><span class="eyebrow">INSERTION GEOMETRY</span><h2 id="grid-heading">Neighbours around the selected aircraft</h2></div><span id="grid-note">—</span></div>
-            <canvas id="grid-chart" aria-label="Along-track position of nearby aircraft in each grid cell, relative to the selected aircraft"></canvas>
-            <p class="chart-legend">
-              <span><i class="chart-key chart-key--ego"></i>selected aircraft</span>
-              <span><i class="chart-key chart-key--band chart-key--band-c"></i>spacing its policy requires, ahead and behind</span>
-              <span>rows = grid cells near it · x = distance along the corridor · ↑ nearest ahead, ↓ nearest behind</span>
-            </p>
           </section>
 
           <section class="selected-card" aria-labelledby="selected-heading">
@@ -198,22 +209,6 @@
               <span><i class="chart-key chart-key--grey"></i>no leader in the group</span>
             </p>
           </section>
-
-          <section class="policy-card" aria-labelledby="benefit-heading">
-            <div class="card-heading"><div><span class="eyebrow">LANE-CHANGE BENEFIT</span><h2 id="benefit-heading">Predicted gain of each change</h2></div><span id="benefit-note">—</span></div>
-            <canvas id="benefit-chart" aria-label="Predicted policy-cost improvement of each lane change over time"></canvas>
-            <p class="chart-legend">
-              <span><i class="chart-key chart-key--other"></i>every change in this case</span>
-              <span><i class="chart-key chart-key--ego"></i>changes by the selected aircraft</span>
-              <span>predicted at the decision, not a measured outcome</span>
-            </p>
-          </section>
-
-          <section class="policy-card" aria-labelledby="compare-heading">
-            <div class="card-heading"><div><span class="eyebrow">CASE SUMMARY</span><h2 id="compare-heading">No lane change against lane change</h2></div><span id="compare-window">—</span></div>
-            <div class="motion-table-wrap"><table id="compare-table" class="motion-table"></table></div>
-            <p id="compare-note">Same demand, spacing law and controller in both cases. Grid cells are alternative positions for one stream, not extra lanes.</p>
-          </section>
         </aside>
       </main>
 
@@ -231,7 +226,7 @@
             crossorigin="anonymous"></script>
     <script>
       (() => {
-        const version = "20260916-lanechange-v5";
+        const version = "20260916-lanechange-v7";
         const dataScript = document.createElement("script");
         dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
         dataScript.addEventListener("load", () => {

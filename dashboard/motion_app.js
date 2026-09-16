@@ -238,7 +238,6 @@
     $("experiment-status").textContent =
       `Recomputed on the ${fmt(frameS, 0)} s grid · C/R/F ${fmt(100 * before.C)}/${fmt(100 * before.R)}/${fmt(100 * before.F)}% → `
       + `${fmt(100 * after.C)}/${fmt(100 * after.R)}/${fmt(100 * after.F)}%`;
-    renderCompareTable();
     draw();
   }
 
@@ -249,7 +248,6 @@
     seriesCache = null;
     populateForm(currentParameters);
     $("experiment-status").textContent = "Archived run restored";
-    renderCompareTable();
     draw();
   }
 
@@ -299,7 +297,6 @@
     $("total-time").textContent = `/ ${formatTime(frames.at(-1).t)}`;
     const [lo, hi] = summary.compared_window_s;
     $("window-caption").textContent = `mean / 95% reliable · ${fmt(lo / 60)}–${fmt(hi / 60)} min`;
-    renderCompareTable();
     clearAircraftLayers();
     const url = new URL(window.location.href);
     url.searchParams.set("case", caseId);
@@ -452,6 +449,8 @@
   let viewer3d = null;
   const aircraft3d = new Map();
   let servingLink3d = null;
+  let flownPath3d = null;
+  let flownPathFor = null;
   let cameraMode = "follow";
   const billboardCache = new Map();
 
@@ -496,6 +495,7 @@
           backgroundColor: Cesium.Color.fromCssColorString("#17364a").withAlpha(.8), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 12000) } });
     });
     servingLink3d = viewer3d.entities.add({ polyline: { positions: [], width: 2, material: new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.fromCssColorString("#ff7658"), dashLength: 16 }) } });
+    flownPath3d = viewer3d.entities.add({ polyline: { positions: [], width: 4, material: Cesium.Color.fromCssColorString("#e46f51").withAlpha(.9) } });
     const canvas = viewer3d.scene.canvas;
     canvas.addEventListener("pointerdown", releaseCamera, { capture: true });
     canvas.addEventListener("wheel", releaseCamera, { capture: true, passive: true });
@@ -544,6 +544,11 @@
       }
       if (isSelected) entity.label.text = `${aircraft[state.idx].id} · ${Math.round(state.altitude)} m · ${state.policy}`;
     });
+    if (selected && flownPath3d && flownPathFor !== `${caseId}:${selected.idx}`) {
+      const path = aircraftSeries(selected.idx).flatMap((row) => [row.lon, row.lat, row.altitude]);
+      flownPath3d.polyline.positions = Cesium.Cartesian3.fromDegreesArrayHeights(path);
+      flownPathFor = `${caseId}:${selected.idx}`;
+    }
     if (selected && link) {
       const from = Cesium.Cartesian3.fromDegrees(selected.lon, selected.lat, selected.altitude);
       servingLink3d.polyline.positions = [from, Cesium.Cartesian3.fromDegrees(link.site.lon, link.site.lat, link.site.height_m)];
@@ -662,44 +667,6 @@
     });
     ctx.fillText("distance along the corridor from the selected aircraft  ·  ahead →", pad.left, height - 2);
     $("grid-note").textContent = `needs ${fmt(required, 0)} m (${selected.policy}) ahead and behind · ±4 km shown`;
-  }
-
-  // Predicted gain of each lane change, as recorded at the decision in the archived run.
-  function drawBenefit(selected) {
-    const { ctx, width, height } = setupCanvas($("benefit-chart"), 150);
-    const changes = caseData.changes;
-    if (!changes.length) {
-      ctx.fillStyle = "#64747c";
-      ctx.fillText("No lane changes in this case: every aircraft stays on the entry cell.", 14, 24);
-      $("benefit-note").textContent = "—";
-      return;
-    }
-    const pad = { left: 40, right: 12, top: 16, bottom: 24 };
-    const tMax = Math.max(...changes.map((change) => change[0]), frames.at(-1).t);
-    const gains = changes.map((change) => change[5]);
-    const maxGain = Math.max(...gains, 1);
-    const xAt = (t) => pad.left + t / tMax * (width - pad.left - pad.right);
-    const yAt = (gain) => pad.top + (maxGain - gain) / maxGain * (height - pad.top - pad.bottom);
-    ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, height - pad.bottom); ctx.lineTo(width - pad.right, height - pad.bottom); ctx.stroke();
-    changes.forEach((change) => {
-      const mine = selected && change[1] === selected.idx;
-      ctx.fillStyle = mine ? "#17364a" : "#9aa5a9";
-      ctx.beginPath(); ctx.arc(xAt(change[0]), yAt(change[5]), mine ? 5 : 3, 0, Math.PI * 2); ctx.fill();
-    });
-    ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
-    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), pad.top); ctx.lineTo(xAt(simulatedTime), height - pad.bottom); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
-    ctx.fillText(`${fmt(maxGain, 0)} s`, 6, pad.top + 8);
-    ctx.fillText("0", 6, height - pad.bottom);
-    ctx.fillText("predicted policy-cost improvement per change", pad.left + 4, pad.top - 4);
-    ctx.fillText(formatTime(0), pad.left, height - 8);
-    ctx.fillText(formatTime(tMax), width - pad.right - 32, height - 8);
-    const mine = selected ? changes.filter((change) => change[1] === selected.idx) : [];
-    const worsened = changes.filter((change) => change[8] > 0).length;
-    $("benefit-note").textContent = mine.length
-      ? `${aircraft[selected.idx].id}: ${mine.length} change${mine.length > 1 ? "s" : ""}, predicted ${mine.map((change) => `${fmt(change[5], 0)} s`).join(" · ")}`
-      : `${changes.length} changes · ${worsened} with an aircraft predicted worse off`;
   }
 
   function aircraftSeries(idx) {
@@ -858,24 +825,76 @@
     ctx.fillText(String(maxY), 6, pad.top + 8); ctx.fillText(String(minY), 6, height - pad.bottom);
   }
 
-  function renderCompareTable() {
-    const ids = Object.keys(data.cases);
-    const stat = (id) => active[id].stats;
-    const pct = (value) => `${fmt(100 * value)}%`;
-    const rows = [
-      ["C / R / F time", (s) => `${pct(s.policy_shares.C)} / ${pct(s.policy_shares.R)} / ${pct(s.policy_shares.F)}`],
-      ["Planning rate, mean", (s) => `${fmt(s.window_mean_uam_h)} UAM/h`],
-      ["Planning rate, 95% reliable", (s) => `${fmt(s.window_q95_uam_h)} UAM/h`],
-      ["Completed lane changes", (s) => String(s.completed_lane_changes)],
-      ["Aircraft held at entry", (s) => String(s.held_at_entry)],
-      ["Speed reversals per flight", (s) => fmt(s.speed_reversals_per_flight)],
-      ["Completed / sampled NMAC", (s) => `${s.completed}/${s.scheduled} · ${s.sampled_nmac ? "yes" : "none"}`],
-    ];
-    const header = `<thead><tr><th></th>${ids.map((id) => `<th class="${id === caseId ? "motion-table__current" : ""}">${id === "spatial_grid" ? "Lane change" : "No change"}</th>`).join("")}</tr></thead>`;
-    const body = rows.map(([label, value]) => `<tr><td>${label}</td>${ids.map((id) => `<td class="${id === caseId ? "motion-table__current" : ""}">${value(stat(id))}</td>`).join("")}</tr>`).join("");
-    $("compare-table").innerHTML = header + `<tbody>${body}</tbody>`;
-    const [lo, hi] = summary.compared_window_s;
-    $("compare-window").textContent = `window ${fmt(lo / 60)}–${fmt(hi / 60)} min${recomputed ? " · recomputed" : ""}`;
+  // The selected aircraft's own flight: lateral offset and altitude along the corridor, with the
+  // lane changes it made and the gain predicted for each at the decision.
+  function drawTrajectory(selected) {
+    const { ctx, width, height } = setupCanvas($("trajectory-chart"), 235);
+    if (!selected) { ctx.fillStyle = "#64747c"; ctx.fillText("Select an aircraft on the map.", 14, 24); $("trajectory-note").textContent = "—"; return; }
+    const rows = aircraftSeries(selected.idx);
+    const changes = caseData.changes.filter((change) => change[1] === selected.idx);
+    const pad = { left: 54, right: 16, top: 26, bottom: 30 };
+    const xAt = (q) => pad.left + q / corridorLengthM * (width - pad.left - pad.right);
+    const lateral = { top: pad.top, h: 66 };
+    const vertical = { top: pad.top + 92, h: 66 };
+    const spread = (values) => Math.max(1, values.at(-1) - values[0]);
+    lateral.yAt = (value) => lateral.top + (offsets.at(-1) - value) / spread(offsets) * lateral.h;
+    vertical.yAt = (value) => vertical.top + (altitudes.at(-1) - value) / spread(altitudes) * vertical.h;
+
+    [[lateral, offsets, "lateral offset (m)", (v) => `${v > 0 ? "+" : ""}${v}`],
+     [vertical, altitudes, "altitude (m)", (v) => String(v)]].forEach(([panel, levels, label, format]) => {
+      ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
+      ctx.fillText(label, pad.left + 2, panel.top - 6);
+      levels.forEach((level) => {
+        const y = panel.yAt(level);
+        ctx.strokeStyle = "#eceeed"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
+        ctx.fillStyle = "#9aa5a9";
+        ctx.fillText(format(level), 8, y + 3);
+      });
+    });
+
+    [[lateral, "offset"], [vertical, "altitude"]].forEach(([panel, key]) => {
+      ctx.lineWidth = 2.5; ctx.lineCap = "round";
+      for (let i = 0; i + 1 < rows.length; i += 1) {
+        ctx.strokeStyle = colors[rows[i].policy];
+        ctx.beginPath();
+        ctx.moveTo(xAt(rows[i].q), panel.yAt(rows[i][key]));
+        ctx.lineTo(xAt(rows[i + 1].q), panel.yAt(rows[i + 1][key]));
+        ctx.stroke();
+      }
+    });
+
+    changes.forEach((change) => {
+      const at = rows.reduce((best, row) => (Math.abs(row.t - change[0]) < Math.abs(best.t - change[0]) ? row : best), rows[0]);
+      const x = xAt(at.q);
+      ctx.strokeStyle = "#17364a"; ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, lateral.top - 4); ctx.lineTo(x, vertical.top + vertical.h + 4); ctx.stroke(); ctx.setLineDash([]);
+      [[lateral, at.offset], [vertical, at.altitude]].forEach(([panel, value]) => {
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(x, panel.yAt(value), 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#17364a";
+        ctx.beginPath(); ctx.arc(x, panel.yAt(value), 4.5, 0, Math.PI * 2); ctx.fill();
+      });
+      const label = `+${fmt(change[5], 0)} s`;
+      ctx.font = "700 10px system-ui";
+      ctx.fillStyle = "#17364a";
+      ctx.fillText(label, Math.min(width - pad.right - ctx.measureText(label).width, Math.max(pad.left, x - ctx.measureText(label).width / 2)), lateral.top - 8);
+    });
+
+    const now = rows.reduce((best, row) => (Math.abs(row.t - simulatedTime) < Math.abs(best.t - simulatedTime) ? row : best), rows[0]);
+    ctx.strokeStyle = "#e46f51"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xAt(now.q), lateral.top - 4); ctx.lineTo(xAt(now.q), vertical.top + vertical.h + 4); ctx.stroke();
+
+    ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
+    [0, .25, .5, .75, 1].forEach((fraction) => {
+      const q = fraction * corridorLengthM;
+      const label = `${fmt(q / 1000, 0)} km`;
+      ctx.fillText(label, xAt(q) - ctx.measureText(label).width / 2, height - 14);
+    });
+    ctx.fillText("distance along the corridor  ·  orange line = now", pad.left, height - 2);
+    $("trajectory-note").textContent = changes.length
+      ? `${aircraft[selected.idx].id} · ${changes.length} lane change${changes.length > 1 ? "s" : ""} · predicted ${changes.map((change) => `+${fmt(change[5], 0)} s`).join(" · ")}`
+      : `${aircraft[selected.idx].id} · no lane change on this flight`;
   }
 
   // ------------------------------------------------------------------ frame update
@@ -938,7 +957,7 @@
     }
     drawPolicyShares();
     drawInsertion(states, selected);
-    drawBenefit(selected);
+    drawTrajectory(selected);
     drawLinkChart(selected);
     drawAircraftChart(selected);
     drawCapacity();

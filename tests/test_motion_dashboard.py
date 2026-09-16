@@ -17,7 +17,7 @@ def test_lane_change_page_links_and_controls():
     html = (ROOT / "dashboard" / "motion.html").read_text(encoding="utf-8")
     app = (ROOT / "dashboard" / "motion_app.js").read_text(encoding="utf-8")
     for element_id in ("case-select", "motion-map", "motion-3d", "time-slider", "capacity-chart", "grid-chart",
-                       "aircraft-chart", "compare-table", "settings-list", "selected-controller", "selected-move",
+                       "aircraft-chart", "trajectory-chart", "settings-list", "selected-controller", "selected-move",
                        "input-theta", "input-window", "input-persistence", "input-c-tolerance", "input-r-tolerance",
                        "input-group-size", "input-group-mode", "input-reliability", "run-experiment", "reset-experiment"):
         assert f'id="{element_id}"' in html
