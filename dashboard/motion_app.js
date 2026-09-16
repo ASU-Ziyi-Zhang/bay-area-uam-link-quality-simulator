@@ -160,12 +160,21 @@
     route.map((row) => { const p = engine.interpolateRoute(route, corridorLengthM, row.s_m, offset); return [p.lat, p.lon]; }),
     offset === 0 ? { color: "#168c85", weight: 4, opacity: .85 } : { color: "#607177", weight: 2, opacity: .7, dashArray: "6 6" },
   ).addTo(map));
+  // The pane can still be laying out when the script runs, so keep fitting the corridor until the
+  // container settles. Any pointer or wheel gesture on the map hands control to the viewer.
+  const mapNode = document.getElementById("motion-map");
+  let viewerMovedMap = false;
   const fitCorridor = () => {
+    if (viewerMovedMap) return;
     map.invalidateSize();
     map.fitBounds(laneLines[Math.floor(laneLines.length / 2)].getBounds(), { padding: [45, 45] });
   };
+  ["pointerdown", "wheel"].forEach((type) =>
+    mapNode.addEventListener(type, () => { viewerMovedMap = true; }, { capture: true, passive: true }));
   fitCorridor();
   window.requestAnimationFrame(() => window.setTimeout(fitCorridor, 50));
+  window.addEventListener("load", fitCorridor);
+  if (window.ResizeObserver) new ResizeObserver(() => fitCorridor()).observe(mapNode);
   data.stations.forEach((site) => {
     L.circleMarker([site.lat, site.lon], { radius: 4, color: "#fff", weight: 1.2, fillColor: "#17364a", fillOpacity: .85 })
       .bindTooltip(`${site.id} · ${site.physical_form}`).addTo(map);
