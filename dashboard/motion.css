@@ -61,10 +61,16 @@
 .chart-key--band-f { background: var(--fallback); }
 
 #link-quality-chart { display: block; width: 100%; height: 200px; border-top: 1px solid var(--line); }
-#grid-chart { height: 230px; }
+#grid-chart { height: 300px; }
 #aircraft-chart { height: 210px; }
 
 .chart-key--ego { width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
 .chart-key--other { width: 8px; height: 8px; border-radius: 50%; background: #9aa5a9; }
 #trajectory-chart { display: block; width: 100%; height: 235px; border-top: 1px solid var(--line); }
 .motion-lane--flown { border-color: #e46f51; }
+
+.chart-key--current { height: 3px; background: var(--teal); }
+.chart-key--other-line { height: 2px; background: #9aa5a9; }
+.chart-key--window { width: 14px; height: 10px; border-radius: 2px; background: #eef2f7; box-shadow: inset 0 0 0 1px #dde3ea; }
+.chart-key--ok { width: 14px; height: 10px; border-radius: 2px; background: rgb(35 139 87 / 25%); }
+.chart-key--short { width: 14px; height: 10px; border-radius: 2px; background: rgb(214 83 83 / 32%); }

@@ -579,12 +579,23 @@
   // aircraft, per grid cell, against the spacing its policy requires. This is the geometry the
   // admission check works on; a corridor-wide count per cell was not decision-relevant.
   const INSERTION_WINDOW_M = 4000;
+  // Isometric view of the 3 x 3 grid receding along the corridor: distance along the corridor runs
+  // left to right, altitude up, lateral offset right-and-down. The cross-section is drawn far larger
+  // than scale (600 m across against 8 km deep) or it would collapse to a line; ribs at fixed
+  // distances tie the nine lanes together so a dot can still be read against the distance axis.
+  const CELL_X = 24;
+  const CELL_Y = 34;
+  const CELL_SKEW = 15;
   function drawInsertion(states, selected) {
-    const { ctx, width, height } = setupCanvas($("grid-chart"), 230);
+    const { ctx, width, height } = setupCanvas($("grid-chart"), 300);
     if (!selected) { ctx.fillStyle = "#64747c"; ctx.fillText("Select an aircraft on the map.", 14, 24); return; }
-    const pad = { left: 92, right: 58, top: 18, bottom: 30 };
+    const pad = { left: 104, right: 74, top: 34, bottom: 46 };
     const plotW = width - pad.left - pad.right;
-    const xAt = (metres) => pad.left + (metres + INSERTION_WINDOW_M) / (2 * INSERTION_WINDOW_M) * plotW;
+    const originY = pad.top + CELL_Y + 36;
+    const lateralIndex = (cell) => offsets.indexOf(summary.grid[cell].offset_m);
+    const altitudeIndex = (cell) => altitudes.indexOf(summary.grid[cell].altitude_m);
+    const xAt = (metres, oi) => pad.left + (metres + INSERTION_WINDOW_M) / (2 * INSERTION_WINDOW_M) * plotW + (oi - 1) * CELL_X;
+    const yAt = (oi, ai) => originY - (ai - 1) * CELL_Y + (oi - 1) * CELL_SKEW;
 
     const near = states.filter((state) => Math.abs(state.q - selected.q) <= INSERTION_WINDOW_M);
     const byCell = new Map();
@@ -593,80 +604,114 @@
       byCell.get(state.cell).push(state);
     });
     const change = activeChange(selected.idx, simulatedTime);
-    const pinned = new Set([selected.cell]);
-    if (change) pinned.add(change[3]);
-    pinned.forEach((cell) => { if (!byCell.has(cell)) byCell.set(cell, []); });
-    let cells = [...byCell.keys()];
-    cells.sort((a, b) => (pinned.has(b) ? 1 : 0) - (pinned.has(a) ? 1 : 0) || byCell.get(b).length - byCell.get(a).length);
-    const shown = cells.slice(0, 5);
-    shown.sort((a, b) => summary.grid[b].altitude_m - summary.grid[a].altitude_m || summary.grid[a].offset_m - summary.grid[b].offset_m);
-    const rowH = (height - pad.top - pad.bottom) / Math.max(1, shown.length);
+    const targetCell = change ? change[3] : null;
     const required = spacing[selected.policy];
 
-    shown.forEach((cellIndex, row) => {
-      const y = pad.top + (row + .5) * rowH;
+    // ribs: the 3 x 3 cross-section drawn at fixed distances, so the lattice reads as a tube
+    const ribs = [-4000, -2000, 0, 2000, 4000];
+    ribs.forEach((metres) => {
+      ctx.strokeStyle = metres === 0 ? "#c9d2d6" : "#e6eaea";
+      ctx.lineWidth = 1;
+      altitudes.forEach((_unused, ai) => {
+        ctx.beginPath();
+        offsets.forEach((__unused, oi) => {
+          const x = xAt(metres, oi); const y = yAt(oi, ai);
+          if (oi === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+      offsets.forEach((_unused, oi) => {
+        ctx.beginPath();
+        altitudes.forEach((__unused, ai) => {
+          const x = xAt(metres, oi); const y = yAt(oi, ai);
+          if (ai === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+    });
+
+    // the nine lanes
+    summary.grid.forEach((cell, cellIndex) => {
+      const oi = lateralIndex(cellIndex); const ai = altitudeIndex(cellIndex);
+      const isEgo = cellIndex === selected.cell;
+      const isTarget = cellIndex === targetCell;
+      ctx.strokeStyle = isEgo ? "#17364a" : isTarget ? colors[selected.policy] : "#dfe4e4";
+      ctx.lineWidth = isEgo || isTarget ? 2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(xAt(-INSERTION_WINDOW_M, oi), yAt(oi, ai));
+      ctx.lineTo(xAt(INSERTION_WINDOW_M, oi), yAt(oi, ai));
+      ctx.stroke();
+    });
+
+    // the spacing the ego's policy requires, on its own lane and on the lane it is moving to
+    [selected.cell, targetCell].filter((cell) => cell !== null && cell !== undefined).forEach((cellIndex) => {
+      const oi = lateralIndex(cellIndex); const ai = altitudeIndex(cellIndex);
+      const y = yAt(oi, ai);
+      ctx.strokeStyle = colors[selected.policy];
+      ctx.globalAlpha = .28; ctx.lineWidth = 11;
+      ctx.beginPath(); ctx.moveTo(xAt(-required, oi), y); ctx.lineTo(xAt(required, oi), y); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      [-required, required].forEach((metres) => {
+        ctx.beginPath(); ctx.moveTo(xAt(metres, oi), y - 9); ctx.lineTo(xAt(metres, oi), y + 9); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+    });
+
+    // neighbours on their own lanes
+    near.forEach((state) => {
+      if (state.idx === selected.idx) return;
+      const oi = lateralIndex(state.cell); const ai = altitudeIndex(state.cell);
+      const x = xAt(state.q - selected.q, oi); const y = yAt(oi, ai);
+      ctx.fillStyle = colors[state.policy];
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+
+    // the selected aircraft
+    const egoOi = lateralIndex(selected.cell); const egoAi = altitudeIndex(selected.cell);
+    const egoX = xAt(0, egoOi); const egoY = yAt(egoOi, egoAi);
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(egoX, egoY, 7.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = colors[selected.policy];
+    ctx.beginPath(); ctx.arc(egoX, egoY, 7.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#17364a"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(egoX, egoY, 9.5, 0, Math.PI * 2); ctx.stroke();
+
+    // labels: the cells that carry traffic, plus the ego and target cells
+    const labelled = new Set([...byCell.keys(), selected.cell]);
+    if (targetCell !== null) labelled.add(targetCell);
+    [...labelled].forEach((cellIndex) => {
+      const oi = lateralIndex(cellIndex); const ai = altitudeIndex(cellIndex);
       const cell = summary.grid[cellIndex];
       const isEgo = cellIndex === selected.cell;
-      const isTarget = Boolean(change) && cellIndex === change[3];
-
-      if (isEgo || isTarget) {
-        ctx.fillStyle = colors[selected.policy];
-        ctx.globalAlpha = .1;
-        ctx.fillRect(xAt(-required), y - rowH / 2 + 3, xAt(required) - xAt(-required), rowH - 6);
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = colors[selected.policy];
-        ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
-        [-required, required].forEach((metres) => {
-          ctx.beginPath(); ctx.moveTo(xAt(metres), y - rowH / 2 + 3); ctx.lineTo(xAt(metres), y + rowH / 2 - 3); ctx.stroke();
-        });
-        ctx.setLineDash([]);
-      }
-
-      ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
-
       ctx.fillStyle = isEgo ? "#17364a" : "#64747c";
       ctx.font = isEgo ? "700 10px system-ui" : "10px system-ui";
-      ctx.fillText(`${cell.offset_m > 0 ? "+" : ""}${cell.offset_m} m · ${cell.altitude_m} m`, 6, y - 1);
-      ctx.fillStyle = "#9aa5a9"; ctx.font = "9px system-ui";
-      ctx.fillText(isEgo ? "own cell" : isTarget ? "target cell" : "", 6, y + 11);
-
-      const others = byCell.get(cellIndex).filter((state) => state.idx !== selected.idx);
-      others.forEach((state) => {
-        const dx = state.q - selected.q;
-        ctx.fillStyle = colors[state.policy];
-        ctx.beginPath(); ctx.arc(xAt(dx), y, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5; ctx.stroke();
-      });
-
+      const label = `${cell.offset_m > 0 ? "+" : ""}${cell.offset_m} · ${cell.altitude_m} m`;
+      ctx.fillText(label, xAt(-INSERTION_WINDOW_M, oi) - ctx.measureText(label).width - 8, yAt(oi, ai) + 3);
+      const others = (byCell.get(cellIndex) || []).filter((state) => state.idx !== selected.idx);
       const ahead = others.filter((state) => state.q > selected.q).sort((a, b) => a.q - b.q)[0];
       const behind = others.filter((state) => state.q < selected.q).sort((a, b) => b.q - a.q)[0];
-      ctx.font = "9px system-ui";
-      ctx.fillStyle = "#64747c";
-      const aheadText = ahead ? `${fmt((ahead.q - selected.q) / 1000, 2)} km` : "clear";
-      const behindText = behind ? `${fmt((selected.q - behind.q) / 1000, 2)} km` : "clear";
-      ctx.fillText(`↑ ${aheadText}`, width - pad.right + 6, y - 2);
-      ctx.fillText(`↓ ${behindText}`, width - pad.right + 6, y + 10);
-
-      if (isEgo) {
-        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.arc(xAt(0), y, 7, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = colors[selected.policy];
-        ctx.beginPath(); ctx.arc(xAt(0), y, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = "#17364a"; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(xAt(0), y, 9, 0, Math.PI * 2); ctx.stroke();
-      }
+      ctx.font = "9px system-ui"; ctx.fillStyle = "#64747c";
+      const right = xAt(INSERTION_WINDOW_M, oi) + 8;
+      ctx.fillText(`↑ ${ahead ? `${fmt((ahead.q - selected.q) / 1000, 2)} km` : "clear"}`, right, yAt(oi, ai) - 2);
+      ctx.fillText(`↓ ${behind ? `${fmt((selected.q - behind.q) / 1000, 2)} km` : "clear"}`, right, yAt(oi, ai) + 10);
     });
 
-    ctx.strokeStyle = "#17364a"; ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(xAt(0), pad.top - 4); ctx.lineTo(xAt(0), height - pad.bottom + 4); ctx.stroke(); ctx.setLineDash([]);
+    // axes
     ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
-    [-4000, -2000, 0, 2000, 4000].forEach((metres) => {
+    ribs.forEach((metres) => {
       const label = metres === 0 ? "0" : `${metres > 0 ? "+" : ""}${metres / 1000} km`;
-      ctx.fillText(label, xAt(metres) - ctx.measureText(label).width / 2, height - 14);
+      ctx.fillText(label, xAt(metres, 1) - ctx.measureText(label).width / 2, height - 26);
     });
-    ctx.fillText("distance along the corridor from the selected aircraft  ·  ahead →", pad.left, height - 2);
-    $("grid-note").textContent = `needs ${fmt(required, 0)} m (${selected.policy}) ahead and behind · ±4 km shown`;
+    ctx.fillText("distance along the corridor from the selected aircraft  ·  ahead →", pad.left - 40, height - 10);
+    ctx.save();
+    ctx.translate(pad.left - 78, originY + 6);
+    ctx.fillStyle = "#9aa5a9"; ctx.font = "9px system-ui";
+    ctx.fillText("↑ altitude", -16, -CELL_Y - 10);
+    ctx.fillText("↘ lateral", -16, CELL_Y + 18);
+    ctx.restore();
+    $("grid-note").textContent = `needs ${fmt(required, 0)} m (${selected.policy}) ahead and behind · cross-section not to scale`;
   }
 
   function aircraftSeries(idx) {
@@ -726,25 +771,26 @@
   }
 
   function drawAircraftChart(selected) {
-    const { ctx, width, height } = setupCanvas($("aircraft-chart"), 210);
+    const { ctx, width, height } = setupCanvas($("aircraft-chart"), 230);
     if (!selected) { ctx.fillStyle = "#64747c"; ctx.fillText("Select an aircraft on the map.", 14, 24); return; }
     const rows = aircraftSeries(selected.idx);
     const pad = { left: 46, right: 12 };
     const t0 = rows[0].t; const t1 = rows.at(-1).t;
     const xAt = (t) => pad.left + (t - t0) / Math.max(1, t1 - t0) * (width - pad.left - pad.right);
-    const speedPanel = { top: 14, h: 64, min: parameters.speed_min_mps - 2, max: parameters.speed_max_mps + 2, label: "speed (m/s)" };
-    const gapPanel = { top: 108, h: 74, min: 0, max: spacing.F * 1.35, label: "gap and spacing target (m, capped)" };
+    const speedPanel = { top: 14, h: 58, min: parameters.speed_min_mps - 2, max: parameters.speed_max_mps + 2, label: "speed (m/s)" };
+    const gapPanel = { top: 104, h: 84, min: 0, max: spacing.F * 1.35, label: "gap to the leader against the spacing its policy requires (m)" };
     [speedPanel, gapPanel].forEach((panel) => {
       panel.yAt = (value) => panel.top + (panel.max - Math.min(value, panel.max)) / (panel.max - panel.min) * panel.h;
       ctx.strokeStyle = "#d7ddd9"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(pad.left, panel.top); ctx.lineTo(pad.left, panel.top + panel.h); ctx.lineTo(width - pad.right, panel.top + panel.h); ctx.stroke();
-      ctx.fillStyle = "#64747c";
+      ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
       ctx.fillText(panel.label, pad.left + 4, panel.top - 3);
       ctx.fillText(fmt(panel.max, 0), 4, panel.top + 8);
       ctx.fillText(fmt(panel.min, 0), 4, panel.top + panel.h);
     });
 
-    ctx.fillStyle = "#e9e9e6";
+    // stretches with no leader in the group: nothing to compare against
+    ctx.fillStyle = "#ededea";
     let runStart = null;
     rows.forEach((row, i) => {
       if (row.gap < 0 && runStart === null) runStart = row.t;
@@ -755,13 +801,28 @@
       }
     });
 
-    ctx.strokeStyle = "#294f70"; ctx.lineWidth = 2; ctx.beginPath();
+    // the difference between the two is what the controller is working on: green when the gap meets
+    // the requirement, red when it is short
+    for (let i = 0; i + 1 < rows.length; i += 1) {
+      const a = rows[i]; const b = rows[i + 1];
+      if (a.gap < 0 || b.gap < 0) continue;
+      const targetA = spacing[a.policy]; const targetB = spacing[b.policy];
+      ctx.fillStyle = (a.gap >= targetA && b.gap >= targetB) ? "rgba(35,139,87,.14)" : "rgba(214,83,83,.20)";
+      ctx.beginPath();
+      ctx.moveTo(xAt(a.t), gapPanel.yAt(a.gap));
+      ctx.lineTo(xAt(b.t), gapPanel.yAt(b.gap));
+      ctx.lineTo(xAt(b.t), gapPanel.yAt(targetB));
+      ctx.lineTo(xAt(a.t), gapPanel.yAt(targetA));
+      ctx.closePath(); ctx.fill();
+    }
+
+    ctx.strokeStyle = "#2b7bb9"; ctx.lineWidth = 2; ctx.beginPath();
     rows.forEach((row, i) => { const x = xAt(row.t); const y = speedPanel.yAt(row.speed); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
     ctx.stroke();
 
     for (let i = 0; i + 1 < rows.length; i += 1) {
       const level = gapPanel.yAt(spacing[rows[i].policy]);
-      ctx.strokeStyle = colors[rows[i].policy]; ctx.lineWidth = 3;
+      ctx.strokeStyle = colors[rows[i].policy]; ctx.lineWidth = 3.5;
       ctx.beginPath(); ctx.moveTo(xAt(rows[i].t), level); ctx.lineTo(xAt(rows[i + 1].t), level); ctx.stroke();
       if (rows[i + 1].policy !== rows[i].policy) {
         ctx.strokeStyle = "#9aa5a9"; ctx.lineWidth = 1.5;
@@ -769,7 +830,7 @@
       }
     }
 
-    ctx.strokeStyle = "#17364a"; ctx.lineWidth = 1.6; ctx.beginPath();
+    ctx.strokeStyle = "#17364a"; ctx.lineWidth = 1.8; ctx.beginPath();
     let open = false;
     rows.forEach((row) => {
       if (row.gap < 0) { open = false; return; }
@@ -778,11 +839,19 @@
     });
     ctx.stroke();
 
-    ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]);
-    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), 8); ctx.lineTo(xAt(simulatedTime), 186); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#64747c";
-    ctx.fillText(formatTime(t0), pad.left, 202);
-    ctx.fillText(formatTime(t1), width - pad.right - 32, 202);
+    // mark where the gap runs past the top of the panel
+    ctx.fillStyle = "#17364a";
+    rows.forEach((row) => {
+      if (row.gap <= gapPanel.max) return;
+      const x = xAt(row.t);
+      ctx.beginPath(); ctx.moveTo(x, gapPanel.top + 1); ctx.lineTo(x - 3, gapPanel.top + 6); ctx.lineTo(x + 3, gapPanel.top + 6); ctx.closePath(); ctx.fill();
+    });
+
+    ctx.strokeStyle = "#17364a"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), 8); ctx.lineTo(xAt(simulatedTime), gapPanel.top + gapPanel.h + 4); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#64747c"; ctx.font = "10px system-ui";
+    ctx.fillText(formatTime(t0), pad.left, 206);
+    ctx.fillText(formatTime(t1), width - pad.right - 32, 206);
   }
 
   function drawPolicyShares() {
@@ -823,6 +892,7 @@
     ctx.beginPath(); ctx.moveTo(xAt(simulatedTime), pad.top); ctx.lineTo(xAt(simulatedTime), height - pad.bottom); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "#64747c";
     ctx.fillText(String(maxY), 6, pad.top + 8); ctx.fillText(String(minY), 6, height - pad.bottom);
+    $("capacity-current-label").textContent = caseId === "spatial_grid" ? "lane change in 3 x 3" : "no lane change";
   }
 
   // The selected aircraft's own flight: lateral offset and altitude along the corridor, with the
