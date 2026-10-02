@@ -11,7 +11,7 @@
           integrity="sha384-ghEeMdcWWzRv/BPeUcX835vcKDGrxvROXisl/Btpv3GeekBUXTSPVcFJpI1Tcrgp"
           crossorigin="anonymous" />
     <link rel="stylesheet" href="traffic.css?v=20260827-left-stack-v12" />
-    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v7" />
+    <link rel="stylesheet" href="motion.css?v=20260916-lanechange-v8" />
   </head>
   <body>
     <div class="traffic-dashboard motion-dashboard">
@@ -129,7 +129,8 @@
             <p class="chart-legend">
               <span><i class="chart-key chart-key--ego"></i>selected aircraft</span>
               <span><i class="chart-key chart-key--band chart-key--band-c"></i>spacing its policy requires, ahead and behind</span>
-              <span>rows = grid cells near it · x = distance along the corridor · ↑ nearest ahead, ↓ nearest behind</span>
+              <span>isometric view of the nine lanes: distance along the corridor to the right, altitude up, lateral offset right-and-down</span>
+              <span>the cross-section is exaggerated (600 m across against 8 km deep); ribs mark −4, −2, 0, +2, +4 km · ↑ nearest ahead, ↓ nearest behind</span>
             </p>
           </section>
 
@@ -146,6 +147,12 @@
           <section class="capacity-card" aria-labelledby="capacity-heading">
             <div class="card-heading"><div><span class="eyebrow">CAPACITY TRACE</span><h2 id="capacity-heading">Planning rate: no lane change against lane change</h2></div><span id="current-counts">—</span></div>
             <canvas id="capacity-chart" aria-label="Planning rate over time for both cases"></canvas>
+            <p class="chart-legend">
+              <span><i class="chart-key chart-key--current"></i>this case (<span id="capacity-current-label">lane change in 3 x 3</span>)</span>
+              <span><i class="chart-key chart-key--other-line"></i>the other case</span>
+              <span><i class="chart-key chart-key--window"></i>compared window, used for the mean and 95% figures</span>
+              <span>UAM/h · 3600 · v / mean spacing of the aircraft in the corridor</span>
+            </p>
           </section>
         </div>
 
@@ -200,13 +207,16 @@
           </section>
 
           <section class="link-card" aria-labelledby="aircraft-heading">
-            <div class="card-heading"><div><span class="eyebrow">SPACING CONTROL</span><h2 id="aircraft-heading">Selected aircraft: speed and spacing</h2></div></div>
+            <div class="card-heading"><div><span class="eyebrow">SPACING CONTROL</span><h2 id="aircraft-heading">Selected aircraft: is the gap big enough?</h2></div></div>
             <canvas id="aircraft-chart" aria-label="Selected aircraft speed, gap and spacing target over time"></canvas>
             <p class="chart-legend">
-              <span><i class="chart-key chart-key--speed"></i>speed</span>
-              <span><i class="chart-key chart-key--gap"></i>gap to leader</span>
-              <span><i class="chart-key chart-key--thick"></i>spacing target S(policy)</span>
+              <span><i class="chart-key chart-key--speed"></i>speed (top panel)</span>
+              <span><i class="chart-key chart-key--gap"></i>gap: measured distance to its leader</span>
+              <span><i class="chart-key chart-key--thick"></i>spacing target: what its policy requires, S = 152.4 + τ·v + 0.167·v²</span>
+              <span><i class="chart-key chart-key--ok"></i>gap meets the requirement</span>
+              <span><i class="chart-key chart-key--short"></i>gap short of it</span>
               <span><i class="chart-key chart-key--grey"></i>no leader in the group</span>
+              <span>▲ = gap runs past the top of the panel (capped at 1.35 × S(F))</span>
             </p>
           </section>
         </aside>
@@ -226,7 +236,7 @@
             crossorigin="anonymous"></script>
     <script>
       (() => {
-        const version = "20260916-lanechange-v7";
+        const version = "20260916-lanechange-v8";
         const dataScript = document.createElement("script");
         dataScript.src = `data/airport_to_airport_motion.js?v=${version}`;
         dataScript.addEventListener("load", () => {
